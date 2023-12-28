@@ -1,9 +1,18 @@
 import React from "react";
-import ReactFlow, { Controls, Background, MarkerType } from "reactflow";
+import ReactFlow, {
+  Controls,
+  Background,
+  MarkerType,
+  useNodesState,
+  useEdgesState,
+} from "reactflow";
 import "reactflow/dist/style.css";
 import ConditionalNode from "../components/ConditionalNode";
 import AttributeNode from "../components/ArrtibuteNode";
 import OutputNode from "../components/OutputNode";
+
+const inputAttributes = ["account_no", "loan_duration", "date_of_birth"];
+const resultAttributes = ["intrest_rate", "test"];
 
 const nodeTypes = {
   attributeNode: AttributeNode,
@@ -17,18 +26,20 @@ const flowData = {
       type: "attributeNode",
       data: {
         label: "Loan Interest Rate",
-        inputAttributes: ["account_no", "loan_duration", "date_of_birth"],
-        resultAttributes: ["intrest_rate"],
+        inputAttributes: inputAttributes,
+        resultAttributes: resultAttributes,
       },
       position: { x: 234, y: 50 },
     },
     {
       id: "2",
       type: "conditionalNode",
+      inputAttributes,
+      resultAttributes,
       data: {
         label: "Conditional Node",
-        inputAttributes: ["account_no", "loan_duration", "date_of_birth"],
-        resultAttributes: ["intrest_rate"],
+        inputAttributes: inputAttributes,
+        resultAttributes: resultAttributes,
         rule: "Any",
         conditions: [
           {
@@ -36,23 +47,23 @@ const flowData = {
             expression: [
               {
                 inputAttribute: "annual_income",
-                operator: "Divide",
+                operator: "/",
                 value: "12",
               },
               {
                 inputAttribute: null,
-                operator: "Greater than",
+                operator: ">",
                 value: "1000000",
               },
             ],
-            boolean: "OR",
+            boolean: "||",
           },
           {
             multiple: false,
             expression: [
               {
                 inputAttribute: "loan_duration",
-                operator: "Greater than",
+                operator: ">",
                 value: "5",
               },
             ],
@@ -60,17 +71,6 @@ const flowData = {
         ],
       },
       position: { x: 100, y: 500 },
-    },
-    {
-      id: "3",
-      type: "outputNode",
-      data: {
-        label: "Output Node",
-        inputAttributes: ["account_no", "loan_duration", "date_of_birth"],
-        resultAttributes: ["test", "intrest_rate"],
-        outputFields: [{ field: "intrest_rate", value: "5" }],
-      },
-      position: { x: 50, y: 1000 },
     },
   ],
   edges: [
@@ -89,50 +89,25 @@ const flowData = {
         strokeWidth: 3,
       },
     },
-    {
-      id: "2-3",
-      source: "2",
-      target: "3",
-      animated: true,
-      sourceHandle: "no",
-      markerEnd: {
-        type: MarkerType.ArrowClosed,
-        width: 12,
-        height: 12,
-        color: "#FF0072",
-      },
-      style: {
-        strokeWidth: 2,
-        stroke: "#FF0072",
-      },
-    },
-    {
-      id: "2-3",
-      source: "2",
-      target: "3",
-      animated: true,
-      sourceHandle: "yes",
-      markerEnd: {
-        type: MarkerType.ArrowClosed,
-        width: 12,
-        height: 12,
-        color: "#FF0072",
-      },
-      style: {
-        strokeWidth: 2,
-        stroke: "#FF0072",
-      },
-    },
   ],
 };
 
 const Rules = () => {
+  const [nodes, setNodes, onNodesChange] = useNodesState(flowData.nodes);
+  const [edges, setEdges, onEdgesChange] = useEdgesState(flowData.edges);
+
   return (
     <div style={{ height: "100%" }}>
       <ReactFlow
         nodeTypes={nodeTypes}
-        nodes={flowData.nodes}
-        edges={flowData.edges}
+        nodes={nodes}
+        edges={edges}
+        onNodesChange={onNodesChange}
+        onEdgesChange={onEdgesChange}
+        nodesDraggable={true}
+        elementsSelectable={true}
+        setNodes={setNodes}
+        setEdges={setEdges}
       >
         <Background />
         <Controls />
