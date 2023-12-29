@@ -46,27 +46,12 @@ const flowData = {
             multiple: true,
             expression: [
               {
-                inputAttribute: "annual_income",
-                operator: "/",
-                value: "12",
-              },
-              {
-                inputAttribute: null,
-                operator: ">",
-                value: "1000000",
+                inputAttribute: "",
+                operator: "",
+                value: "",
               },
             ],
-            boolean: "||",
-          },
-          {
-            multiple: false,
-            expression: [
-              {
-                inputAttribute: "loan_duration",
-                operator: ">",
-                value: "5",
-              },
-            ],
+            boolean: null,
           },
         ],
       },
@@ -108,6 +93,7 @@ const Rules = () => {
         elementsSelectable={true}
         setNodes={setNodes}
         setEdges={setEdges}
+        fitView={true}
       >
         <Background />
         <Controls />

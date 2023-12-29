@@ -1,4 +1,4 @@
-import React, { memo, useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 import styled, { useTheme } from "styled-components";
 import {
   Handle,
@@ -15,6 +15,10 @@ import {
 } from "@mui/icons-material";
 import Conditions from "./Conditions";
 import { checkConditionType, logicalOperations } from "../utils/data";
+import { useDispatch, useSelector } from "react-redux";
+import { ruleUpdated } from "../redux/reducers/rulesSlice";
+import { useDrop } from "react-dnd";
+import { ItemTypes } from "../utils/itemTypes";
 
 const Wrapper = styled.div`
   display: flex;
@@ -40,7 +44,7 @@ const NodeHeader = styled.div`
   flex-direction: row;
   justify-content: space-between;
   align-items: center;
-  gap: 8px;
+  gap: 20px;
 `;
 
 const NodeTitle = styled.input`
@@ -141,7 +145,7 @@ const FlexRight = styled.div`
 
 const No = styled.div`
   display: flex;
-  flex-direction: row;
+  flex-direction: column;
   align-items: center;
   position: relative;
 `;
@@ -156,7 +160,7 @@ const Yes = styled.div`
 const NodeButtons = styled.div`
   position: absolute;
   top: 250%;
-  left: 20%;
+  left: -55%;
   transform: translate(0, -50%);
   display: flex;
   flex-direction: column;
@@ -173,6 +177,7 @@ const AddNoNode = styled.div`
   justify-content: center;
   align-items: center;
   gap: 8px;
+  background: ${({ theme }) => theme.card};
   border: 2px solid ${({ theme }) => theme.arrow};
   border-radius: 50px;
   padding: 6px 6px;
@@ -326,19 +331,20 @@ const calculateNodePosition = (
 const YesNode = ({ id, data }) => {
   const theme = useTheme();
   const reactFlow = useReactFlow();
+  const { updated } = useSelector((state) => state.rule);
   const [connectedEdges, setConnectedEdges] = useState(
     getConnectedEdges(reactFlow.getNodes(), reactFlow.getEdges())
   );
 
   const [yesEdges, setYesEdges] = useState([]);
+
   useEffect(() => {
-    //check if node has yes egde and if sourceHandler is no
     setYesEdges(
-      connectedEdges?.filter(
+      getConnectedEdges(reactFlow.getNodes(), reactFlow.getEdges()).filter(
         (edge) => edge.source === id && edge.sourceHandle === "yes"
       )
     );
-  }, [connectedEdges, id]);
+  }, [connectedEdges, id, updated, reactFlow]);
 
   return (
     <Yes>
@@ -359,7 +365,7 @@ const YesNode = ({ id, data }) => {
       </OutlineWrapper>
 
       {yesEdges.length === 0 ? (
-        <NodeButtons style={{ top: "170%", left: "-50%" }}>
+        <NodeButtons style={{ top: "170%", left: "-55%" }}>
           <AddNoNode>
             <AddRounded sx={{ fontSize: "14px" }} />
           </AddNoNode>
@@ -437,23 +443,24 @@ const YesNode = ({ id, data }) => {
 const NoNode = ({ id, data }) => {
   const theme = useTheme();
   const reactFlow = useReactFlow();
+  const { updated } = useSelector((state) => state.rule);
   const [connectedEdges, setConnectedEdges] = useState(
     getConnectedEdges(reactFlow.getNodes(), reactFlow.getEdges())
   );
 
   const [noEdges, setNoEdges] = useState([]);
+
   useEffect(() => {
     //check if node has yes egde and if sourceHandler is no
     setNoEdges(
-      connectedEdges?.filter(
+      getConnectedEdges(reactFlow.getNodes(), reactFlow.getEdges()).filter(
         (edge) => edge.source === id && edge.sourceHandle === "no"
       )
     );
-  }, [connectedEdges, id]);
+  }, [reactFlow, connectedEdges, id, updated]);
 
   return (
     <No>
-      <Hr style={{ height: "3px", background: theme.arrow, width: "100px" }} />
       <OutlineWrapper
         style={{
           borderColor: theme.arrow,
@@ -464,6 +471,7 @@ const NoNode = ({ id, data }) => {
           justifyContent: "center",
           alignItems: "center",
           fontSize: "20px",
+          marginTop: noEdges.length === 0 ? "0px" : "30px",
         }}
       >
         No
@@ -524,7 +532,9 @@ const NoNode = ({ id, data }) => {
         </NodeButtons>
       ) : (
         <AddNoNode
-          style={{ marginLeft: "4px" }}
+          style={{
+            marginTop: "4px",
+          }}
           onClick={async () => {
             await addNewConditionalNode(id, "no", reactFlow, data);
             setConnectedEdges(
@@ -535,14 +545,14 @@ const NoNode = ({ id, data }) => {
           <AddRounded sx={{ fontSize: "14px" }} />
         </AddNoNode>
       )}
-      <Handle id="no" type="source" position={Position.Right} />
+      <Handle id="no" type="source" position={Position.Bottom} />
     </No>
   );
 };
 
 function ConditionalNode({ id, data }) {
   const theme = useTheme();
-
+  const dispatch = useDispatch();
   const reactFlow = useReactFlow();
 
   // handel node title change
@@ -729,6 +739,28 @@ function ConditionalNode({ id, data }) {
     reactFlow.setNodes(updatedNodes);
   };
 
+  // delete node
+  const deleteNode = async () => {
+    //first delete all edged connected to this node  and use getConnectedEdges
+    const connectedEdges = await getConnectedEdges(
+      [reactFlow.getNode(id, data)],
+      reactFlow.getEdges()
+    );
+    const updatedEdges = await reactFlow.getEdges().filter((edge) => {
+      return !connectedEdges.some(
+        (connectedEdge) => connectedEdge.id === edge.id
+      );
+    });
+    await reactFlow.setEdges(updatedEdges);
+
+    // then delete node
+    const updatedNodes = await reactFlow.getNodes().filter((node) => {
+      return node.id !== id;
+    });
+    await reactFlow.setNodes(updatedNodes);
+    dispatch(ruleUpdated());
+  };
+
   return (
     <Wrapper>
       <FlexRight>
@@ -742,17 +774,35 @@ function ConditionalNode({ id, data }) {
             <Flex style={{ width: "max-content" }}>
               <OutlineWrapper>
                 <Select value={data.rule} onChange={(e) => handelRuleChange(e)}>
-                  {checkConditionType.map((item) => (
-                    <option value={item.value}>{item.name}</option>
+                  {checkConditionType.map((item, index) => (
+                    <option key={index} value={item.value}>
+                      {item.name}
+                    </option>
                   ))}
                 </Select>
               </OutlineWrapper>
               <div>Conditions must be true</div>
             </Flex>
+
+            <OutlineWrapper
+              style={{
+                borderColor: theme.red,
+                color: theme.red,
+                padding: "4px 6px",
+                cursor: "pointer",
+                fontSize: "12px",
+              }}
+              onClick={() => deleteNode()}
+            >
+              <DeleteOutlineRounded
+                sx={{ fontSize: "12px", color: theme.red }}
+              />
+              Delete
+            </OutlineWrapper>
           </NodeHeader>
           <NodeBody>
             {data.conditions?.map((condition, index) => (
-              <>
+              <div key={index}>
                 <Conditions
                   nodeId={id}
                   condition={condition}
@@ -809,7 +859,7 @@ function ConditionalNode({ id, data }) {
                     />
                   </BooleanCondition>
                 )}
-              </>
+              </div>
             ))}
           </NodeBody>
           <Hr />
@@ -822,9 +872,10 @@ function ConditionalNode({ id, data }) {
         </Node>
         <YesNode id={id} data={data} />
       </FlexRight>
+      <Hr style={{ height: "3px", background: theme.arrow, width: "100px" }} />
       <NoNode id={id} data={data} />
     </Wrapper>
   );
 }
 
-export default memo(ConditionalNode);
+export default ConditionalNode;

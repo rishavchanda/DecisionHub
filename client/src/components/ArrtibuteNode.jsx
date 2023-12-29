@@ -1,7 +1,20 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import styled, { useTheme } from "styled-components";
-import { Handle } from "reactflow";
-import { EditOutlined } from "@mui/icons-material";
+import { Handle, MarkerType, getConnectedEdges, useReactFlow } from "reactflow";
+import {
+  AddRounded,
+  EditOutlined,
+  SubtitlesRounded,
+} from "@mui/icons-material";
+import { useDispatch, useSelector } from "react-redux";
+import { ruleUpdated } from "../redux/reducers/rulesSlice";
+
+const Wrapper = styled.div`
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+`;
 
 const Node = styled.div`
   width: 100%;
@@ -40,6 +53,25 @@ const NodeBody = styled.div`
   gap: 14px;
 `;
 
+const OutlineWrapper = styled.div`
+  border: 1px solid ${({ theme }) => theme.text_secondary + 50};
+  border-radius: 8px;
+  padding: 6px;
+  font-size: 12px;
+  color: ${({ theme }) => theme.text_primary};
+  display: flex;
+  flex-direction: row;
+  justify-content: center;
+  align-items: center;
+  gap: 4px;
+`;
+
+const VR = styled.div`
+  width: 0.5px;
+  height: 100%;
+  background: ${({ theme }) => theme.text_secondary + 50};
+`;
+
 const ItemWrapper = styled.div`
   display: flex;
   flex-direction: column;
@@ -75,35 +107,172 @@ const Hr = styled.div`
   border-radius: 8px;
 `;
 
+const NodeButtons = styled.div`
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  gap: 8px;
+`;
+
+const AddNoNode = styled.div`
+  width: min-content;
+  cursor: pointer;
+  display: flex;
+  flex-direction: row;
+  justify-content: center;
+  align-items: center;
+  gap: 8px;
+  border: 2px solid ${({ theme }) => theme.arrow};
+  border-radius: 50px;
+  padding: 6px 6px;
+  font-size: 12px;
+  &:hover {
+    background: ${({ theme }) => theme.arrow};
+    color: ${({ theme }) => theme.card};
+  }
+`;
+
 const AttributeNode = ({ id, data }) => {
   const theme = useTheme();
+  const reactFlow = useReactFlow();
+  const dispatch = useDispatch();
+  const { updated } = useSelector((state) => state.rule);
+
+  const [isNotConnected, setIsNotConnected] = useState(false);
+
+  useEffect(() => {
+    setIsNotConnected(
+      getConnectedEdges(reactFlow.getNodes(), reactFlow.getEdges()).filter(
+        (edge) => edge.source === id
+      ).length === 0
+    );
+  }, [id, updated, reactFlow]);
+
+  const addNewConditionalNode = () => {
+    const existingNodes = reactFlow.getNodes();
+    const parentNode = existingNodes.find((node) => node.id === id);
+
+    const newNodeId = `${existingNodes.length + 1}`;
+    const depth = parentNode.position.y + parentNode.height;
+
+    const newNode = {
+      id: newNodeId,
+      type: "conditionalNode",
+      data: {
+        label: "New Condition Node",
+        inputAttributes: data.inputAttributes,
+        resultAttributes: data.resultAttributes,
+        rule: "Any",
+        conditions: [
+          {
+            multiple: false,
+            expression: [
+              {
+                inputAttribute: "",
+                operator: "",
+                value: "",
+              },
+            ],
+          },
+        ],
+      },
+      position: {
+        x: parentNode.position.x - 150,
+        y: depth + 50,
+      },
+    };
+
+    const newEdge = {
+      id: `${id}-start-${newNodeId}`,
+      source: id,
+      target: newNodeId,
+      animated: false,
+      style: {
+        strokeWidth: 3,
+      },
+      markerEnd: {
+        type: MarkerType.ArrowClosed,
+        width: 12,
+        height: 12,
+      },
+    };
+
+    reactFlow.addNodes(newNode);
+    reactFlow.addEdges(newEdge);
+  };
+
   return (
-    <Node>
-      <NodeHeader>
-        <NodeTitle>{data.label}</NodeTitle>
-        <EditOutlined sx={{ fontSize: "18px", color: theme.white }} />
-      </NodeHeader>
-      <NodeBody>
-        <ItemWrapper>
-          <Title>Input Attribute</Title>
-          <ChipsWrapper>
-            {data.inputAttributes?.map((attribute) => (
-              <Chip>{attribute}</Chip>
-            ))}
-          </ChipsWrapper>
-        </ItemWrapper>
-        <Hr />
-        <ItemWrapper>
-          <Title>Result Attribute</Title>
-          <ChipsWrapper>
-            {data.resultAttributes?.map((attribute) => (
-              <Chip>{attribute}</Chip>
-            ))}
-          </ChipsWrapper>
-        </ItemWrapper>
-      </NodeBody>
-      <Handle type="source" position="bottom" />
-    </Node>
+    <Wrapper>
+      <Node>
+        <NodeHeader>
+          <NodeTitle>{data.label}</NodeTitle>
+          <EditOutlined
+            sx={{ fontSize: "18px", color: theme.white, cursor: "pointer" }}
+          />
+        </NodeHeader>
+        <NodeBody>
+          <ItemWrapper>
+            <Title>Input Attribute</Title>
+            <ChipsWrapper>
+              {data.inputAttributes?.map((attribute, index) => (
+                <Chip key={index}>{attribute}</Chip>
+              ))}
+            </ChipsWrapper>
+          </ItemWrapper>
+          <Hr />
+          <ItemWrapper>
+            <Title>Result Attribute</Title>
+            <ChipsWrapper>
+              {data.resultAttributes?.map((attribute, index) => (
+                <Chip key={index}>{attribute}</Chip>
+              ))}
+            </ChipsWrapper>
+          </ItemWrapper>
+        </NodeBody>
+        <Handle type="source" position="bottom" />
+      </Node>
+      {isNotConnected && (
+        <>
+          <VR
+            style={{ height: "60px", background: theme.arrow, width: "3px" }}
+          />
+          <NodeButtons>
+            <AddNoNode>
+              <AddRounded sx={{ fontSize: "14px" }} />
+            </AddNoNode>
+            <OutlineWrapper
+              style={{
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                borderWidth: "2px",
+                borderColor: theme.arrow,
+                cursor: "pointer",
+                padding: "12px 16px",
+                gap: "8px",
+                width: "max-content",
+                fontSize: "14px",
+                fontWeight: "500",
+                "&:hover": {
+                  background: theme.text_secondary + 50,
+                  color: theme.card,
+                },
+              }}
+              onClick={async () => {
+                await addNewConditionalNode(id, "yes", reactFlow, data);
+                dispatch(ruleUpdated());
+              }}
+            >
+              <SubtitlesRounded
+                sx={{ fontSize: "20px", color: theme.yellow }}
+              />
+              Add New Conditional Node
+            </OutlineWrapper>
+          </NodeButtons>
+        </>
+      )}
+    </Wrapper>
   );
 };
 

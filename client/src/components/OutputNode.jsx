@@ -1,7 +1,13 @@
 import React from "react";
 import styled, { useTheme } from "styled-components";
-import { Handle } from "reactflow";
-import { AddRounded, EditOutlined } from "@mui/icons-material";
+import { Handle, getConnectedEdges, useReactFlow } from "reactflow";
+import {
+  AddRounded,
+  DeleteOutlineRounded,
+  DeleteRounded,
+} from "@mui/icons-material";
+import { useDispatch } from "react-redux";
+import { ruleUpdated } from "../redux/reducers/rulesSlice";
 
 const Node = styled.div`
   width: 100%;
@@ -26,10 +32,12 @@ const NodeHeader = styled.div`
   border-radius: 8px 8px 0px 0px;
 `;
 
-const NodeTitle = styled.div`
+const NodeTitle = styled.input`
   font-size: 16px;
   font-weight: 600;
   color: ${({ theme }) => theme.white};
+  background: transparent;
+  border: none;
 `;
 
 const NodeBody = styled.div`
@@ -43,6 +51,7 @@ const NodeBody = styled.div`
 const ItemWrapper = styled.div`
   display: flex;
   flex-direction: row;
+  align-items: center;
   gap: 8px;
 `;
 
@@ -50,11 +59,15 @@ const OutlineWrapper = styled.div`
   border: 1px solid ${({ theme }) => theme.text_secondary + 50};
   border-radius: 8px;
   padding: 9px 8px;
-  font-size: 14px;
+  font-size: 12px;
   color: ${({ theme }) => theme.text_primary};
   &:focus {
     outline: none;
   }
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 4px;
 `;
 
 const Select = styled.select`
@@ -93,38 +106,213 @@ const Button = styled.div`
   border: 1px solid ${({ theme }) => theme.text_secondary + 50};
   border-radius: 8px;
   padding: 6px 8px;
-  font-size: 14px;
+  font-size: 12px;
 `;
 
-const OutputNode = ({ id, data }) => {
+const Input = styled.input`
+  max-width: 80px;
+  background: transparent;
+  border: none;
+  font-size: 12px;
+  font-weight: 600;
+  color: ${({ theme }) => theme.text_primary};
+  background: ${({ theme }) => theme.card};
+  &:focus {
+    outline: none;
+  }
+`;
+
+const OutputNode = ({ id, data, outputAttributes }) => {
   const theme = useTheme();
+  const reactFlow = useReactFlow();
+  const dispatch = useDispatch();
+
+  //handel change output node title
+  const handelLabelChange = (e) => {
+    const updatedNodes = reactFlow.getNodes().map((node) => {
+      if (node.id === id) {
+        return {
+          ...node,
+          data: {
+            ...node.data,
+            label: e.target.value,
+          },
+        };
+      }
+      return node;
+    });
+    reactFlow.setNodes(updatedNodes);
+  };
+
+  // add output field
+  const addOutputField = () => {
+    const updatedNodes = reactFlow.getNodes().map((node) => {
+      if (node.id === id) {
+        return {
+          ...node,
+          data: {
+            ...node.data,
+            outputFields: [
+              ...node.data.outputFields,
+              {
+                field: "",
+                size: "",
+              },
+            ],
+          },
+        };
+      }
+      return node;
+    });
+    reactFlow.setNodes(updatedNodes);
+  };
+
+  // delete output field
+  const deleteOutputField = (index) => {
+    const updatedNodes = reactFlow.getNodes().map((node) => {
+      if (node.id === id) {
+        return {
+          ...node,
+          data: {
+            ...node.data,
+            outputFields: node.data.outputFields.filter(
+              (field, i) => i !== index
+            ),
+          },
+        };
+      }
+      return node;
+    });
+    reactFlow.setNodes(updatedNodes);
+  };
+
+  // handle select change
+  const handleSelectChange = (field, index, e) => {
+    const updatedNodes = reactFlow.getNodes().map((node) => {
+      if (node.id === id) {
+        return {
+          ...node,
+          data: {
+            ...node.data,
+            outputFields: node.data.outputFields.map((item, i) => {
+              if (i === index) {
+                if (field === "field") {
+                  return { ...item, field: e.target.value };
+                } else if (field === "value") {
+                  return { ...item, value: e.target.value };
+                }
+              }
+              return item;
+            }),
+          },
+        };
+      }
+      return node;
+    });
+    reactFlow.setNodes(updatedNodes);
+  };
+
+  const deleteNode = async () => {
+    //first delete all edged connected to this node  and use getConnectedEdges
+    const connectedEdges = getConnectedEdges(
+      [reactFlow.getNode(id, data)],
+      reactFlow.getEdges()
+    );
+    const updatedEdges = reactFlow.getEdges().filter((edge) => {
+      return !connectedEdges.some(
+        (connectedEdge) => connectedEdge.id === edge.id
+      );
+    });
+    await reactFlow.setEdges(updatedEdges);
+
+    // then delete node
+    const updatedNodes = reactFlow.getNodes().filter((node) => {
+      return node.id !== id;
+    });
+    await reactFlow.setNodes(updatedNodes);
+
+    dispatch(ruleUpdated());
+  };
+
   return (
     <Node>
       <NodeHeader>
-        <NodeTitle>{data.label}</NodeTitle>
-        <EditOutlined sx={{ fontSize: "18px", color: theme.white }} />
+        <NodeTitle
+          value={data.label}
+          onChange={(e) => handelLabelChange(e)}
+        ></NodeTitle>
+        <OutlineWrapper
+          style={{
+            borderColor: theme.red,
+            color: theme.red,
+            padding: "6px 8px",
+            cursor: "pointer !important",
+          }}
+          onClick={() => deleteNode()}
+        >
+          <DeleteRounded sx={{ fontSize: "14px", color: theme.red }} />
+          Delete
+        </OutlineWrapper>
       </NodeHeader>
       <NodeBody>
-        {data.outputFields?.map((field) => (
+        {data.outputFields?.map((field, index) => (
           <ItemWrapper>
             <OutlineWrapper style={{ width: "fit-content" }}>
-              <Select value={field.field}>
+              <Select
+                value={field.field}
+                onChange={(e) => handleSelectChange("field", index, e)}
+              >
                 {data.resultAttributes?.map((attribute) => (
                   <option value={attribute}>{attribute}</option>
                 ))}
               </Select>
             </OutlineWrapper>
             <OutlineWrapper style={{ width: "fit-content" }}>
-              <Select>
-                <option value="5">5</option>
+              <Select
+                value={
+                  data.inputAttributes?.includes(field.value)
+                    ? field.value
+                    : "__custom__"
+                }
+                onChange={(e) => handleSelectChange("value", index, e)}
+              >
+                {data.inputAttributes?.map((item) => (
+                  <option key={item} value={item}>
+                    {item}
+                  </option>
+                ))}
+                <option value="__custom__">Custom Value</option>
               </Select>
+              {(field.value === "__custom__" ||
+                data.inputAttributes?.includes(field.value) === false) && (
+                <Input
+                  value={field.value}
+                  onChange={(e) => handleSelectChange("value", index, e)}
+                  placeholder="Enter Value"
+                />
+              )}
             </OutlineWrapper>
+            <DeleteOutlineRounded
+              sx={{
+                fontSize: "20px",
+                color: theme.text_secondary,
+                cursor:
+                  reactFlow.getNode(id)?.data?.outputFields?.length === 1 &&
+                  index === 0
+                    ? "not-allowed"
+                    : "pointer",
+              }}
+              onClick={() => {
+                reactFlow.getNode(id)?.data?.outputFields?.length > 1 &&
+                  deleteOutputField(index);
+              }}
+            />
           </ItemWrapper>
         ))}
         <Hr />
         <NodeFooter>
-          <Button>
-            <AddRounded sx={{ fontSize: "18px", color: theme.primary }} />
+          <Button onClick={() => addOutputField()}>
+            <AddRounded sx={{ fontSize: "16px", color: theme.primary }} />
             Add Fields
           </Button>
         </NodeFooter>

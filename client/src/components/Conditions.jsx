@@ -1,12 +1,14 @@
 import {
   AddRounded,
+  ArrowDropDownRounded,
+  ArrowDropUpRounded,
   DeleteOutlineRounded,
-  DragIndicator,
 } from "@mui/icons-material";
 import React from "react";
 import styled, { useTheme } from "styled-components";
 import { arithmeticOperations } from "../utils/data";
 import { useReactFlow } from "reactflow";
+import { IconButton } from "@mui/material";
 
 const Wrapper = styled.div`
   width: fit-content;
@@ -24,6 +26,15 @@ const Condition = styled.div`
   border-radius: 8px;
   background: transparent;
   border: 1px solid ${({ theme }) => theme.text_secondary + 50};
+`;
+
+const Move = styled.div`
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  gap: 2px;
+  font-size: 12px;
 `;
 
 const VR = styled.div`
@@ -204,20 +215,96 @@ const Conditions = ({
     reactFlow.setNodes(updatedNodes);
   };
 
+  //handel move up and down
+  const moveCondition = (index, direction) => {
+    const updatedNodes = reactFlow.getNodes().map((node) => {
+      if (node.id === nodeId) {
+        // keep the boolean constant if it is present in the condition change the rest
+        const boolean = node.data.conditions[index].boolean;
+        const booleanDirection =
+          node.data.conditions[index + direction].boolean;
+        const updatedData = {
+          ...node.data,
+          conditions: node.data.conditions.map((condition, cIndex) => {
+            if (cIndex === index) {
+              return {
+                ...node.data.conditions[index + direction],
+                boolean: boolean,
+              };
+            } else if (cIndex === index + direction) {
+              return {
+                ...node.data.conditions[index],
+                boolean: booleanDirection,
+              };
+            }
+            return condition;
+          }),
+        };
+        return { ...node, data: updatedData };
+      }
+      return node;
+    });
+
+    reactFlow.setNodes(updatedNodes);
+  };
+
   return (
     <Wrapper>
       <Condition>
-        <DragIndicator
-          sx={{
-            fontSize: "22px",
-            color: theme.text_secondary,
-            cursor: "pointer",
+        <div
+          style={{
+            display: "flex",
+            gap: "6px",
+            fontSize: "12px",
+            justifyContent: "center",
+            alignItems: "center",
+            marginRight: "4px",
+            fontWeight: "600",
           }}
-        />
+        >
+          <Move>
+            <ArrowDropUpRounded
+              sx={{
+                fontSize: "14px",
+                color: theme.text_secondary,
+                padding: "0.4px",
+                borderRadius: "50%",
+                backgroundColor: theme.text_secondary + 10,
+                cursor:
+                  conditionIndex === 0
+                    ? "not-allowed !important"
+                    : "pointer !important",
+              }}
+              onClick={() =>
+                conditionIndex > 0 && moveCondition(conditionIndex, -1)
+              }
+            />
+            <ArrowDropDownRounded
+              sx={{
+                fontSize: "14px",
+                color: theme.text_secondary,
+                padding: "0.4px",
+                borderRadius: "50%",
+                backgroundColor: theme.text_secondary + 10,
+                cursor:
+                  conditionIndex ===
+                  reactFlow.getNode(nodeId)?.data.conditions.length - 1
+                    ? "not-allowed !important"
+                    : "pointer !important",
+              }}
+              onClick={() =>
+                conditionIndex <
+                  reactFlow.getNode(nodeId)?.data.conditions.length - 1 &&
+                moveCondition(conditionIndex, 1)
+              }
+            />
+          </Move>
+          {conditionIndex + 1}
+        </div>
         <VR />
         {condition.expression?.map((item, index) => (
           <>
-            <ConditionBody>
+            <ConditionBody key={index}>
               {item.inputAttribute !== null && (
                 <OutlineWrapper>
                   <Select
@@ -226,8 +313,10 @@ const Conditions = ({
                       handleSelectChange("inputAttribute", index, e)
                     }
                   >
-                    {inputAttribute?.map((item) => (
-                      <option value={item}>{item}</option>
+                    {inputAttribute?.map((item, index) => (
+                      <option key={index} value={item}>
+                        {item}
+                      </option>
                     ))}
                   </Select>
                 </OutlineWrapper>
@@ -238,7 +327,9 @@ const Conditions = ({
                   onChange={(e) => handleSelectChange("operator", index, e)}
                 >
                   {arithmeticOperations?.map((item) => (
-                    <option value={item.value}>{item.name}</option>
+                    <option key={item.name} value={item.value}>
+                      {item.name}
+                    </option>
                   ))}
                 </Select>
               </OutlineWrapper>
@@ -263,14 +354,14 @@ const Conditions = ({
                   <Input
                     value={item.value}
                     onChange={(e) => handleSelectChange("value", index, e)}
-                    placeholder="Enter Integer Value"
-                    type="number"
+                    placeholder="Enter Value"
                   />
                 )}
               </OutlineWrapper>
             </ConditionBody>
             {index > 0 && (
               <DeleteOutlineRounded
+                key={index}
                 sx={{
                   fontSize: "20px",
                   color: theme.text_secondary,
@@ -279,7 +370,7 @@ const Conditions = ({
                 onClick={() => deleteExpression(index)}
               />
             )}
-            <VR />
+            <VR key={index} />
           </>
         ))}
         <Button onClick={() => addBlankExpression()}>
