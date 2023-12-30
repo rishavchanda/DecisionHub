@@ -17,8 +17,6 @@ import Conditions from "./Conditions";
 import { checkConditionType, logicalOperations } from "../utils/data";
 import { useDispatch, useSelector } from "react-redux";
 import { ruleUpdated } from "../redux/reducers/rulesSlice";
-import { useDrop } from "react-dnd";
-import { ItemTypes } from "../utils/itemTypes";
 
 const Wrapper = styled.div`
   display: flex;

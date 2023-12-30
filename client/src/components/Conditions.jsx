@@ -6,9 +6,12 @@ import {
 } from "@mui/icons-material";
 import React from "react";
 import styled, { useTheme } from "styled-components";
-import { arithmeticOperations } from "../utils/data";
+import {
+  arithmeticOperations,
+  specialAttributes,
+  specialFunctions,
+} from "../utils/data";
 import { useReactFlow } from "reactflow";
-import { IconButton } from "@mui/material";
 
 const Wrapper = styled.div`
   width: fit-content;
@@ -111,6 +114,14 @@ const Button = styled.div`
   `}
 `;
 
+const Hr = styled.div`
+  border: 0;
+  width: 100%;
+  height: 1px;
+  background: ${({ theme }) => theme.text_secondary + 20};
+  border-radius: 8px;
+`;
+
 const Conditions = ({
   nodeId,
   conditionIndex,
@@ -138,6 +149,17 @@ const Conditions = ({
                   if (eIndex === expressionIndex) {
                     if (
                       field === "inputAttribute" &&
+                      expr.inputAttribute !== null &&
+                      specialFunctions?.find(
+                        (func) => func.value === event.target.value
+                      )
+                    ) {
+                      return {
+                        ...expr,
+                        inputAttribute: event.target.value + ",null,null",
+                      };
+                    } else if (
+                      field === "inputAttribute" &&
                       expr.inputAttribute !== null
                     ) {
                       return { ...expr, inputAttribute: event.target.value };
@@ -145,6 +167,77 @@ const Conditions = ({
                       return { ...expr, operator: event.target.value };
                     } else if (field === "value") {
                       return { ...expr, value: event.target.value };
+                    }
+                  }
+                  return expr;
+                }),
+              };
+            }
+            return condition;
+          }),
+        };
+        return { ...node, data: updatedData };
+      }
+      return node;
+    });
+
+    reactFlow.setNodes(updatedNodes);
+    console.log(updatedNodes);
+    console.log(getInputAttribute("time_diff,null,null", 0));
+  };
+
+  const getInputAttribute = (value, pos) => {
+    if (value.split(",")[pos] !== null || undefined || "")
+      return (value = value.split(",")[pos]);
+    else return "null";
+  };
+
+  // handel function input attribute change for selects
+  const handleFunctionInputAttributeChange = (
+    field,
+    expressionIndex,
+    event
+  ) => {
+    const updatedNodes = reactFlow.getNodes().map((node) => {
+      if (node.id === nodeId) {
+        const updatedData = {
+          ...node.data,
+          conditions: node.data.conditions.map((condition, cIndex) => {
+            if (cIndex === conditionIndex) {
+              return {
+                ...condition,
+                expression: condition.expression.map((expr, eIndex) => {
+                  if (eIndex === expressionIndex) {
+                    if (field === "fun" && expr.inputAttribute !== null) {
+                      return {
+                        ...expr,
+                        inputAttribute:
+                          event.target.value +
+                          "," +
+                          getInputAttribute(expr.inputAttribute, 1) +
+                          "," +
+                          getInputAttribute(expr.inputAttribute, 2),
+                      };
+                    } else if (field === "val1") {
+                      return {
+                        ...expr,
+                        inputAttribute:
+                          getInputAttribute(expr.inputAttribute, 0) +
+                          "," +
+                          event.target.value +
+                          "," +
+                          getInputAttribute(expr.inputAttribute, 2),
+                      };
+                    } else if (field === "val2") {
+                      return {
+                        ...expr,
+                        inputAttribute:
+                          getInputAttribute(expr.inputAttribute, 0) +
+                          "," +
+                          getInputAttribute(expr.inputAttribute, 1) +
+                          "," +
+                          event.target.value,
+                      };
                     }
                   }
                   return expr;
@@ -308,7 +401,7 @@ const Conditions = ({
               {item.inputAttribute !== null && (
                 <OutlineWrapper>
                   <Select
-                    value={item.inputAttribute}
+                    value={getInputAttribute(item.inputAttribute, 0)}
                     onChange={(e) =>
                       handleSelectChange("inputAttribute", index, e)
                     }
@@ -318,7 +411,61 @@ const Conditions = ({
                         {item}
                       </option>
                     ))}
+                    {specialAttributes?.map((item) => (
+                      <option key={item.name} value={item.value}>
+                        {item.name}
+                      </option>
+                    ))}
+                    <Hr />
+                    {specialFunctions?.map((item) => (
+                      <option key={item.name} value={item.value}>
+                        {item.name}
+                      </option>
+                    ))}
                   </Select>
+                  {/* When a special function is selected i have to show two more selectable options and make a final string and set that as the value */}
+                  {
+                    // if the selected input attribute is a special function
+                    specialFunctions?.find(
+                      (func) =>
+                        func.value === getInputAttribute(item.inputAttribute, 0)
+                    ) && (
+                      <>
+                        (
+                        <Select
+                          value={getInputAttribute(item.inputAttribute, 1)}
+                          onChange={(e) =>
+                            handleFunctionInputAttributeChange("val1", index, e)
+                          }
+                        >
+                          {inputAttribute?.map((item) => (
+                            <option key={item} value={item}>
+                              {item}
+                            </option>
+                          ))}
+                          {specialAttributes?.map((item) => (
+                            <option key={item.name} value={item.value}>
+                              {item.name}
+                            </option>
+                          ))}
+                        </Select>
+                        ,
+                        <Select
+                          value={getInputAttribute(item.inputAttribute, 2)}
+                          onChange={(e) =>
+                            handleFunctionInputAttributeChange("val2", index, e)
+                          }
+                        >
+                          {inputAttribute?.map((item) => (
+                            <option key={item} value={item}>
+                              {item}
+                            </option>
+                          ))}
+                        </Select>
+                        )
+                      </>
+                    )
+                  }
                 </OutlineWrapper>
               )}
               <OutlineWrapper>
@@ -345,6 +492,11 @@ const Conditions = ({
                   {inputAttribute?.map((item) => (
                     <option key={item} value={item}>
                       {item}
+                    </option>
+                  ))}
+                  {specialAttributes?.map((item) => (
+                    <option key={item.name} value={item.value}>
+                      {item.name}
                     </option>
                   ))}
                   <option value="__custom__">Custom Value</option>

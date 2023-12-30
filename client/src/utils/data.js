@@ -45,6 +45,28 @@ export const arithmeticOperations = [
   },
 ];
 
+export const specialFunctions = [
+  {
+    name: "Date_Difference",
+    value: "date_diff",
+  },
+  {
+    name: "Time_Difference",
+    value: "time_diff",
+  },
+];
+
+export const specialAttributes = [
+  {
+    name: "Current_Date",
+    value: "current_date",
+  },
+  {
+    name: "Current_Time",
+    value: "current_time",
+  },
+];
+
 export const logicalOperations = [
   {
     name: "AND",
