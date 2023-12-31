@@ -10,6 +10,7 @@ import Test from "./pages/Test";
 import { setDarkMode } from "./redux/reducers/userSlice";
 import { useDispatch, useSelector } from "react-redux";
 import Authentication from "./pages/Authentication";
+import NewRuleForm from "./components/NewRuleForm";
 
 const Container = styled.div`
   width: 100%;
@@ -35,6 +36,7 @@ function App() {
   const { currentUser, darkMode } = useSelector((state) => state.user);
   const { open, message, severity } = useSelector((state) => state.snackbar);
   const [menuOpen, setMenuOpen] = useState(true);
+  const [openNewRule, setOpenNewRule] = useState(false);
 
   const dispatch = useDispatch();
 
@@ -56,10 +58,15 @@ function App() {
               <Navbar menuOpen={menuOpen} setMenuOpen={setMenuOpen} />
 
               <Routes>
-                <Route path="/" exact element={<Dashboard />} />
+                <Route
+                  path="/"
+                  exact
+                  element={<Dashboard setOpenNewRule={setOpenNewRule} />}
+                />
                 <Route path="/rules" exact element={<Rules />} />
                 <Route path="/test" exact element={<Test />} />
               </Routes>
+              {openNewRule && <NewRuleForm setOpenNewRule={setOpenNewRule} />}
             </Wrapper>
           </Container>
         ) : (

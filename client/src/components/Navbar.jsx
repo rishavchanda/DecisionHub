@@ -2,7 +2,7 @@ import { useState } from "react";
 import styled from "styled-components";
 import { Avatar, IconButton } from "@mui/material";
 import { Link, useLocation } from "react-router-dom";
-import { MenuRounded } from "@mui/icons-material";
+import { MenuRounded, SearchRounded } from "@mui/icons-material";
 import DropdownIcon from "@mui/icons-material/ArrowDropDown";
 import { useSelector } from "react-redux";
 // import UserProfile from "./Profile";
@@ -77,6 +77,32 @@ const Path = styled.div`
   }
 `;
 
+const Search = styled.div`
+  width: 40%;
+  @media screen and (max-width: 480px) {
+    width: 50%;
+  }
+  left: 0px;
+  right: 0px;
+  margin: auto;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-radius: 12px;
+  color: ${({ theme }) => theme.text_primary};
+  background-color: ${({ theme }) => theme.bg};
+`;
+const Input = styled.input`
+  width: 100%;
+  border: none;
+  font-size: 16px;
+  padding: 15px 22px;
+  border-radius: 100px;
+  background-color: transparent;
+  outline: none;
+  color: ${({ theme }) => theme.text_primary};
+`;
+
 const User = styled.div`
   display: flex;
   align-items: center;
@@ -147,9 +173,13 @@ const Navbar = ({ setMenuOpen, menuOpen }) => {
         <Path>{path}</Path>
         <LogoText to="/">
           {/* <LogoImg src={Logo} /> */}
-          Trackify
+          DecisionHub
         </LogoText>
       </Flex>
+      <Search>
+        <Input placeholder="Search any rule..." />
+        <SearchRounded style={{ marginRight: "20px", marginLeft: "20px" }} />
+      </Search>
       <User aria-describedby={id} onClick={handleClick}>
         <Avatar
           src={currentUser?.img}

@@ -2,7 +2,6 @@ import React from "react";
 import ReactFlow, {
   Controls,
   Background,
-  MarkerType,
   useNodesState,
   useEdgesState,
 } from "reactflow";
@@ -10,9 +9,17 @@ import "reactflow/dist/style.css";
 import ConditionalNode from "../components/ConditionalNode";
 import AttributeNode from "../components/ArrtibuteNode";
 import OutputNode from "../components/OutputNode";
+import DownloadButton from "../components/DownloadButton";
 
-const inputAttributes = ["account_no", "loan_duration", "date_of_birth"];
-const resultAttributes = ["intrest_rate", "test"];
+const inputAttributes = [
+  "account_no",
+  "loan_duration",
+  "date_of_birth",
+  "employment_status",
+  "annual_income",
+  "credit_score",
+];
+const resultAttributes = ["intrest_rate"];
 
 const nodeTypes = {
   attributeNode: AttributeNode,
@@ -31,50 +38,8 @@ const flowData = {
       },
       position: { x: 234, y: 50 },
     },
-    {
-      id: "2",
-      type: "conditionalNode",
-      inputAttributes,
-      resultAttributes,
-      data: {
-        label: "Conditional Node",
-        inputAttributes: inputAttributes,
-        resultAttributes: resultAttributes,
-        rule: "Any",
-        conditions: [
-          {
-            multiple: true,
-            expression: [
-              {
-                inputAttribute: "",
-                operator: "",
-                value: "",
-              },
-            ],
-            boolean: null,
-          },
-        ],
-      },
-      position: { x: 100, y: 500 },
-    },
   ],
-  edges: [
-    {
-      id: "1-2",
-      source: "1",
-      target: "2",
-      type: "smoothstep",
-      sourceHandle: "input",
-      markerEnd: {
-        type: MarkerType.ArrowClosed,
-        width: 12,
-        height: 12,
-      },
-      style: {
-        strokeWidth: 3,
-      },
-    },
-  ],
+  edges: [],
 };
 
 const Rules = () => {
@@ -97,6 +62,7 @@ const Rules = () => {
       >
         <Background />
         <Controls />
+        <DownloadButton />
       </ReactFlow>
     </div>
   );

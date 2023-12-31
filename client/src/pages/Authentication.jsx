@@ -6,16 +6,26 @@ import SignUp from "../components/SignUp";
 // import Logo from "../Images/Logo.svg";
 
 const Container = styled.div`
+  padding: 20px 30px;
+  padding-bottom: 50px;
+  height: 100%;
+  overflow-y: scroll;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  @media (max-width: 768px) {
+    padding: 6px 0px;
+  }
+  background: ${({ theme }) => theme.bg};
+`;
+
+const Wrapper = styled.div`
   width: 100%;
   height: 100%;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  @media only screen and (max-width: 600px) {
-    padding: 24px 12px;
-    justify-content: start;
-  }
 `;
 
 const Logotext = styled.div`
@@ -61,20 +71,22 @@ const Authentication = () => {
   const [openSignUp, setOpenSignUp] = useState(false);
   return (
     <Container>
-      <Logotext>
-        {/* <LogoImg src={Logo} /> */}
-        DecisionHub
-      </Logotext>
-      <WelcomeText>
-        {openSignUp
-          ? "Welcome to DecisionHub!"
-          : "Welcome back to DecisionHub!"}
-      </WelcomeText>
-      {openSignUp ? (
-        <SignUp setOpenSignUp={setOpenSignUp} />
-      ) : (
-        <SignIn setOpenSignUp={setOpenSignUp} />
-      )}
+      <Wrapper>
+        <Logotext>
+          {/* <LogoImg src={Logo} /> */}
+          DecisionHub
+        </Logotext>
+        <WelcomeText>
+          {openSignUp
+            ? "Welcome to DecisionHub!"
+            : "Welcome back to DecisionHub!"}
+        </WelcomeText>
+        {openSignUp ? (
+          <SignUp setOpenSignUp={setOpenSignUp} />
+        ) : (
+          <SignIn setOpenSignUp={setOpenSignUp} />
+        )}
+      </Wrapper>
     </Container>
   );
 };

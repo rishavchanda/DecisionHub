@@ -14,7 +14,7 @@ const Container = styled.div`
   @media (max-width: 768px) {
     padding: 6px 0px;
   }
-  background: ${({ theme }) => theme.background};
+  background: ${({ theme }) => theme.bg};
 `;
 
 const TopSection = styled.div`
@@ -63,14 +63,14 @@ const ItemTitle = styled.div`
   }
 `;
 
-const Dashboard = () => {
+const Dashboard = ({ setOpenNewRule }) => {
   // Hooks
   const { currentUser } = useSelector((state) => state.user);
   return (
     <Container>
       <TopSection>
         <Flex>
-          <Button>
+          <Button onClick={() => setOpenNewRule(true)}>
             <AddRounded />
             Create New Rule
           </Button>
