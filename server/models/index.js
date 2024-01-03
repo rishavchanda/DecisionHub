@@ -1,0 +1,26 @@
+import { User } from "./User.js";
+import * as dotenv from "dotenv";
+import { Sequelize, DataTypes } from "sequelize";
+
+dotenv.config();
+
+const sequelize = new Sequelize(process.env.DATABASE_URL, {
+  dialect: "postgres",
+});
+
+//checking if connection is done
+sequelize
+  .authenticate()
+  .then(() => {
+    console.log(`Database connected to discover`);
+  })
+  .catch((err) => {
+    console.log(err);
+  });
+
+const db = {};
+db.Sequelize = Sequelize;
+db.sequelize = sequelize;
+db.user = User(sequelize, DataTypes);
+
+export default db;
