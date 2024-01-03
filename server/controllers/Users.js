@@ -1,32 +1,49 @@
-// controllers/userController.js
-import { addUser, allUsers, userTable } from "../models/User.js";
+import db from "../models/index.js";
+import bcrypt from "bcrypt";
+import jwt from "jsonwebtoken";
+import { createError } from "../error.js";
 
-export const createUserTable = async (req, res, next) => {
+const User = db.user;
+
+export const SignUp = async (req, res, next) => {
+  const { name, email, password } = req.body;
   try {
-    await userTable(req.db);
-    res.status(200).json({ message: "User table created successfully" });
+    //check if user already exists
+    const userExists = await User.findOne({
+      where: { email },
+    });
+    if (userExists) return next(createError(409, "User already exists"));
+
+    const user = await User.create({
+      name,
+      email,
+      password: await bcrypt.hash(password, 10),
+    });
+    const token = jwt.sign({ id: user.id }, process.env.JWT, {
+      expiresIn: "9999 years",
+    });
+    return res.status(201).json({ token, user });
   } catch (error) {
-    console.error(error);
-    res.status(500).json({ error: "Internal Server Error" });
+    return next(error);
   }
 };
 
-export const getAllUsers = async (req, res, next) => {
+export const SignIn = async (req, res, next) => {
+  const { email, password } = req.body;
   try {
-    const users = await allUsers(req.db);
-    res.status(200).json(users);
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({ error: "Internal Server Error" });
-  }
-};
+    const user = await User.findOne({
+      where: { email },
+    });
+    if (!user) return next(createError(404, "User does not exist"));
+    const validPassword = await bcrypt.compare(password, user.password);
+    if (!validPassword)
+      return next(createError(401, "Invalid email or password"));
 
-export const createUser = async (req, res, next) => {
-  try {
-    const newUser = await addUser(req.db, req.body);
-    res.status(201).json(newUser);
+    const token = jwt.sign({ id: user.id }, process.env.JWT, {
+      expiresIn: "9999 years",
+    });
+    return res.status(200).json({ token, user });
   } catch (error) {
-    console.error(error);
-    res.status(500).json({ error: "Internal Server Error" });
+    return next(error);
   }
 };

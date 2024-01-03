@@ -13,6 +13,7 @@ import google from "../images/google.png";
 import { loginSuccess } from "../redux/reducers/userSlice";
 import { openSnackbar } from "../redux/reducers/snackbarSlice";
 import ForgetPassword from "./ForgetPassword";
+import { signIn } from "../api";
 
 const Container = styled.div`
   width: 100%;
@@ -236,85 +237,46 @@ const SignIn = (props) => {
     e.preventDefault();
 
     // If there is no error message, then submit the form
-    // if (!buttonDisabled) {
-    //   setLoading(true);
-    //   setButtonDisabled(true);
-    //   if (selectedOption === "admin") {
-    //     AdminLogin(formData)
-    //       .then((res) => {
-    //         if (res.status === 200) {
-    //           dispatch(loginSuccess(res.data));
-    //           dispatch(
-    //             openSnackbar({
-    //               message: "Login Successful",
-    //               severity: "success",
-    //             })
-    //           );
-    //           setLoading(false);
-    //           setButtonDisabled(false);
-    //           setErrorMessage({
-    //             ...errorMessage,
-    //             apierror: "",
-    //           });
-    //         }
-    //       })
-    //       .catch((err) => {
-    //         setButtonDisabled(false);
-    //         if (err.response) {
-    //           setLoading(false);
-    //           setErrorMessage({
-    //             ...errorMessage,
-    //             apierror: err.response.data.message,
-    //           });
-    //         } else {
-    //           setLoading(false);
-    //           dispatch(
-    //             openSnackbar({
-    //               message: err.message,
-    //               severity: "error",
-    //             })
-    //           );
-    //         }
-    //       });
-    //   } else {
-    //     EmployeeLogin(formData)
-    //       .then((res) => {
-    //         if (res.status === 200) {
-    //           dispatch(loginSuccess(res.data));
-    //           dispatch(
-    //             openSnackbar({
-    //               message: "Login Successful",
-    //               severity: "success",
-    //             })
-    //           );
-    //           setLoading(false);
-    //           setButtonDisabled(false);
-    //           setErrorMessage({
-    //             ...errorMessage,
-    //             apierror: "",
-    //           });
-    //         }
-    //       })
-    //       .catch((err) => {
-    //         setButtonDisabled(false);
-    //         if (err.response) {
-    //           setLoading(false);
-    //           setErrorMessage({
-    //             ...errorMessage,
-    //             apierror: err.response.data.message,
-    //           });
-    //         } else {
-    //           setLoading(false);
-    //           dispatch(
-    //             openSnackbar({
-    //               message: err.message,
-    //               severity: "error",
-    //             })
-    //           );
-    //         }
-    //       });
-    //   }
-    // }
+    if (!buttonDisabled) {
+      setLoading(true);
+      setButtonDisabled(true);
+      signIn(formData)
+        .then((res) => {
+          if (res.status === 200) {
+            dispatch(loginSuccess(res.data));
+            dispatch(
+              openSnackbar({
+                message: "Login Successful",
+                severity: "success",
+              })
+            );
+            setLoading(false);
+            setButtonDisabled(false);
+            setErrorMessage({
+              ...errorMessage,
+              apierror: "",
+            });
+          }
+        })
+        .catch((err) => {
+          setButtonDisabled(false);
+          if (err.response) {
+            setLoading(false);
+            setErrorMessage({
+              ...errorMessage,
+              apierror: err.response.data.message,
+            });
+          } else {
+            setLoading(false);
+            dispatch(
+              openSnackbar({
+                message: err.message,
+                severity: "error",
+              })
+            );
+          }
+        });
+    }
   };
 
   return (
