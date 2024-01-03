@@ -1,6 +1,7 @@
 import { User } from "./User.js";
 import * as dotenv from "dotenv";
 import { Sequelize, DataTypes } from "sequelize";
+import { Rule } from "./Rule.js";
 
 dotenv.config();
 
@@ -22,5 +23,10 @@ const db = {};
 db.Sequelize = Sequelize;
 db.sequelize = sequelize;
 db.user = User(sequelize, DataTypes);
+db.rule = Rule(sequelize, DataTypes);
+
+//associations
+db.rule.belongsTo(db.user, { foreignKey: "userId" });
+db.user.hasMany(db.rule, { foreignKey: "userId" });
 
 export default db;

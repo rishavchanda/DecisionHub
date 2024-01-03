@@ -7,7 +7,7 @@ import Navbar from "./components/Navbar";
 import Dashboard from "./pages/Dashboard";
 import Rules from "./pages/Rules";
 import Test from "./pages/Test";
-import { setDarkMode } from "./redux/reducers/userSlice";
+import { logout, setDarkMode } from "./redux/reducers/userSlice";
 import { useDispatch, useSelector } from "react-redux";
 import Authentication from "./pages/Authentication";
 import NewRuleForm from "./components/NewRuleForm";

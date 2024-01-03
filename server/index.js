@@ -1,6 +1,7 @@
 import express from "express";
 import * as dotenv from "dotenv";
 import userRoutes from "./routes/User.js";
+import ruleRoutes from "./routes/Rule.js";
 import cors from "cors";
 import morgan from "morgan";
 import db from "./models/index.js";
@@ -25,5 +26,6 @@ app.use(express.json());
 // });
 
 app.use("/api/user", userRoutes);
+app.use("/api/rule", ruleRoutes);
 
 app.listen(PORT, () => console.log(`Server listening to port ${PORT}`));

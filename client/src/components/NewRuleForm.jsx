@@ -10,6 +10,7 @@ import React, { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import styled from "styled-components";
 import TextInput from "./Inputs/TextInput";
+import { createRule } from "../api";
 
 const Body = styled.div`
   width: 100%;
@@ -91,13 +92,30 @@ const Button = styled.button`
 `;
 
 const NewRuleForm = ({ setOpenNewRule }) => {
+  const flowData = {
+    nodes: [
+      {
+        id: "1",
+        type: "attributeNode",
+        data: {
+          label: "Loan Interest Rate",
+          inputAttributes: ["df"],
+          resultAttributes: ["w"],
+        },
+        position: { x: 234, y: 50 },
+      },
+    ],
+    edges: [],
+  };
   const [ruleData, setRuleData] = useState({
     title: "",
     description: "",
     inputAttributes: [],
     outputAttributes: [],
+    condition: JSON.stringify(flowData),
   });
   const [buttonDisabled, setButtonDisabled] = useState(true);
+  const [loading, setLoading] = useState(false);
 
   const handelInputs = (e) => {
     const { name, value } = e.target;
@@ -120,6 +138,39 @@ const NewRuleForm = ({ setOpenNewRule }) => {
     const temp = [...ruleData[name]];
     temp.splice(index, 1);
     setRuleData({ ...ruleData, [name]: temp });
+  };
+
+  useEffect(() => {
+    if (
+      ruleData.title !== "" &&
+      ruleData.description !== "" &&
+      ruleData.inputAttributes.length !== 0 &&
+      ruleData.outputAttributes.length !== 0
+    ) {
+      setButtonDisabled(false);
+    } else {
+      setButtonDisabled(true);
+    }
+  }, [ruleData]);
+
+  const handelFormSubmit = async (e) => {
+    e.preventDefault();
+    setLoading(true);
+    setButtonDisabled(true);
+    const token = localStorage.getItem("decisionhub-token-auth-x4");
+    await createRule(ruleData, token)
+      .then((res) => {
+        // console.log(JSON.parse(res.data.condition));
+        setLoading(false);
+        setOpenNewRule(false);
+        setButtonDisabled(false);
+      })
+      .catch((err) => {
+        console.log(err);
+        setLoading(false);
+        setOpenNewRule(false);
+        setButtonDisabled(false);
+      });
   };
 
   return (
@@ -190,7 +241,18 @@ const NewRuleForm = ({ setOpenNewRule }) => {
               removeChip={removeChip}
             />
           </Form>
-          <Button>Continue</Button>
+          <Button
+            onClick={(e) => {
+              handelFormSubmit(e);
+            }}
+            buttonDisabled={buttonDisabled}
+          >
+            {loading ? (
+              <CircularProgress size={24} color="inherit" />
+            ) : (
+              <>Continue</>
+            )}
+          </Button>
         </Container>
       </Modal>
     </Body>
