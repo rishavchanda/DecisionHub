@@ -1,0 +1,22 @@
+{
+  "name": "decisionhub",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "type": "module",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "nodemon index.js"
+  },
+  "author": "Rishav & Upasana",
+  "license": "ISC",
+  "dependencies": {
+    "dotenv": "^16.3.1",
+    "express": "^4.18.2",
+    "nodemon": "^3.0.2",
+    "path": "^0.12.7",
+    "pg": "^8.11.3",
+    "pg-promise": "^11.5.4",
+    "typeorm": "^0.3.17"
+  }
+}
