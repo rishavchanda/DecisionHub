@@ -36,8 +36,7 @@ export const SignIn = async (req, res, next) => {
     });
     if (!user) return next(createError(404, "User does not exist"));
     const validPassword = await bcrypt.compare(password, user.password);
-    if (!validPassword)
-      return next(createError(401, "Invalid email or password"));
+    if (!validPassword) return next(createError(401, "Invalid password"));
 
     const token = jwt.sign({ id: user.id }, process.env.JWT, {
       expiresIn: "9999 years",
