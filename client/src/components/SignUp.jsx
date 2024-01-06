@@ -11,7 +11,7 @@ import {
 import { CircularProgress } from "@mui/material";
 import { openSnackbar } from "../redux/reducers/snackbarSlice";
 import { loginSuccess } from "../redux/reducers/userSlice";
-// import { AdminRegister, findUserByEmail } from "../api";
+import { signUp, findUserByEmail } from "../api";
 import google from "../images/google.png";
 import OTP from "./OTP";
 
@@ -156,12 +156,12 @@ const SignUp = ({ setOpenSignUp }) => {
   const [buttonDisabled, setButtonDisabled] = useState(true);
   const [loading, setLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState({
-    username: "",
+    name: "",
     email: "",
     password: "",
   }); // error message for validation checks.
   const [formData, setFormData] = useState({
-    username: "",
+    name: "",
     email: "",
     password: "",
   });
@@ -236,23 +236,23 @@ const SignUp = ({ setOpenSignUp }) => {
       }
     }
 
-    if (name === "username") {
+    if (name === "name") {
       if (!value) {
         setButtonDisabled(true);
       }
-      // Username validation regex pattern
-      const usernameRegex = /^[A-Za-z0-9\s]+$/;
+      // name validation regex pattern
+      const nameRegex = /^[A-Za-z0-9\s]+$/;
 
-      if (value && !usernameRegex.test(value)) {
+      if (value && !nameRegex.test(value)) {
         setErrorMessage({
           ...errorMessage,
-          username: "Username must contain only letters, numbers and spaces",
+          name: "name must contain only letters, numbers and spaces",
         });
         setButtonDisabled(true);
       } else {
         setErrorMessage({
           ...errorMessage,
-          username: "",
+          name: "",
         });
       }
     }
@@ -282,10 +282,10 @@ const SignUp = ({ setOpenSignUp }) => {
   useEffect(() => {
     // If there is no error message and all the fields are filled, then enable the button
     if (
-      !errorMessage.username &&
+      !errorMessage.name &&
       !errorMessage.email &&
       !errorMessage.password &&
-      formData.username &&
+      formData.name &&
       formData.email &&
       formData.password &&
       confirmPassword === formData.password
@@ -303,43 +303,39 @@ const SignUp = ({ setOpenSignUp }) => {
     if (!buttonDisabled) {
       setLoading(true);
       setButtonDisabled(true);
-      //   findUserByEmail(formData.email)
-      //     .then((res) => {
-      //       if (res.status === 200) {
-      //         setButtonDisabled(false);
-      //         setLoading(false);
-      //         setErrorMessage({
-      //           ...errorMessage,
-      //           apierror: "Email already in use",
-      //         });
-      //       } else if (res.status === 402) {
-      //         setShowOtp(true);
-      //         setButtonDisabled(true);
-      //         setLoading(false);
-      //         setErrorMessage({
-      //           ...errorMessage,
-      //           apierror: "",
-      //         });
-      //       }
-      //     })
-      //     .catch((err) => {
-      //       setButtonDisabled(false);
-      //       if (err.response) {
-      //         setLoading(false);
-      //         setErrorMessage({
-      //           ...errorMessage,
-      //           apierror: err.response.data.message,
-      //         });
-      //       } else {
-      //         setLoading(false);
-      //         dispatch(
-      //           openSnackbar({
-      //             message: err.message,
-      //             severity: "error",
-      //           })
-      //         );
-      //       }
-      //     });
+      findUserByEmail({ email: formData.email })
+        .then((res) => {
+          if (res.status === 200) {
+            setButtonDisabled(false);
+            setLoading(false);
+            setErrorMessage({
+              ...errorMessage,
+              apierror: "Email already in use",
+            });
+          }
+        })
+        .catch((err) => {
+          setButtonDisabled(false);
+          if (err.response) {
+            if (err.response.status === 404) {
+              setShowOtp(true);
+              setButtonDisabled(true);
+              setLoading(false);
+              setErrorMessage({
+                ...errorMessage,
+                apierror: "",
+              });
+            }
+          } else {
+            setLoading(false);
+            dispatch(
+              openSnackbar({
+                message: err.message,
+                severity: "error",
+              })
+            );
+          }
+        });
     }
   };
 
@@ -347,46 +343,44 @@ const SignUp = ({ setOpenSignUp }) => {
     setShowOtp(false);
     setLoading(true);
     setButtonDisabled(true);
-    // AdminRegister(formData)
-    //   .then((res) => {
-    //     if (res.status === 200) {
-    //       dispatch(loginSuccess(res.data));
-    //       dispatch(
-    //         openSnackbar({
-    //           message: "Login Successful",
-    //           severity: "success",
-    //         })
-    //       );
-    //       setLoading(false);
-    //       setButtonDisabled(false);
-    //       setErrorMessage({
-    //         ...errorMessage,
-    //         apierror: "",
-    //       });
-    //     }
-    //   })
-    //   .catch((err) => {
-    //     setLoading(false);
-    //     setButtonDisabled(false);
-    //     if (err.response) {
-    //       setErrorMessage({
-    //         ...errorMessage,
-    //         apierror: err.response.data.message,
-    //       });
-    //     } else {
-    //       setErrorMessage({
-    //         ...errorMessage,
-    //         apierror: err.message,
-    //       });
-    //     }
-    //   });
+    signUp(formData)
+      .then((res) => {
+        dispatch(loginSuccess(res.data));
+        dispatch(
+          openSnackbar({
+            message: "Login Successful",
+            severity: "success",
+          })
+        );
+        setLoading(false);
+        setButtonDisabled(false);
+        setErrorMessage({
+          ...errorMessage,
+          apierror: "",
+        });
+      })
+      .catch((err) => {
+        setLoading(false);
+        setButtonDisabled(false);
+        if (err.response) {
+          setErrorMessage({
+            ...errorMessage,
+            apierror: err.response.data.message,
+          });
+        } else {
+          setErrorMessage({
+            ...errorMessage,
+            apierror: err.message,
+          });
+        }
+      });
   };
 
   useEffect(() => {
     if (otpVerified) {
       createAccount();
     }
-  });
+  }, [otpVerified]);
 
   return (
     <Container data-testid="signup">
@@ -397,17 +391,17 @@ const SignUp = ({ setOpenSignUp }) => {
             <OutlinedInput>
               <PersonRounded />
               <Input
-                placeholder="Username"
-                name="username"
-                value={formData.username}
+                placeholder="Full Name"
+                name="name"
+                value={formData.name}
                 onChange={handleInputChange}
                 maxLength={16}
               />
             </OutlinedInput>
             {
               // Show error message if there is one
-              errorMessage?.username && (
-                <Error style={{ color: "red" }}>{errorMessage.username}</Error>
+              errorMessage?.name && (
+                <Error style={{ color: "red" }}>{errorMessage.name}</Error>
               )
             }
             <OutlinedInput>
