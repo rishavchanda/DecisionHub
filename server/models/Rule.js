@@ -10,7 +10,7 @@ export const Rule = (sequelize, DataTypes) => {
         type: DataTypes.STRING,
         allowNull: false,
       },
-      descryption: {
+      description: {
         type: DataTypes.STRING,
         allowNull: true,
       },
