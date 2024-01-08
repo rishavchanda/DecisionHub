@@ -50,6 +50,8 @@ export const SignIn = async (req, res, next) => {
       where: { email },
     });
     if (!user) return next(createError(404, "User does not exist"));
+    if (user.googleAuth)
+      return next(createError(401, "Please login with google"));
     const validPassword = await bcrypt.compare(password, user.password);
     if (!validPassword) return next(createError(401, "Invalid password"));
 
@@ -59,6 +61,42 @@ export const SignIn = async (req, res, next) => {
     return res.status(200).json({ token, user });
   } catch (error) {
     return next(error);
+  }
+};
+
+export const googleAuthSignIn = async (req, res, next) => {
+  try {
+    const user = await User.findOne({
+      where: {
+        email: req.body.email,
+      },
+    });
+    if (!user) {
+      try {
+        const user = new User({ ...req.body, googleAuth: true });
+        await user.save();
+        const token = jwt.sign({ id: user.id }, process.env.JWT, {
+          expiresIn: "9999 years",
+        });
+        res.status(200).json({ token, user: user });
+      } catch (err) {
+        next(createError(err.status, err.message));
+      }
+    } else if (user.googleAuth) {
+      const token = jwt.sign({ id: user._id }, process.env.JWT, {
+        expiresIn: "9999 years",
+      });
+      res.status(200).json({ token, user });
+    } else if (user.googleAuth === false) {
+      return next(
+        createError(
+          402,
+          "User already exists with this email can't do google auth"
+        )
+      );
+    }
+  } catch (err) {
+    next(err);
   }
 };
 
@@ -99,7 +137,7 @@ export const generateOTP = async (req, res, next) => {
 
   const resetPasswordOtp = {
     to: email,
-    subject: "Trackify Reset Password Verification",
+    subject: "DecisionHub Reset Password Verification",
     html: `
             <div style="font-family: Poppins, sans-serif; max-width: 600px; margin: 0 auto; background-color: #f9f9f9; padding: 20px; border: 1px solid #ccc; border-radius: 5px;">
                 <h1 style="font-size: 22px; font-weight: 500; color: #007AFF; text-align: center; margin-bottom: 30px;">Reset Your DecisionHub Account Password</h1>
@@ -147,4 +185,52 @@ export const verifyOTP = async (req, res, next) => {
     return res.status(200).send({ message: "OTP verified" });
   }
   return next(createError(403, "Wrong OTP"));
+};
+
+export const createResetSession = async (req, res, next) => {
+  if (req.app.locals.resetSession) {
+    req.app.locals.resetSession = false;
+    return res.status(200).send({ message: "Access granted" });
+  }
+
+  return res.status(400).send({ message: "Session expired" });
+};
+
+export const resetPassword = async (req, res, next) => {
+  if (!req.app.locals.resetSession)
+    return res.status(440).send({ message: "Session expired" });
+
+  const { email, password } = req.body;
+
+  try {
+    const user = await User.findOne({
+      where: {
+        email: email,
+      },
+    });
+
+    if (user) {
+      const salt = bcrypt.genSaltSync(10);
+      const hashedPassword = bcrypt.hashSync(password, salt);
+
+      // Update the user's password using Sequelize
+      await User.update(
+        { password: hashedPassword },
+        {
+          where: {
+            email: email,
+          },
+        }
+      );
+
+      req.app.locals.resetSession = false;
+      return res.status(200).send({
+        message: "Password reset successful",
+      });
+    } else {
+      next(createError("User not found", 404));
+    }
+  } catch (err) {
+    next(createError(err.message, err.status));
+  }
 };

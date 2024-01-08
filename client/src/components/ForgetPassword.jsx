@@ -12,6 +12,7 @@ import {
 import { openSnackbar } from "../redux/reducers/snackbarSlice";
 // import { findUserByEmail, resetPassword } from "../api";
 import OTP from "./OTP";
+import { findUserByEmail, resetPassword } from "../api";
 
 const Container = styled.div`
   position: relative;
@@ -110,31 +111,31 @@ const ForgetPassword = ({ setShowForgotPassword }) => {
     if (!resetDisabled) {
       setResetDisabled(true);
       setLoading(true);
-      //   findUserByEmail(formData.email)
-      //     .then((res) => {
-      //       if (res.status === 200) {
-      //         setShowOTP(true);
-      //         setResetDisabled(false);
-      //         setLoading(false);
-      //       }
-      //     })
-      //     .catch((err) => {
-      //       setResetDisabled(false);
-      //       setLoading(false);
-      //       if (err.response) {
-      //         setErrorMessage({
-      //           ...errorMessage,
-      //           apierror: err.response.data.message,
-      //         });
-      //       } else {
-      //         dispatch(
-      //           openSnackbar({
-      //             message: err.message,
-      //             severity: "error",
-      //           })
-      //         );
-      //       }
-      //     });
+      findUserByEmail({ email: formData.email })
+        .then((res) => {
+          if (res.status === 200) {
+            setShowOTP(true);
+            setResetDisabled(false);
+            setLoading(false);
+          }
+        })
+        .catch((err) => {
+          setResetDisabled(false);
+          setLoading(false);
+          if (err.response) {
+            setErrorMessage({
+              ...errorMessage,
+              apierror: err.response.data.message,
+            });
+          } else {
+            dispatch(
+              openSnackbar({
+                message: err.message,
+                severity: "error",
+              })
+            );
+          }
+        });
     }
   };
 
@@ -257,37 +258,37 @@ const ForgetPassword = ({ setShowForgotPassword }) => {
     setShowOTP(false);
     setLoading(true);
     setResetDisabled(true);
-    // await resetPassword(formData.email, formData.password)
-    //   .then((res) => {
-    //     if (res.status === 200) {
-    //       dispatch(
-    //         openSnackbar({
-    //           message: "Password Reset Successfully",
-    //           severity: "success",
-    //         })
-    //       );
-    //       setShowForgotPassword(false);
-    //       setLoading(true);
-    //       setOtpVerified(false);
-    //     }
-    //   })
-    //   .catch((err) => {
-    //     dispatch(
-    //       openSnackbar({
-    //         message: err.message,
-    //         severity: "error",
-    //       })
-    //     );
-    //     setShowOTP(false);
-    //     setOtpVerified(false);
-    //   });
+    await resetPassword({email: formData.email, password: formData.password})
+      .then((res) => {
+        if (res.status === 200) {
+          dispatch(
+            openSnackbar({
+              message: "Password Reset Successfully",
+              severity: "success",
+            })
+          );
+          setShowForgotPassword(false);
+          setLoading(true);
+          setOtpVerified(false);
+        }
+      })
+      .catch((err) => {
+        dispatch(
+          openSnackbar({
+            message: err.message,
+            severity: "error",
+          })
+        );
+        setShowOTP(false);
+        setOtpVerified(false);
+      });
   };
 
   useEffect(() => {
     if (otpVerified) {
       performResetPassword();
     }
-  });
+  }, [otpVerified]);
 
   return (
     <Container>
@@ -389,7 +390,7 @@ const ForgetPassword = ({ setShowForgotPassword }) => {
       ) : (
         <OTP
           email={formData.email}
-          name="User"
+          name={formData.email}
           otpVerified={otpVerified}
           setOtpVerified={setOtpVerified}
           reason="FORGOTPASSWORD"

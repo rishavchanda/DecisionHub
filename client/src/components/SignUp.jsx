@@ -513,7 +513,7 @@ const SignUp = ({ setOpenSignUp }) => {
       ) : (
         <OTP
           email={formData.email}
-          name={formData.email}
+          name={formData.name}
           otpVerified={otpVerified}
           setOtpVerified={setOtpVerified}
         />
