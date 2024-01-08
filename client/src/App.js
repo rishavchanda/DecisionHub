@@ -10,7 +10,7 @@ import Test from "./pages/Test";
 import { logout, setDarkMode } from "./redux/reducers/userSlice";
 import { useDispatch, useSelector } from "react-redux";
 import Authentication from "./pages/Authentication";
-import NewRuleForm from "./components/NewRuleForm";
+import NewRuleForm from "./components/DialogForms/NewRuleForm";
 
 const Container = styled.div`
   width: 100%;
@@ -66,7 +66,12 @@ function App() {
                 <Route path="/rules" exact element={<Rules />} />
                 <Route path="/test" exact element={<Test />} />
               </Routes>
-              {openNewRule && <NewRuleForm setOpenNewRule={setOpenNewRule} />}
+              {openNewRule && (
+                <NewRuleForm
+                  setOpenNewRule={setOpenNewRule}
+                  updateForm={{ update: false }}
+                />
+              )}
             </Wrapper>
           </Container>
         ) : (

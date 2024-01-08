@@ -7,9 +7,9 @@ import ReactFlow, {
   Panel,
 } from "reactflow";
 import "reactflow/dist/style.css";
-import ConditionalNode from "../components/ConditionalNode";
-import AttributeNode from "../components/ArrtibuteNode";
-import OutputNode from "../components/OutputNode";
+import ConditionalNode from "../components/Nodes/ConditionalNode";
+import AttributeNode from "../components/Nodes/ArrtibuteNode";
+import OutputNode from "../components/Nodes/OutputNode";
 import DownloadButton from "../components/DownloadButton";
 import styled, { useTheme } from "styled-components";
 import { MenuItem, Select } from "@mui/material";
@@ -50,7 +50,7 @@ const inputAttributes = [
   "annual_income",
   "credit_score",
 ];
-const resultAttributes = ["intrest_rate"];
+const outputAttributes = ["intrest_rate"];
 
 const nodeTypes = {
   attributeNode: AttributeNode,
@@ -65,7 +65,7 @@ const flowData = {
       data: {
         label: "Loan Interest Rate",
         inputAttributes: inputAttributes,
-        resultAttributes: resultAttributes,
+        outputAttributes: outputAttributes,
       },
       position: { x: 234, y: 50 },
     },

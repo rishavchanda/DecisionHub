@@ -14,9 +14,9 @@ import {
   DeleteOutlineRounded,
 } from "@mui/icons-material";
 import Conditions from "./Conditions";
-import { checkConditionType, logicalOperations } from "../utils/data";
+import { checkConditionType, logicalOperations } from "../../utils/data";
 import { useDispatch, useSelector } from "react-redux";
-import { ruleUpdated } from "../redux/reducers/rulesSlice";
+import { ruleUpdated } from "../../redux/reducers/rulesSlice";
 
 const Wrapper = styled.div`
   display: flex;
@@ -212,7 +212,7 @@ const addNewConditionalNode = (
     data: {
       label: "New Condition Node",
       inputAttributes: data.inputAttributes,
-      resultAttributes: data.resultAttributes,
+      outputAttributes: data.outputAttributes,
       rule: "Any",
       conditions: [
         {
@@ -277,7 +277,7 @@ const addNewOutputNode = (currentNodeId, sourceHandle, reactFlow, data) => {
     data: {
       label: "New Condition Node",
       inputAttributes: data.inputAttributes,
-      resultAttributes: data.resultAttributes,
+      outputAttributes: data.outputAttributes,
       outputFields: [{ field: "", value: "" }],
     },
     position: calculateNodePosition(
@@ -806,7 +806,7 @@ function ConditionalNode({ id, data }) {
                   condition={condition}
                   conditionIndex={index}
                   inputAttribute={data.inputAttributes}
-                  resultAttribute={data.resultAttributes}
+                  resultAttribute={data.outputAttributes}
                   withBoolean={condition.boolean}
                   booleanDisabled={index === data.conditions.length - 1}
                   deleteCondition={deleteCondition}

@@ -9,8 +9,8 @@ import { CircularProgress, Modal } from "@mui/material";
 import React, { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import styled from "styled-components";
-import TextInput from "./Inputs/TextInput";
-import { createRule } from "../api";
+import TextInput from "../Inputs/TextInput";
+import { createRule } from "../../api";
 
 const Body = styled.div`
   width: 100%;
@@ -91,7 +91,8 @@ const Button = styled.button`
   `}
 `;
 
-const NewRuleForm = ({ setOpenNewRule }) => {
+const NewRuleForm = ({ setOpenNewRule, updateForm }) => {
+  console.log(updateForm);
   const flowData = {
     nodes: [
       {
@@ -107,13 +108,17 @@ const NewRuleForm = ({ setOpenNewRule }) => {
     ],
     edges: [],
   };
-  const [ruleData, setRuleData] = useState({
-    title: "",
-    description: "",
-    inputAttributes: [],
-    outputAttributes: [],
-    condition: JSON.stringify(flowData),
-  });
+  const [ruleData, setRuleData] = useState(
+    updateForm.update
+      ? updateForm.data
+      : {
+          title: "",
+          description: "",
+          inputAttributes: [],
+          outputAttributes: [],
+          condition: JSON.stringify(flowData),
+        }
+  );
   const [buttonDisabled, setButtonDisabled] = useState(true);
   const [loading, setLoading] = useState(false);
 
@@ -142,10 +147,10 @@ const NewRuleForm = ({ setOpenNewRule }) => {
 
   useEffect(() => {
     if (
-      ruleData.title !== "" &&
-      ruleData.description !== "" &&
-      ruleData.inputAttributes.length !== 0 &&
-      ruleData.outputAttributes.length !== 0
+      ruleData?.title !== "" &&
+      ruleData?.description !== "" &&
+      ruleData?.inputAttributes?.length !== 0 &&
+      ruleData?.outputAttributes?.length !== 0
     ) {
       setButtonDisabled(false);
     } else {
@@ -158,19 +163,22 @@ const NewRuleForm = ({ setOpenNewRule }) => {
     setLoading(true);
     setButtonDisabled(true);
     const token = localStorage.getItem("decisionhub-token-auth-x4");
-    await createRule(ruleData, token)
-      .then((res) => {
-        // console.log(JSON.parse(res.data.condition));
-        setLoading(false);
-        setOpenNewRule(false);
-        setButtonDisabled(false);
-      })
-      .catch((err) => {
-        console.log(err);
-        setLoading(false);
-        setOpenNewRule(false);
-        setButtonDisabled(false);
-      });
+    if (updateForm.update) {
+    } else {
+      await createRule(ruleData, token)
+        .then((res) => {
+          // console.log(JSON.parse(res.data.condition));
+          setLoading(false);
+          setOpenNewRule(false);
+          setButtonDisabled(false);
+        })
+        .catch((err) => {
+          console.log(err);
+          setLoading(false);
+          setOpenNewRule(false);
+          setButtonDisabled(false);
+        });
+    }
   };
 
   return (
@@ -189,7 +197,9 @@ const NewRuleForm = ({ setOpenNewRule }) => {
       >
         <Container>
           <TopBar>
-            <Title>Create New Rule</Title>
+            <Title>
+              {updateForm.update ? "Update Rule" : "Create New Rule"}
+            </Title>
             <Desc>Add all rule details</Desc>
           </TopBar>
           <CloseRounded
@@ -250,7 +260,7 @@ const NewRuleForm = ({ setOpenNewRule }) => {
             {loading ? (
               <CircularProgress size={24} color="inherit" />
             ) : (
-              <>Continue</>
+              <>{updateForm.update ? "Update" : "Continue"}</>
             )}
           </Button>
         </Container>
