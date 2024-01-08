@@ -5,7 +5,7 @@ import OtpInput from "react-otp-input";
 import CircularProgress from "@mui/material/CircularProgress";
 import { useDispatch } from "react-redux";
 import { openSnackbar } from "../redux/reducers/snackbarSlice";
-// import { generateOtp, verifyOtp } from "../api";
+import { generateOtp, verifyOtp } from "../api";
 
 const Title = styled.h1`
   font-size: 28px;
@@ -133,40 +133,40 @@ const OTP = ({ email, name, setOtpVerified, reason }) => {
 
   // Sends the otp to the user email id
   const sendOtp = async () => {
-    // await generateOtp(email, name, reason)
-    //   .then((res) => {
-    //     if (res.status === 200) {
-    //       dispatch(
-    //         openSnackbar({
-    //           message: "OTP sent Successfully",
-    //           severity: "success",
-    //         })
-    //       );
-    //       setDisabled(true);
-    //       setOtp("");
-    //       setOtpError("");
-    //       setOtpLoading(false);
-    //       setOtpSent(true);
-    //     } else {
-    //       dispatch(
-    //         openSnackbar({
-    //           message: res.status,
-    //           severity: "error",
-    //         })
-    //       );
-    //       setOtp("");
-    //       setOtpError("");
-    //       setOtpLoading(false);
-    //     }
-    //   })
-    //   .catch((err) => {
-    //     dispatch(
-    //       openSnackbar({
-    //         message: err.message,
-    //         severity: "error",
-    //       })
-    //     );
-    //   });
+    await generateOtp(email, name, reason)
+      .then((res) => {
+        if (res.status === 200) {
+          dispatch(
+            openSnackbar({
+              message: "OTP sent Successfully",
+              severity: "success",
+            })
+          );
+          setDisabled(true);
+          setOtp("");
+          setOtpError("");
+          setOtpLoading(false);
+          setOtpSent(true);
+        } else {
+          dispatch(
+            openSnackbar({
+              message: res.status,
+              severity: "error",
+            })
+          );
+          setOtp("");
+          setOtpError("");
+          setOtpLoading(false);
+        }
+      })
+      .catch((err) => {
+        dispatch(
+          openSnackbar({
+            message: err.message,
+            severity: "error",
+          })
+        );
+      });
   };
 
   const resendOtp = () => {
@@ -176,42 +176,42 @@ const OTP = ({ email, name, setOtpVerified, reason }) => {
   };
 
   // Validate the entered otp
-  const validateOtp = () => {
+  const validateOtp = async () => {
     setOtpLoading(true);
     setDisabled(true);
-    // verifyOtp(otp)
-    //   .then((res) => {
-    //     if (res.status === 200) {
-    //       setOtpVerified(true);
-    //       setOtp("");
-    //       setOtpError("");
-    //       setDisabled(false);
-    //       setOtpLoading(false);
-    //     }
-    //   })
-    //   .catch((err) => {
-    //     if (err.response) {
-    //       setOtpError(err.response.data.message);
-    //       setDisabled(false);
-    //       setOtpLoading(false);
-    //     } else {
-    //       dispatch(
-    //         openSnackbar({
-    //           message: err.message,
-    //           severity: "error",
-    //         })
-    //       );
-    //       setOtpError(err.message);
-    //     }
-    //     setDisabled(false);
-    //     setOtpLoading(false);
-    //   });
+    await verifyOtp(otp)
+      .then((res) => {
+        if (res.status === 200) {
+          setOtpVerified(true);
+          setOtp("");
+          setOtpError("");
+          setDisabled(false);
+          setOtpLoading(false);
+        }
+      })
+      .catch((err) => {
+        if (err.response) {
+          setOtpError(err.response.data.message);
+          setDisabled(false);
+          setOtpLoading(false);
+        } else {
+          dispatch(
+            openSnackbar({
+              message: err.message,
+              severity: "error",
+            })
+          );
+          setOtpError(err.message);
+        }
+        setDisabled(false);
+        setOtpLoading(false);
+      });
   };
 
   useEffect(() => {
     clearTimer(getDeadTime());
     sendOtp();
-  });
+  }, []);
 
   // Check if the timer is 00:00 then hide the timer
   useEffect(() => {

@@ -379,11 +379,11 @@ const Sidebar = ({
                 width: "32px",
                 fontSize: "12px",
                 borderRadius: "6px",
-                background: generateColor("R"),
+                background: generateColor(currentUser?.name),
               }}
               src={currentUser?.img}
             >
-              {currentUser?.name[0]}
+              {currentUser && currentUser?.name[0]}
             </Avatar>
           </NavLinkItem>
         ) : (
@@ -405,11 +405,11 @@ const Sidebar = ({
                 width: "32px",
                 fontSize: "12px",
                 borderRadius: "6px",
-                background: generateColor("R"),
+                background: generateColor(currentUser?.name),
               }}
               src={currentUser?.img}
             >
-              {currentUser?.name[0]}
+              {currentUser && currentUser?.name[0]}
             </Avatar>
             <ProfileDetails>
               {currentUser?.name}

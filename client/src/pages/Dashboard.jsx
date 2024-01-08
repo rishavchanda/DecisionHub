@@ -2,6 +2,7 @@ import { AddRounded, RuleRounded } from "@mui/icons-material";
 import React from "react";
 import { useSelector } from "react-redux";
 import styled from "styled-components";
+import RulesCard from "../components/cards/RulesCard";
 
 const Container = styled.div`
   padding: 20px 30px;
@@ -57,10 +58,16 @@ const ItemTitle = styled.div`
   font-size: ${({ fontSize }) => fontSize || "22px"};
   font-weight: 500;
   color: ${({ theme }) => theme.text_primary};
-  margin-bottom: 16px;
   @media (max-width: 768px) {
     font-size: ${({ smallfontSize }) => smallfontSize || "18px"};
   }
+`;
+
+const CardWrapper = styled.div`
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(272px, 1fr));
+  grid-gap: 16px 16px;
+  margin-bottom: 20px;
 `;
 
 const Dashboard = ({ setOpenNewRule }) => {
@@ -81,6 +88,21 @@ const Dashboard = ({ setOpenNewRule }) => {
         </Flex>
       </TopSection>
       <ItemTitle>Recent Activity</ItemTitle>
+      <CardWrapper>
+        <RulesCard />
+        <RulesCard />
+        <RulesCard />
+        <RulesCard />
+        <RulesCard />
+      </CardWrapper>
+      <ItemTitle>New Rules</ItemTitle>
+      <CardWrapper>
+        <RulesCard />
+        <RulesCard />
+        <RulesCard />
+        <RulesCard />
+        <RulesCard />
+      </CardWrapper>
     </Container>
   );
 };

@@ -16,6 +16,10 @@ export const User = (sequelize, DataTypes) => {
         type: DataTypes.STRING,
         allowNull: true,
       },
+      img: {
+        type: DataTypes.STRING,
+        allowNull: true,
+      },
       googleAuth: {
         type: DataTypes.BOOLEAN,
         allowNull: false,
