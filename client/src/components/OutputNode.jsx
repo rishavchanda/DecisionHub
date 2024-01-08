@@ -27,7 +27,7 @@ const NodeHeader = styled.div`
   justify-content: center;
   align-items: center;
   padding: 14px 16px;
-  background: ${({ theme }) => theme.text_secondary + 20};
+  background: ${({ theme }) => theme.primary};
   gap: 16px;
   border-radius: 8px 8px 0px 0px;
 `;
@@ -243,14 +243,13 @@ const OutputNode = ({ id, data, outputAttributes }) => {
         ></NodeTitle>
         <OutlineWrapper
           style={{
-            borderColor: theme.red,
-            color: theme.red,
+            borderWidth: 2,
             padding: "6px 8px",
             cursor: "pointer !important",
           }}
           onClick={() => deleteNode()}
         >
-          <DeleteRounded sx={{ fontSize: "14px", color: theme.red }} />
+          <DeleteRounded sx={{ fontSize: "14px" }} />
           Delete
         </OutlineWrapper>
       </NodeHeader>

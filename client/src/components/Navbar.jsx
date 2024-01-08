@@ -185,7 +185,7 @@ const Navbar = ({ setMenuOpen, menuOpen }) => {
           src={currentUser?.img}
           style={{
             fontSize: "16px",
-            background: generateColor(currentUser?.name[0]),
+            background: generateColor(currentUser?.name),
           }}
         >
           {currentUser?.name[0]}

@@ -13,7 +13,9 @@ import google from "../images/google.png";
 import { loginSuccess } from "../redux/reducers/userSlice";
 import { openSnackbar } from "../redux/reducers/snackbarSlice";
 import ForgetPassword from "./ForgetPassword";
-import { signIn } from "../api";
+import { useGoogleLogin } from "@react-oauth/google";
+import { googleAuth, signIn } from "../api";
+import axios from "axios";
 
 const Container = styled.div`
   width: 100%;
@@ -279,6 +281,72 @@ const SignIn = (props) => {
     }
   };
 
+  //Google SignIn
+  const googleLogin = useGoogleLogin({
+    onSuccess: async (tokenResponse) => {
+      setLoading(true);
+      const user = await axios
+        .get("https://www.googleapis.com/oauth2/v3/userinfo", {
+          headers: { Authorization: `Bearer ${tokenResponse.access_token}` },
+        })
+        .catch((err) => {
+          dispatch(
+            openSnackbar({
+              message: err.message,
+              severity: "error",
+            })
+          );
+        });
+
+      googleAuth({
+        name: user.data.name,
+        email: user.data.email,
+        img: user.data.picture,
+      }).then((res) => {
+        if (res.status === 200) {
+          dispatch(loginSuccess(res.data));
+          dispatch(
+            openSnackbar({
+              message: "Logged In Successfully",
+              severity: "success",
+            })
+          );
+          setLoading(false);
+        } else {
+          dispatch(
+            openSnackbar({
+              message: res.data.message,
+              severity: "error",
+            })
+          );
+          setLoading(false);
+        }
+      }).catch((err) => {
+          dispatch(
+            openSnackbar({
+              message: err.response.data.message,
+              severity: "error",
+            })
+          );
+            setErrorMessage({
+              ...errorMessage,
+              apierror: err.response.data.message,
+            });
+            setLoading(false);
+      }
+      );
+    },
+    onError: (errorResponse) => {
+      setLoading(false);
+      dispatch(
+        openSnackbar({
+          message: errorResponse.error,
+          severity: "error",
+        })
+      );
+    },
+  });
+
   return (
     <Container data-testid="signup">
       {showForgotPassword ? (
@@ -360,7 +428,7 @@ const SignIn = (props) => {
 
           <GoogleButton
             onClick={(e) => {
-              handleSubmit(e);
+              googleLogin(e);
             }}
           >
             {loading ? (
