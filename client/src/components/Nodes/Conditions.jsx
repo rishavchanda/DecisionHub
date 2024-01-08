@@ -10,7 +10,7 @@ import {
   arithmeticOperations,
   specialAttributes,
   specialFunctions,
-} from "../utils/data";
+} from "../../utils/data";
 import { useReactFlow } from "reactflow";
 
 const Wrapper = styled.div`
@@ -182,8 +182,6 @@ const Conditions = ({
     });
 
     reactFlow.setNodes(updatedNodes);
-    console.log(updatedNodes);
-    console.log(getInputAttribute("time_diff,null,null", 0));
   };
 
   const getInputAttribute = (value, pos) => {

@@ -7,7 +7,7 @@ import {
   DeleteRounded,
 } from "@mui/icons-material";
 import { useDispatch } from "react-redux";
-import { ruleUpdated } from "../redux/reducers/rulesSlice";
+import { ruleUpdated } from "../../redux/reducers/rulesSlice";
 
 const Node = styled.div`
   width: 100%;
@@ -261,7 +261,7 @@ const OutputNode = ({ id, data, outputAttributes }) => {
                 value={field.field}
                 onChange={(e) => handleSelectChange("field", index, e)}
               >
-                {data.resultAttributes?.map((attribute) => (
+                {data.outputAttributes?.map((attribute) => (
                   <option value={attribute}>{attribute}</option>
                 ))}
               </Select>

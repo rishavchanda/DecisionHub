@@ -7,7 +7,8 @@ import {
   SubtitlesRounded,
 } from "@mui/icons-material";
 import { useDispatch, useSelector } from "react-redux";
-import { ruleUpdated } from "../redux/reducers/rulesSlice";
+import { ruleUpdated } from "../../redux/reducers/rulesSlice";
+import NewRuleForm from "../DialogForms/NewRuleForm";
 
 const Wrapper = styled.div`
   display: flex;
@@ -138,6 +139,7 @@ const AttributeNode = ({ id, data }) => {
   const reactFlow = useReactFlow();
   const dispatch = useDispatch();
   const { updated } = useSelector((state) => state.rule);
+  const [openUpdateDialog, setOpenUpdateDialog] = useState(false);
 
   const [isNotConnected, setIsNotConnected] = useState(false);
 
@@ -162,7 +164,7 @@ const AttributeNode = ({ id, data }) => {
       data: {
         label: "New Condition Node",
         inputAttributes: data.inputAttributes,
-        resultAttributes: data.resultAttributes,
+        outputAttributes: data.outputAttributes,
         rule: "Any",
         conditions: [
           {
@@ -209,6 +211,7 @@ const AttributeNode = ({ id, data }) => {
           <NodeTitle>{data.label}</NodeTitle>
           <EditOutlined
             sx={{ fontSize: "18px", color: theme.white, cursor: "pointer" }}
+            onClick={() => setOpenUpdateDialog(true)}
           />
         </NodeHeader>
         <NodeBody>
@@ -271,6 +274,21 @@ const AttributeNode = ({ id, data }) => {
             </OutlineWrapper>
           </NodeButtons>
         </>
+      )}
+      {openUpdateDialog && (
+        <NewRuleForm
+          setOpenNewRule={setOpenUpdateDialog}
+          updateForm={{
+            update: true,
+            id: id,
+            data: {
+              title: data.label,
+              description: "",
+              inputAttributes: data.inputAttributes,
+              outputAttributes: data.outputAttributes,
+            },
+          }}
+        />
       )}
     </Wrapper>
   );
