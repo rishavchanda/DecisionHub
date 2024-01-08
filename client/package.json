@@ -8,6 +8,7 @@
     "@mui/icons-material": "^5.11.16",
     "@mui/lab": "^5.0.0-alpha.130",
     "@mui/material": "^5.13.1",
+    "@react-oauth/google": "^0.10.0",
     "@reduxjs/toolkit": "^1.9.5",
     "@testing-library/jest-dom": "^5.17.0",
     "@testing-library/react": "^13.4.0",
@@ -24,8 +25,8 @@
     "reactflow": "^11.10.1",
     "redux-persist": "^6.0.0",
     "styled-components": "^5.3.5",
-    "web-vitals": "^2.1.4",
-    "@react-oauth/google": "^0.10.0"
+    "timeago.js": "^4.0.2",
+    "web-vitals": "^2.1.4"
   },
   "scripts": {
     "start": "react-scripts start",

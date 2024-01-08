@@ -1,6 +1,8 @@
 import React from "react";
 import styled, { useTheme } from "styled-components";
 import { AccessTimeOutlined, CalendarTodayOutlined } from "@mui/icons-material";
+import { format } from "timeago.js";
+import { useNavigate } from "react-router-dom";
 
 const Image = styled.img`
   width: 100%;
@@ -78,29 +80,38 @@ const Flex = styled.div`
   width: fit-content;
 `;
 
-const RulesCard = () => {
+const RulesCard = ({ rule }) => {
   const theme = useTheme();
+  const navigate = useNavigate();
   return (
-    <Card>
-      <Image src="https://firebasestorage.googleapis.com/v0/b/flexi-coding.appspot.com/o/reactflow%20(11).png?alt=media&token=6c50b741-cbb9-4a9f-bdcd-7b6aa2aa56f4" />
+    <Card onClick={() => navigate(`/rules/${rule?.id}`)}>
+      {/* <Image src="https://firebasestorage.googleapis.com/v0/b/flexi-coding.appspot.com/o/reactflow%20(11).png?alt=media&token=6c50b741-cbb9-4a9f-bdcd-7b6aa2aa56f4" /> */}
       <CardTop>
         <Tag>Tested</Tag>
         <Flex>
           <AccessTimeOutlined
             sx={{ color: theme.text_secondary, fontSize: "16px" }}
           />
-          <LastUpdated>Last Updated: 12 Min Ago</LastUpdated>
+          <LastUpdated>Updated: {format(rule?.updatedAt)}</LastUpdated>
         </Flex>
       </CardTop>
       <div>
-        <Title>Rules</Title>
-        <Description>hgfisegfueshfsuekhf mnf je fejh ehj</Description>
+        <Title>{rule?.title}</Title>
+        <Description>{rule?.descryption}</Description>
       </div>
       <Flex>
         <CalendarTodayOutlined
           sx={{ color: theme.text_secondary + 90, fontSize: "12px" }}
         />
-        <CreatedOn>Created On: 06-Dec-2023</CreatedOn>
+        <CreatedOn>
+          Created On:{" "}
+          {rule?.createdAt &&
+            new Intl.DateTimeFormat("en-US", {
+              year: "numeric",
+              month: "short",
+              day: "2-digit",
+            }).format(new Date(`${rule?.createdAt}`))}
+        </CreatedOn>
       </Flex>
     </Card>
   );

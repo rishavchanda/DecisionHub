@@ -227,7 +227,7 @@ const AttributeNode = ({ id, data }) => {
           <ItemWrapper>
             <Title>Result Attribute</Title>
             <ChipsWrapper>
-              {data.resultAttributes?.map((attribute, index) => (
+              {data.outputAttributes?.map((attribute, index) => (
                 <Chip key={index}>{attribute}</Chip>
               ))}
             </ChipsWrapper>

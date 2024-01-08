@@ -1,13 +1,8 @@
 import {
-  BusinessRounded,
-  CallRounded,
   CloseRounded,
-  DateRangeRounded,
-  PersonRounded,
 } from "@mui/icons-material";
 import { CircularProgress, Modal } from "@mui/material";
 import React, { useEffect, useState } from "react";
-import { useDispatch, useSelector } from "react-redux";
 import styled from "styled-components";
 import TextInput from "../Inputs/TextInput";
 import { createRule } from "../../api";
@@ -113,7 +108,7 @@ const NewRuleForm = ({ setOpenNewRule, updateForm }) => {
       ? updateForm.data
       : {
           title: "",
-          description: "",
+          descryption: "",
           inputAttributes: [],
           outputAttributes: [],
           condition: JSON.stringify(flowData),
@@ -148,7 +143,7 @@ const NewRuleForm = ({ setOpenNewRule, updateForm }) => {
   useEffect(() => {
     if (
       ruleData?.title !== "" &&
-      ruleData?.description !== "" &&
+      ruleData?.descryption !== "" &&
       ruleData?.inputAttributes?.length !== 0 &&
       ruleData?.outputAttributes?.length !== 0
     ) {
@@ -227,7 +222,7 @@ const NewRuleForm = ({ setOpenNewRule, updateForm }) => {
               name="description"
               textArea
               rows={3}
-              value={ruleData.description}
+              value={ruleData.descryption}
               handelChange={handelInputs}
             />
             <TextInput

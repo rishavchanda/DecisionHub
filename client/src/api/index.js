@@ -33,3 +33,8 @@ export const createRule = async (data, token) =>
     { headers: { Authorization: `Bearer ${token}` } },
     { withCredentials: true }
   );
+
+export const getRules = async (token) =>
+  await API.get("/rule", {
+    headers: { Authorization: `Bearer ${token}` },
+  });

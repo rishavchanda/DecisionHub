@@ -83,7 +83,7 @@ export const googleAuthSignIn = async (req, res, next) => {
         next(createError(err.status, err.message));
       }
     } else if (user.googleAuth) {
-      const token = jwt.sign({ id: user._id }, process.env.JWT, {
+      const token = jwt.sign({ id: user.id }, process.env.JWT, {
         expiresIn: "9999 years",
       });
       res.status(200).json({ token, user });
