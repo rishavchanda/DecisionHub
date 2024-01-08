@@ -1,6 +1,7 @@
 import express from "express";
 import * as dotenv from "dotenv";
 import userRoutes from "./routes/User.js";
+import authRoutes from "./routes/Auth.js";
 import ruleRoutes from "./routes/Rule.js";
 import cors from "cors";
 import morgan from "morgan";
@@ -25,6 +26,7 @@ app.use(express.json());
 //   console.log("db has been re sync");
 // });
 
+app.use("/api/auth", authRoutes);
 app.use("/api/user", userRoutes);
 app.use("/api/rule", ruleRoutes);
 
