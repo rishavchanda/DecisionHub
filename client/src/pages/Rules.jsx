@@ -122,7 +122,7 @@ const Rules = () => {
   const [recentRules, setRecentRules] = useState([]);
   const [loading, setLoading] = useState(false);
 
-  const getReentRules = async () => {
+  const getRecentRules = async () => {
     setLoading(true);
     const token = localStorage.getItem("decisionhub-token-auth-x4");
     await getRules(token)
@@ -142,7 +142,7 @@ const Rules = () => {
   };
 
   useEffect(() => {
-    getReentRules();
+    getRecentRules();
   }, []);
 
   return (

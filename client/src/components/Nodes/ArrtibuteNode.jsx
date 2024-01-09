@@ -283,9 +283,13 @@ const AttributeNode = ({ id, data }) => {
             id: id,
             data: {
               title: data.label,
-              description: "",
+              descryption: data?.descryption,
               inputAttributes: data.inputAttributes,
               outputAttributes: data.outputAttributes,
+              condition: JSON.stringify({
+                nodes: reactFlow.getNodes(),
+                edges: reactFlow.getEdges(),
+              }),
             },
           }}
         />

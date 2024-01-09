@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import ReactFlow, {
   Controls,
   Background,
@@ -15,9 +15,13 @@ import { CircularProgress, MenuItem, Select } from "@mui/material";
 import {
   ArrowBackRounded,
   DeleteOutlineRounded,
+  FlipCameraAndroidOutlined,
   SaveRounded,
 } from "@mui/icons-material";
 import { useNavigate, useParams } from "react-router-dom";
+import { getRuleById, updateRule, deleteRule } from "../api";
+import { useDispatch, useSelector } from "react-redux";
+import { openSnackbar } from "../redux/reducers/snackbarSlice";
 
 const FlexDisplay = styled.div`
   display: flex;
@@ -65,9 +69,9 @@ const TextButton = styled.div`
 
 const Button = styled.div`
   border-radius: 6px;
-  padding: 10px 16px;
-  margin: 8px 0px;
-  font-size: 13px;
+  padding: 8px 14px;
+  margin: 6px 0px;
+  font-size: 12px;
   color: ${({ theme }) => theme.white};
   background-color: ${({ theme }) => theme.primary};
   display: flex;
@@ -88,117 +92,236 @@ const Button = styled.div`
   `}
 `;
 
-const inputAttributes = [
-  "account_no",
-  "loan_duration",
-  "date_of_birth",
-  "employment_status",
-  "annual_income",
-  "credit_score",
-];
-const outputAttributes = ["intrest_rate"];
-
 const nodeTypes = {
   attributeNode: AttributeNode,
   conditionalNode: ConditionalNode,
   outputNode: OutputNode,
 };
-const flowData = {
-  nodes: [
-    {
-      id: "1",
-      type: "attributeNode",
-      data: {
-        label: "Loan Interest Rate",
-        inputAttributes: inputAttributes,
-        outputAttributes: outputAttributes,
-      },
-      position: { x: 234, y: 50 },
-    },
-  ],
-  edges: [],
-};
 
 const RulesDetails = () => {
   const { id } = useParams();
+  const { reload } = useSelector((state) => state.rule);
+
+  //Hooks
   const theme = useTheme();
   const navigate = useNavigate();
-  const [nodes, setNodes, onNodesChange] = useNodesState(flowData.nodes);
-  const [edges, setEdges, onEdgesChange] = useEdgesState(flowData.edges);
+  const dispath = useDispatch();
+
+  const [inputAttributes, setInputAttributes] = useState([]);
+  const [outputAttributes, setOutputAttributes] = useState([]);
+  const [nodes, setNodes, onNodesChange] = useNodesState();
+  const [edges, setEdges, onEdgesChange] = useEdgesState();
+  const [rule, setRule] = useState();
+
+  //loader
+  const [loading, setLoading] = useState(true);
   const [saveLoading, setSaveLoading] = useState(false);
+
+  //Functions
+
+  const getRule = async () => {
+    setLoading(true);
+    const token = localStorage.getItem("decisionhub-token-auth-x4");
+    await getRuleById(id, token)
+      .then((res) => {
+        setRule(res.data);
+        setInputAttributes(res.data.inputAttributes);
+        setOutputAttributes(res.data.outputAttributes);
+        setLoading(false);
+      })
+      .catch((err) => {
+        dispath(
+          openSnackbar({
+            message: err.response.data.message,
+            severity: "error",
+          })
+        );
+        setLoading(false);
+      });
+  };
+
+  useEffect(() => {
+    getRule();
+  }, [reload]);
+
+  useEffect(() => {
+    if (rule) {
+      const { nodes, edges } = JSON.parse(rule.condition);
+      //add input and output attributes to nodes
+      nodes.forEach((node) => {
+        if (node.type === "attributeNode") {
+          node.data.label = rule.title;
+          node.data.descryption = rule.descryption;
+        }
+        node.data.inputAttributes = inputAttributes;
+        node.data.outputAttributes = outputAttributes;
+      });
+      setNodes(nodes);
+      setEdges(edges);
+    }
+  }, [rule, inputAttributes, outputAttributes, reload]);
+
+  // update rule
+  const saveRule = async () => {
+    setSaveLoading(true);
+    const updatedRule = {
+      ...rule,
+      condition: JSON.stringify({ nodes, edges }),
+    };
+    const token = localStorage.getItem("decisionhub-token-auth-x4");
+    await updateRule(id, updatedRule, token)
+      .then((res) => {
+        setRule(res.data);
+        setInputAttributes(res.data.inputAttributes);
+        setOutputAttributes(res.data.outputAttributes);
+        setSaveLoading(false);
+      })
+      .catch((err) => {
+        dispath(
+          openSnackbar({
+            message: err.response.data.message,
+            severity: "error",
+          })
+        );
+        setSaveLoading(false);
+      });
+  };
+
+  // Delete Rule
+  const deleterule = async () => {
+    setLoading(true);
+    const token = localStorage.getItem("decisionhub-token-auth-x4");
+    await deleteRule(id, token)
+      .then(() => {
+        setLoading(false);
+        navigate("/rules/");
+        dispath(
+          openSnackbar({
+            message: "Rule Deleted Successfully",
+            severity: "success",
+          })
+        );
+      })
+      .catch((err) => {
+        dispath(
+          openSnackbar({
+            message: err.response.data.message,
+            severity: "error",
+          })
+        );
+      });
+  };
 
   return (
     <div style={{ height: "100%" }}>
-      <ReactFlow
-        nodeTypes={nodeTypes}
-        nodes={nodes}
-        edges={edges}
-        onNodesChange={onNodesChange}
-        onEdgesChange={onEdgesChange}
-        nodesDraggable={true}
-        elementsSelectable={true}
-        setNodes={setNodes}
-        setEdges={setEdges}
-        fitView={true}
-      >
-        <Background />
-        <Controls />
-        <Panel position="top-left">
-          <TextButton onClick={() => navigate("/rules/")}>
-            <ArrowBackRounded sx={{ fontSize: "16px" }} />
-            Back to Rules
-          </TextButton>
-        </Panel>
-        <Panel position="top-right">
-          <FlexDisplay>
-            <Select
-              value="1.1"
-              autoWidth
-              displayEmpty
-              size="small"
-              sx={{
-                color: theme.text_primary,
-                border: `1px solid ${theme.text_secondary + 90}`,
-                borderRadius: "8px",
-                padding: "0px",
-                fontSize: "12px",
-                ".MuiSvgIcon-root ": {
-                  fill: `${theme.text_secondary} !important`,
-                },
-              }}
-            >
-              <MenuItem value="1.1">Version: 1.0</MenuItem>
-              <MenuItem value="2.2">Version: 1.1</MenuItem>
-              <MenuItem value="3.3">Version: 1.2</MenuItem>
-            </Select>
-            <DeleteButton>
-              <DeleteOutlineRounded sx={{ fontSize: "16px" }} />
-              <span>Delete Rule</span>
-            </DeleteButton>
-          </FlexDisplay>
-        </Panel>
-        <Panel position="bottom-right">
-          <Button disabled={saveLoading}>
-            {saveLoading ? (
-              <>
-                <CircularProgress
-                  sx={{
-                    color: "inherit",
-                    width: "16px !important",
-                    height: "16px !important",
-                  }}
-                />
-                Saving...
-              </>
-            ) : (
-              <>
-                <SaveRounded sx={{ fontSize: "16px" }} />
-                Save Rule
-              </>
-            )}
-          </Button>
-        </Panel>
-      </ReactFlow>
+      {loading ? (
+        <div
+          style={{
+            display: "flex",
+            justifyContent: "center",
+            alignItems: "center",
+            height: "100%",
+          }}
+        >
+          <CircularProgress />
+        </div>
+      ) : (
+        <ReactFlow
+          nodeTypes={nodeTypes}
+          nodes={nodes}
+          edges={edges}
+          onNodesChange={onNodesChange}
+          onEdgesChange={onEdgesChange}
+          nodesDraggable={true}
+          elementsSelectable={true}
+          setNodes={setNodes}
+          setEdges={setEdges}
+          fitView={true}
+        >
+          <Background />
+          <Controls />
+          <Panel position="top-left">
+            <TextButton onClick={() => navigate("/rules/")}>
+              <ArrowBackRounded sx={{ fontSize: "16px" }} />
+              Back to Rules
+            </TextButton>
+          </Panel>
+          <Panel position="top-right">
+            <FlexDisplay>
+              <Select
+                value="1.1"
+                autoWidth
+                displayEmpty
+                size="small"
+                sx={{
+                  color: theme.text_primary,
+                  border: `1px solid ${theme.text_secondary + 90}`,
+                  borderRadius: "8px",
+                  padding: "0px",
+                  fontSize: "12px",
+                  ".MuiSvgIcon-root ": {
+                    fill: `${theme.text_secondary} !important`,
+                  },
+                }}
+              >
+                <MenuItem value="1.1">Version: 1.0</MenuItem>
+                <MenuItem value="2.2">Version: 1.1</MenuItem>
+                <MenuItem value="3.3">Version: 1.2</MenuItem>
+              </Select>
+              <DeleteButton onClick={() => deleterule()}>
+                <DeleteOutlineRounded sx={{ fontSize: "16px" }} />
+                <span>Delete Rule</span>
+              </DeleteButton>
+            </FlexDisplay>
+          </Panel>
+          <Panel position="bottom-right">
+            <FlexDisplay>
+              <Button disabled={saveLoading} onClick={() => saveRule()}>
+                {saveLoading ? (
+                  <>
+                    <CircularProgress
+                      sx={{
+                        color: "inherit",
+                        width: "14px !important",
+                        height: "14px !important",
+                      }}
+                    />
+                    Saving...
+                  </>
+                ) : (
+                  <>
+                    <SaveRounded sx={{ fontSize: "14px" }} />
+                    Save Rule
+                  </>
+                )}
+              </Button>
+              <Button
+                disabled={saveLoading}
+                onClick={() => saveRule()}
+                style={{ background: theme.secondary }}
+              >
+                {saveLoading ? (
+                  <>
+                    <CircularProgress
+                      sx={{
+                        color: "inherit",
+                        width: "14px !important",
+                        height: "14px !important",
+                      }}
+                    />
+                    Creating Version...
+                  </>
+                ) : (
+                  <>
+                    <FlipCameraAndroidOutlined sx={{ fontSize: "14px" }} />
+                    Save New Version
+                  </>
+                )}
+              </Button>
+            </FlexDisplay>
+          </Panel>
+        </ReactFlow>
+      )}
     </div>
   );
 };

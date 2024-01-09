@@ -1,11 +1,13 @@
-import {
-  CloseRounded,
-} from "@mui/icons-material";
+import { CloseRounded } from "@mui/icons-material";
 import { CircularProgress, Modal } from "@mui/material";
 import React, { useEffect, useState } from "react";
 import styled from "styled-components";
 import TextInput from "../Inputs/TextInput";
-import { createRule } from "../../api";
+import { createRule, updateRule } from "../../api";
+import { useLocation, useNavigate } from "react-router";
+import { useDispatch } from "react-redux";
+import { openSnackbar } from "../../redux/reducers/snackbarSlice";
+import { ruleReload } from "../../redux/reducers/rulesSlice";
 
 const Body = styled.div`
   width: 100%;
@@ -87,21 +89,25 @@ const Button = styled.button`
 `;
 
 const NewRuleForm = ({ setOpenNewRule, updateForm }) => {
-  console.log(updateForm);
-  const flowData = {
-    nodes: [
-      {
-        id: "1",
-        type: "attributeNode",
-        data: {
-          label: "Loan Interest Rate",
-          inputAttributes: ["df"],
-          resultAttributes: ["w"],
+  const navigate = useNavigate();
+  const location = useLocation();
+  const dispath = useDispatch();
+  let path = location.pathname.split("/");
+  const getFlowData = (label, descryption) => {
+    return {
+      nodes: [
+        {
+          id: "1",
+          type: "attributeNode",
+          data: {
+            label: label,
+            descryption: descryption,
+          },
+          position: { x: 234, y: 50 },
         },
-        position: { x: 234, y: 50 },
-      },
-    ],
-    edges: [],
+      ],
+      edges: [],
+    };
   };
   const [ruleData, setRuleData] = useState(
     updateForm.update
@@ -111,7 +117,7 @@ const NewRuleForm = ({ setOpenNewRule, updateForm }) => {
           descryption: "",
           inputAttributes: [],
           outputAttributes: [],
-          condition: JSON.stringify(flowData),
+          condition: JSON.stringify(getFlowData("", "")),
         }
   );
   const [buttonDisabled, setButtonDisabled] = useState(true);
@@ -159,10 +165,31 @@ const NewRuleForm = ({ setOpenNewRule, updateForm }) => {
     setButtonDisabled(true);
     const token = localStorage.getItem("decisionhub-token-auth-x4");
     if (updateForm.update) {
+      const token = localStorage.getItem("decisionhub-token-auth-x4");
+      await updateRule(path[2], ruleData, token)
+        .then((res) => {
+          dispath(ruleReload());
+          setLoading(false);
+          setOpenNewRule(false);
+          setButtonDisabled(false);
+        })
+        .catch((err) => {
+          dispath(
+            openSnackbar({
+              message: err.response.data.message,
+              severity: "error",
+            })
+          );
+          setLoading(false);
+          setButtonDisabled(false);
+        });
     } else {
+      ruleData.condition = JSON.stringify(
+        getFlowData(ruleData.title, ruleData.descryption)
+      );
       await createRule(ruleData, token)
         .then((res) => {
-          // console.log(JSON.parse(res.data.condition));
+          navigate(`/rules/${res.data.id}`);
           setLoading(false);
           setOpenNewRule(false);
           setButtonDisabled(false);
@@ -219,7 +246,7 @@ const NewRuleForm = ({ setOpenNewRule, updateForm }) => {
             <TextInput
               label="Rule Description"
               placeholder="Enter rule description"
-              name="description"
+              name="descryption"
               textArea
               rows={3}
               value={ruleData.descryption}

@@ -2,6 +2,7 @@ import { createSlice } from "@reduxjs/toolkit";
 
 const initialState = {
   updated: false,
+  reload: false,
 };
 
 const rule = createSlice({
@@ -11,9 +12,12 @@ const rule = createSlice({
     ruleUpdated: (state) => {
       state.updated = !state.updated;
     },
+    ruleReload: (state) => {
+      state.reload = !state.reload;
+    },
   },
 });
 
-export const { ruleUpdated } = rule.actions;
+export const { ruleUpdated, ruleReload } = rule.actions;
 
 export default rule.reducer;
