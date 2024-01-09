@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import ReactFlow, {
   Controls,
   Background,
@@ -11,8 +11,12 @@ import ConditionalNode from "../components/Nodes/ConditionalNode";
 import AttributeNode from "../components/Nodes/ArrtibuteNode";
 import OutputNode from "../components/Nodes/OutputNode";
 import styled, { useTheme } from "styled-components";
-import { MenuItem, Select } from "@mui/material";
-import { ArrowBackRounded, DeleteOutlineRounded } from "@mui/icons-material";
+import { CircularProgress, MenuItem, Select } from "@mui/material";
+import {
+  ArrowBackRounded,
+  DeleteOutlineRounded,
+  SaveRounded,
+} from "@mui/icons-material";
 import { useNavigate, useParams } from "react-router-dom";
 
 const FlexDisplay = styled.div`
@@ -59,6 +63,31 @@ const TextButton = styled.div`
   }
 `;
 
+const Button = styled.div`
+  border-radius: 6px;
+  padding: 10px 16px;
+  margin: 8px 0px;
+  font-size: 13px;
+  color: ${({ theme }) => theme.white};
+  background-color: ${({ theme }) => theme.primary};
+  display: flex;
+  flex-direction: row;
+  justify-content: center;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+  &:hover {
+    background-color: ${({ theme }) => theme.primary + 90};
+  }
+
+  ${({ disabled, theme }) =>
+    disabled &&
+    `
+    background-color: ${theme.primary + 50};
+    cursor: not-allowed;
+  `}
+`;
+
 const inputAttributes = [
   "account_no",
   "loan_duration",
@@ -96,6 +125,7 @@ const RulesDetails = () => {
   const navigate = useNavigate();
   const [nodes, setNodes, onNodesChange] = useNodesState(flowData.nodes);
   const [edges, setEdges, onEdgesChange] = useEdgesState(flowData.edges);
+  const [saveLoading, setSaveLoading] = useState(false);
 
   return (
     <div style={{ height: "100%" }}>
@@ -146,6 +176,27 @@ const RulesDetails = () => {
               <span>Delete Rule</span>
             </DeleteButton>
           </FlexDisplay>
+        </Panel>
+        <Panel position="bottom-right">
+          <Button disabled={saveLoading}>
+            {saveLoading ? (
+              <>
+                <CircularProgress
+                  sx={{
+                    color: "inherit",
+                    width: "16px !important",
+                    height: "16px !important",
+                  }}
+                />
+                Saving...
+              </>
+            ) : (
+              <>
+                <SaveRounded sx={{ fontSize: "16px" }} />
+                Save Rule
+              </>
+            )}
+          </Button>
         </Panel>
       </ReactFlow>
     </div>

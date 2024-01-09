@@ -70,7 +70,7 @@ const LogoImg = styled.img`
 `;
 
 const Path = styled.div`
-  font-size: 22px;
+  font-size: 20px;
   font-weight: 600;
   @media (max-width: 1100px) {
     display: none;
@@ -95,8 +95,8 @@ const Search = styled.div`
 const Input = styled.input`
   width: 100%;
   border: none;
-  font-size: 16px;
-  padding: 15px 22px;
+  font-size: 15px;
+  padding: 14px 22px;
   border-radius: 100px;
   background-color: transparent;
   outline: none;
@@ -178,7 +178,10 @@ const Navbar = ({ setMenuOpen, menuOpen }) => {
       </Flex>
       <Search>
         <Input placeholder="Search any rule..." />
-        <SearchRounded style={{ marginRight: "20px", marginLeft: "20px" }} />
+        <SearchRounded
+          style={{ marginRight: "14px", marginLeft: "14px" }}
+          sx={{ fontSize: "20px" }}
+        />
       </Search>
       <User aria-describedby={id} onClick={handleClick}>
         <Avatar

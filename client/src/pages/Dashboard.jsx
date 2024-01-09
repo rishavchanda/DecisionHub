@@ -40,12 +40,12 @@ const Flex = styled.div`
 `;
 
 const Button = styled.div`
-  width: 200px;
+  width: 180px;
   padding: 14px;
   border-radius: 10px;
   background: ${({ theme }) => theme.primary};
   color: white;
-  font-size: 16px;
+  font-size: 14px;
   font-weight: 600;
   cursor: pointer;
   transition: all 0.3s ease;
@@ -57,7 +57,7 @@ const Button = styled.div`
 
 const ItemTitle = styled.div`
   display: flex;
-  font-size: ${({ fontSize }) => fontSize || "22px"};
+  font-size: ${({ fontSize }) => fontSize || "18px"};
   font-weight: 500;
   color: ${({ theme }) => theme.text_primary};
   @media (max-width: 768px) {
@@ -107,11 +107,11 @@ const Dashboard = ({ setOpenNewRule }) => {
       <TopSection>
         <Flex>
           <Button onClick={() => setOpenNewRule(true)}>
-            <AddRounded />
+            <AddRounded sx={{ fontSize: "22px" }} />
             Create New Rule
           </Button>
           <Button style={{ background: "#9747FF" }}>
-            <RuleRounded />
+            <RuleRounded sx={{ fontSize: "22px" }} />
             Test Rules
           </Button>
         </Flex>

@@ -27,6 +27,7 @@ const Container = styled.div`
       : `
   flex: 0.60;
 `}
+  max-width: 250px;
   flex-direction: column;
   height: 100vh;
   display: flex;
@@ -41,11 +42,11 @@ const Container = styled.div`
     ${({ collapsed }) =>
       collapsed
         ? `
-    max-width: 90px;
+    max-width: 70px;
 
 `
         : `
-    max-width: 300px;
+    max-width: 280px;
 `}
     left: ${({ setMenuOpen }) => (setMenuOpen ? "0" : "-100%")};
     transition: 0.3s ease-in-out;
@@ -73,7 +74,7 @@ const FlexTopDown = styled.div`
 `;
 
 const LogoText = styled(Link)`
-  font-size: 28px;
+  font-size: 24px;
   font-weight: bold;
   display: flex;
   align-items: center;
@@ -92,8 +93,8 @@ const LogoText = styled(Link)`
 `;
 
 const Colapse = styled.div`
-  width: 20px;
-  height: 20px;
+  width: 16px;
+  height: 16px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -123,11 +124,11 @@ const NavLinkItem = styled(NavLink)`
   display: flex;
   color: ${({ theme }) => theme.menu_secondary_text};
   align-items: center;
-  gap: 16px;
+  gap: 10px;
   cursor: pointer;
-  font-size: 18px;
-  padding: 14px 20px;
-  border-radius: 8px;
+  font-size: 16px;
+  padding: 12px 16px;
+  border-radius: 6px;
   transition: 0.3s ease-in-out;
   margin: 0px 10px;
   &:hover {
@@ -138,31 +139,21 @@ const NavLinkItem = styled(NavLink)`
     color: ${({ theme }) => theme.menu_primary_text} !important;
     font-weight: 500;
   }
-
-  @media (max-width: 768px) {
-    padding: 20px 16px;
-    font-size: 16px;
-  }
 `;
 
 const Item = styled.div`
   display: flex;
   color: ${({ theme }) => theme.menu_secondary_text};
   align-items: center;
-  gap: 16px;
+  gap: 10px;
   cursor: pointer;
-  font-size: 18px;
-  padding: 14px 20px;
-  border-radius: 8px;
+  font-size: 16px;
+  padding: 12px 16px;
+  border-radius: 6px;
   transition: 0.3s ease-in-out;
   margin: 0px 10px;
   &:hover {
     background-color: ${({ theme }) => theme.menu_secondary_text + 10};
-  }
-
-  @media (max-width: 768px) {
-    padding: 20px 16px;
-    font-size: 16px;
   }
 `;
 
@@ -172,36 +163,12 @@ const Hr = styled.div`
   background: ${({ theme }) => theme.menu_secondary_text + 30};
 `;
 
-const Button = styled.div`
-  display: flex;
-  color: ${({ theme }) => theme.menu_primary_text};
-  align-items: center;
-  justify-content: center;
-  gap: 6px;
-  cursor: pointer;
-  font-size: 16px;
-  padding: 18px 22px;
-  border-radius: 8px;
-  transition: 0.3s ease-in-out;
-  margin: 0px 10px;
-  font-weight: 500;
-  background-color: ${({ theme }) => theme.menu_secondary_text + 20};
-  &:hover {
-    background-color: ${({ theme }) => theme.menu_secondary_text + 30};
-  }
-
-  @media (max-width: 768px) {
-    padding: 16px 16px;
-    font-size: 14px;
-  }
-`;
-
 const Title = styled.div`
-  font-size: 16px;
+  font-size: 14px;
   font-weight: 600;
   color: ${({ theme }) => theme.menu_primary_text + 90};
   margin-bottom: 12px;
-  padding: 2px 26px;
+  padding: 0px 26px;
   display: flex;
   align-items: center;
   gap: 12px;
@@ -211,12 +178,12 @@ const ProfileDetails = styled.div`
   display: flex;
   flex-direction: column;
   gap: 2px;
-  font-size: 16px;
+  font-size: 14px;
   color: ${({ theme }) => theme.menu_primary_text};
 `;
 
 const Span = styled.span`
-  font-size: 12px;
+  font-size: 10px;
   color: ${({ theme }) => theme.menu_secondary_text};
 `;
 
@@ -284,7 +251,7 @@ const Sidebar = ({
                 exact
                 style={{ textDecoration: "none", color: "inherit" }}
               >
-                <DashboardRounded sx={{ fontSize: "24px" }} />
+                <DashboardRounded sx={{ fontSize: "22px" }} />
               </NavLinkItem>
               <NavLinkItem
                 to="/rules"
@@ -292,7 +259,7 @@ const Sidebar = ({
                 exact
                 style={{ textDecoration: "none", color: "inherit" }}
               >
-                <AccountTreeRounded sx={{ fontSize: "24px" }} />
+                <AccountTreeRounded sx={{ fontSize: "22px" }} />
               </NavLinkItem>
               <NavLinkItem
                 to="/test"
@@ -300,18 +267,18 @@ const Sidebar = ({
                 exact
                 style={{ textDecoration: "none", color: "inherit" }}
               >
-                <RuleRounded sx={{ fontSize: "24px" }} />
+                <RuleRounded sx={{ fontSize: "22px" }} />
               </NavLinkItem>
               <Hr />
               <Item onClick={() => dispatch(setDarkMode(!darkMode))}>
                 {darkMode ? (
-                  <LightModeRounded sx={{ fontSize: "24px" }} />
+                  <LightModeRounded sx={{ fontSize: "22px" }} />
                 ) : (
-                  <DarkModeRounded sx={{ fontSize: "24px" }} />
+                  <DarkModeRounded sx={{ fontSize: "22px" }} />
                 )}
               </Item>
               <Item onClick={() => logoutUser()}>
-                <LogoutRounded sx={{ fontSize: "24px" }} />
+                <LogoutRounded sx={{ fontSize: "22px" }} />
               </Item>
             </ContainerWrapper>
           ) : (
@@ -322,7 +289,7 @@ const Sidebar = ({
                 exact
                 style={{ textDecoration: "none", color: "inherit" }}
               >
-                <DashboardRounded sx={{ fontSize: "24px" }} />
+                <DashboardRounded sx={{ fontSize: "22px" }} />
                 Dashboard
               </NavLinkItem>
               <NavLinkItem
@@ -331,7 +298,7 @@ const Sidebar = ({
                 exact
                 style={{ textDecoration: "none", color: "inherit" }}
               >
-                <AccountTreeRounded sx={{ fontSize: "24px" }} />
+                <AccountTreeRounded sx={{ fontSize: "22px" }} />
                 Rules
               </NavLinkItem>
               <NavLinkItem
@@ -340,21 +307,21 @@ const Sidebar = ({
                 exact
                 style={{ textDecoration: "none", color: "inherit" }}
               >
-                <RuleRounded sx={{ fontSize: "24px" }} />
+                <RuleRounded sx={{ fontSize: "22px" }} />
                 Debug / Test Rules
               </NavLinkItem>
               <Hr />
               <Title>Settings</Title>
               <Item onClick={() => dispatch(setDarkMode(!darkMode))}>
                 {darkMode ? (
-                  <LightModeRounded sx={{ fontSize: "24px" }} />
+                  <LightModeRounded sx={{ fontSize: "22px" }} />
                 ) : (
-                  <DarkModeRounded sx={{ fontSize: "24px" }} />
+                  <DarkModeRounded sx={{ fontSize: "22px" }} />
                 )}
                 {darkMode ? "Light" : "Dark"} Mode
               </Item>
               <Item onClick={() => logoutUser()}>
-                <LogoutRounded sx={{ fontSize: "24px" }} />
+                <LogoutRounded sx={{ fontSize: "22px" }} />
                 Logout
               </Item>
             </ContainerWrapper>
@@ -377,7 +344,7 @@ const Sidebar = ({
               style={{
                 height: "32px",
                 width: "32px",
-                fontSize: "12px",
+                fontSize: "10px",
                 borderRadius: "6px",
                 background: generateColor(currentUser?.name),
               }}
