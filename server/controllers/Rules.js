@@ -1,5 +1,6 @@
 import db from "../models/index.js";
 import { createError } from "../error.js";
+import {Op} from "sequelize";
 
 const Rule = db.rule;
 const User = db.user;
@@ -30,6 +31,7 @@ export const createRule = async (req, res, next) => {
 export const getRules = async (req, res, next) => {
   const userId = req.user.id;
   try {
+    console.log(req.user.id);
     const user = await User.findOne({ where: { id: userId } });
     if (!user) {
       return next(createError(404, "User not found"));
@@ -40,3 +42,90 @@ export const getRules = async (req, res, next) => {
     return next(error);
   }
 };
+
+export const getRuleById = async (req, res, next) => {
+  const userId = req.user.id;
+  const ruleId = req.params.id;
+  try {
+    const user = await User.findOne({ where: { id: userId } });
+    if (!user) {
+      return next(createError(404, "User not found"));
+    }
+    const rule = await Rule.findOne({ where: { id: ruleId } });
+    if (!rule) {
+      return next(createError(404, "No rule with this id"));
+    }
+    return res.status(200).json(rule);
+  } catch (error) {
+    return next(error);
+  }
+}
+
+export const searchRule = async (req, res) => {
+  const query = req.query.title;
+  try {
+    const rules = await Rule.findAll({
+      where: {
+        title: {
+          [Op.iLike]: `%${query}%`, // Case-insensitive search
+        },
+      },
+      limit: 40,
+    });
+    res.status(200).json(rules);
+  } catch (err) {
+    console.log(err);
+    res.json({ message: err.message });
+  }
+};
+
+export const updateRule = async (req, res, next) => {
+  const userId = req.user.id;
+  const ruleId = req.params.id;
+  const newRule = req.body;
+  try {
+    const user = await User.findOne({ where: { id: userId } });
+    if (!user) {
+      return next(createError(404, "User not found"));
+    }
+    const rule = await Rule.findOne({ where: { id: ruleId } });
+    if (!rule) {
+      return next(createError(404, "No rule with that id"));
+    }
+    await Rule.update(
+      { ...newRule, version: rule.version + 1 },
+      {
+        where: {
+          id: ruleId,
+        },
+      }
+    );
+    const updatedRule = await Rule.findOne({ where: { id: ruleId } });
+    return res.status(200).json(updatedRule);
+  } catch (error) {
+    return next(createError(error.status, error.message));
+  }
+}
+
+export const deleteRule = async (req, res, next) => {
+  const userId = req.user.id;
+  const ruleId = req.params.id;
+  try {
+    const user = await User.findOne({ where: { id: userId } });
+    if (!user) {
+      return next(createError(404, "User not found"));
+    }
+    const rule = await Rule.findOne({ where: { id: ruleId } });
+    if (!rule) {
+      return next(createError(404, "No rule with that id"));
+    }
+    await Rule.destroy({
+      where: {
+        id: ruleId
+      }
+    })
+    return res.status(200).json({ message: "Rule deleted succesfully" });
+  } catch (error) {
+    return next(createError(error.status, error.message));
+  }
+}
