@@ -2,9 +2,10 @@ export const Version = (sequelize, DataTypes) => {
     const Version = sequelize.define(
         "version",
         {
-            value: {
-                type: DataTypes.FLOAT,
-                allowNull: false,
+            id: {
+                type: DataTypes.UUID,
+                defaultValue: DataTypes.UUIDV4,
+                primaryKey: true,
             },
             title: {
                 type: DataTypes.STRING,
