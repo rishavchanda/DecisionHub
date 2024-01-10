@@ -118,7 +118,7 @@ export const updateRule = async (req, res, next) => {
       return next(createError(403, "You are not owner of this rule"));
     }
     await Rule.update(
-      { ...newRule, version: rule.version + 1 },
+      { ...newRule, version: rule.version },
       {
         where: {
           id: ruleId,
