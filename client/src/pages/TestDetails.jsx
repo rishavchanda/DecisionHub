@@ -163,57 +163,6 @@ const TestDetails = () => {
     }
   }, [rule, inputAttributes, outputAttributes, reload]);
 
-  // update rule
-  const saveRule = async () => {
-    setSaveLoading(true);
-    const updatedRule = {
-      ...rule,
-      condition: JSON.stringify({ nodes, edges }),
-    };
-    const token = localStorage.getItem("decisionhub-token-auth-x4");
-    await updateRule(id, updatedRule, token)
-      .then((res) => {
-        setRule(res.data);
-        setInputAttributes(res.data.inputAttributes);
-        setOutputAttributes(res.data.outputAttributes);
-        setSaveLoading(false);
-      })
-      .catch((err) => {
-        dispath(
-          openSnackbar({
-            message: err.response.data.message,
-            severity: "error",
-          })
-        );
-        setSaveLoading(false);
-      });
-  };
-
-  // Delete Rule
-  const deleterule = async () => {
-    setLoading(true);
-    const token = localStorage.getItem("decisionhub-token-auth-x4");
-    await deleteRule(id, token)
-      .then(() => {
-        setLoading(false);
-        navigate("/rules/");
-        dispath(
-          openSnackbar({
-            message: "Rule Deleted Successfully",
-            severity: "success",
-          })
-        );
-      })
-      .catch((err) => {
-        dispath(
-          openSnackbar({
-            message: err.response.data.message,
-            severity: "error",
-          })
-        );
-      });
-  };
-
   return (
     <div style={{ height: "100%" }}>
       {loading ? (
