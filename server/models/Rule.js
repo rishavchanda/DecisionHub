@@ -1,16 +1,19 @@
-import { Deferrable } from "sequelize";
-import { User } from "./User.js";
-import db from "./index.js";
+import { v4 as uuidv4 } from 'uuid';
 
 export const Rule = (sequelize, DataTypes) => {
   const Rule = sequelize.define(
     "rule",
     {
+      id: {
+        type: DataTypes.UUID,
+        defaultValue: DataTypes.UUIDV4,
+        primaryKey: true,
+      },
       title: {
         type: DataTypes.STRING,
         allowNull: false,
       },
-      descryption: {
+      description: {
         type: DataTypes.STRING,
         allowNull: true,
       },
