@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import ReactFlow, {
   Controls,
   Background,
@@ -10,36 +10,78 @@ import "reactflow/dist/style.css";
 import ConditionalNode from "../components/Nodes/ConditionalNode";
 import AttributeNode from "../components/Nodes/ArrtibuteNode";
 import OutputNode from "../components/Nodes/OutputNode";
-import DownloadButton from "../components/DownloadButton";
 import styled, { useTheme } from "styled-components";
 import { MenuItem, Select } from "@mui/material";
 import { DeleteOutlineRounded } from "@mui/icons-material";
+import { useDispatch, useSelector } from "react-redux";
+import { getRules } from "../api";
+import { openSnackbar } from "../redux/reducers/snackbarSlice";
+import RulesCard from "../components/cards/RulesCard";
 
-const FlexDisplay = styled.div`
+const Container = styled.div`
+  padding: 20px 30px;
+  padding-bottom: 200px;
+  height: 100%;
+  overflow-y: scroll;
   display: flex;
-  flex-direction: row;
-  gap: 12px;
-  align-items: center;
+  flex-direction: column;
+  gap: 20px;
+  @media (max-width: 768px) {
+    padding: 6px 0px;
+  }
+  background: ${({ theme }) => theme.bg};
 `;
 
-const DeleteButton = styled.div`
-  border: 2px solid ${({ theme }) => theme.red + 90};
-  border-radius: 8px;
-  padding: 8px 12px;
-  font-size: 12px;
-  color: ${({ theme }) => theme.red};
+const TopSection = styled.div`
   display: flex;
-  flex-direction: row;
-  justify-content: center;
   align-items: center;
-  gap: 4px;
+  justify-content: flex-end;
+  gap: 20px;
+  @media (max-width: 768px) {
+    flex-direction: column;
+  }
+`;
+
+const Flex = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  @media (max-width: 768px) {
+    flex-direction: column;
+  }
+`;
+
+const Button = styled.div`
+  width: 200px;
+  padding: 14px;
+  border-radius: 10px;
+  background: ${({ theme }) => theme.primary};
+  color: white;
+  font-size: 16px;
+  font-weight: 600;
   cursor: pointer;
-  span {
-    font-weight: 500;
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+`;
+
+const ItemTitle = styled.div`
+  display: flex;
+  font-size: ${({ fontSize }) => fontSize || "18px"};
+  font-weight: 500;
+  color: ${({ theme }) => theme.text_primary};
+  @media (max-width: 768px) {
+    font-size: ${({ smallfontSize }) => smallfontSize || "18px"};
   }
-  &:hover {
-    background-color: ${({ theme }) => theme.red + 10};
-  }
+`;
+
+const CardWrapper = styled.div`
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(272px, 1fr));
+  grid-gap: 16px 16px;
+  margin-bottom: 20px;
 `;
 
 const inputAttributes = [
@@ -74,56 +116,49 @@ const flowData = {
 };
 
 const Rules = () => {
-  const theme = useTheme();
-  const [nodes, setNodes, onNodesChange] = useNodesState(flowData.nodes);
-  const [edges, setEdges, onEdgesChange] = useEdgesState(flowData.edges);
+  // Hooks
+  const dispath = useDispatch();
+  const { currentUser } = useSelector((state) => state.user);
+  const [recentRules, setRecentRules] = useState([]);
+  const [loading, setLoading] = useState(false);
+
+  const getRecentRules = async () => {
+    setLoading(true);
+    const token = localStorage.getItem("decisionhub-token-auth-x4");
+    await getRules(token)
+      .then((res) => {
+        setRecentRules(res.data);
+        setLoading(false);
+      })
+      .catch((err) => {
+        dispath(
+          openSnackbar({
+            message: err.response.data.message,
+            severity: "error",
+          })
+        );
+        setLoading(false);
+      });
+  };
+
+  useEffect(() => {
+    getRecentRules();
+  }, []);
 
   return (
-    <div style={{ height: "100%" }}>
-      <ReactFlow
-        nodeTypes={nodeTypes}
-        nodes={nodes}
-        edges={edges}
-        onNodesChange={onNodesChange}
-        onEdgesChange={onEdgesChange}
-        nodesDraggable={true}
-        elementsSelectable={true}
-        setNodes={setNodes}
-        setEdges={setEdges}
-        fitView={true}
-      >
-        <Background />
-        <Controls />
-        <Panel position="top-right">
-          <FlexDisplay>
-            <Select
-              value="1.1"
-              autoWidth
-              displayEmpty
-              size="small"
-              sx={{
-                color: theme.text_primary,
-                border: `1px solid ${theme.text_secondary + 90}`,
-                borderRadius: "8px",
-                padding: "0px",
-                fontSize: "12px",
-                ".MuiSvgIcon-root ": {
-                  fill: `${theme.text_secondary} !important`,
-                },
-              }}
-            >
-              <MenuItem value="1.1">Version: 1.0</MenuItem>
-              <MenuItem value="2.2">Version: 1.1</MenuItem>
-              <MenuItem value="3.3">Version: 1.2</MenuItem>
-            </Select>
-            <DeleteButton>
-              <DeleteOutlineRounded sx={{ fontSize: "16px" }} />
-              <span>Delete Rule</span>
-            </DeleteButton>
-          </FlexDisplay>
-        </Panel>
-      </ReactFlow>
-    </div>
+    <Container>
+      <ItemTitle>All Rules</ItemTitle>
+      <CardWrapper>
+        {recentRules.length === 0 && (
+          <ItemTitle fontSize="18px" smallfontSize="14px">
+            No Rules Found
+          </ItemTitle>
+        )}
+        {recentRules.map((rule) => (
+          <RulesCard rule={rule} />
+        ))}
+      </CardWrapper>
+    </Container>
   );
 };
 

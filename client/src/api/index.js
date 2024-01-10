@@ -33,3 +33,23 @@ export const createRule = async (data, token) =>
     { headers: { Authorization: `Bearer ${token}` } },
     { withCredentials: true }
   );
+
+export const getRules = async (token) =>
+  await API.get("/rule", {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+
+export const getRuleById = async (id, token) =>
+  await API.get(`/rule/${id}`, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+
+export const updateRule = async (id, data, token) =>
+  await API.patch(`/rule/${id}`, data, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+
+export const deleteRule = async (id, token) =>
+  await API.delete(`/rule/${id}`, {
+    headers: { Authorization: `Bearer ${token}` },
+  });

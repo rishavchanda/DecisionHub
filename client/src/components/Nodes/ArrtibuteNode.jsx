@@ -227,7 +227,7 @@ const AttributeNode = ({ id, data }) => {
           <ItemWrapper>
             <Title>Result Attribute</Title>
             <ChipsWrapper>
-              {data.resultAttributes?.map((attribute, index) => (
+              {data.outputAttributes?.map((attribute, index) => (
                 <Chip key={index}>{attribute}</Chip>
               ))}
             </ChipsWrapper>
@@ -283,9 +283,13 @@ const AttributeNode = ({ id, data }) => {
             id: id,
             data: {
               title: data.label,
-              description: "",
+              descryption: data?.descryption,
               inputAttributes: data.inputAttributes,
               outputAttributes: data.outputAttributes,
+              condition: JSON.stringify({
+                nodes: reactFlow.getNodes(),
+                edges: reactFlow.getEdges(),
+              }),
             },
           }}
         />

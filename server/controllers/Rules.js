@@ -41,7 +41,6 @@ export const createRule = async (req, res, next) => {
 export const getRules = async (req, res, next) => {
   const userId = req.user.id;
   try {
-    console.log(req.user.id);
     const user = await User.findOne({ where: { id: userId } });
     if (!user) {
       return next(createError(404, "User not found"));
@@ -65,11 +64,17 @@ export const getRuleById = async (req, res, next) => {
     if (!rule) {
       return next(createError(404, "No rule with this id"));
     }
+    //check if user is owner of this rule
+    const userRules = await user.getRules();
+    const ruleIds = userRules.map((rule) => rule.id);
+    if (!ruleIds.includes(parseInt(ruleId))) {
+      return next(createError(403, "You are not owner of this rule"));
+    }
     return res.status(200).json(rule);
   } catch (error) {
     return next(error);
   }
-}
+};
 
 export const searchRule = async (req, res) => {
   const query = req.query.title;
@@ -89,6 +94,41 @@ export const searchRule = async (req, res) => {
   }
 };
 
+export const updateRule = async (req, res, next) => {
+  console.log(req.body);
+  const userId = req.user.id;
+  const ruleId = req.params.id;
+  const newRule = req.body;
+  try {
+    const user = await User.findOne({ where: { id: userId } });
+    if (!user) {
+      return next(createError(404, "User not found"));
+    }
+    const rule = await Rule.findOne({ where: { id: ruleId } });
+    if (!rule) {
+      return next(createError(404, "No rule with that id"));
+    }
+    //check if user is owner of this rule
+    const userRules = await user.getRules();
+    const ruleIds = userRules.map((rule) => rule.id);
+    if (!ruleIds.includes(parseInt(ruleId))) {
+      return next(createError(403, "You are not owner of this rule"));
+    }
+    await Rule.update(
+      { ...newRule, version: rule.version + 1 },
+      {
+        where: {
+          id: ruleId,
+        },
+      }
+    );
+    const updatedRule = await Rule.findOne({ where: { id: ruleId } });
+    return res.status(200).json(updatedRule);
+  } catch (error) {
+    return next(createError(error.status, error.message));
+  }
+};
+
 export const updateRuleWithVersion = async (req, res, next) => {
   const userId = req.user.id;
   const ruleId = req.params.id;
@@ -101,6 +141,12 @@ export const updateRuleWithVersion = async (req, res, next) => {
     const rule = await Rule.findOne({ where: { id: ruleId } });
     if (!rule) {
       return next(createError(404, "No rule with that id"));
+    }
+    //check if user is owner of this rule
+    const userRules = await user.getRules();
+    const ruleIds = userRules.map((rule) => rule.id);
+    if (!ruleIds.includes(parseInt(ruleId))) {
+      return next(createError(403, "You are not owner of this rule"));
     }
     await Rule.update(
       { ...newRule, version: (rule.version + 0.1).toFixed(1) },
@@ -124,7 +170,7 @@ export const updateRuleWithVersion = async (req, res, next) => {
   } catch (error) {
     return next(createError(error.status, error.message));
   }
-}
+};
 
 export const deleteRule = async (req, res, next) => {
   const userId = req.user.id;
@@ -140,11 +186,11 @@ export const deleteRule = async (req, res, next) => {
     }
     await Rule.destroy({
       where: {
-        id: ruleId
-      }
-    })
+        id: ruleId,
+      },
+    });
     return res.status(200).json({ message: "Rule deleted succesfully" });
   } catch (error) {
     return next(createError(error.status, error.message));
   }
-}
+};

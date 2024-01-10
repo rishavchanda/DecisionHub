@@ -1,8 +1,10 @@
 import { AddRounded, RuleRounded } from "@mui/icons-material";
-import React from "react";
-import { useSelector } from "react-redux";
+import React, { useEffect, useState } from "react";
+import { useDispatch, useSelector } from "react-redux";
 import styled from "styled-components";
 import RulesCard from "../components/cards/RulesCard";
+import { getRules } from "../api";
+import { openSnackbar } from "../redux/reducers/snackbarSlice";
 
 const Container = styled.div`
   padding: 20px 30px;
@@ -38,12 +40,12 @@ const Flex = styled.div`
 `;
 
 const Button = styled.div`
-  width: 200px;
+  width: 180px;
   padding: 14px;
   border-radius: 10px;
   background: ${({ theme }) => theme.primary};
   color: white;
-  font-size: 16px;
+  font-size: 14px;
   font-weight: 600;
   cursor: pointer;
   transition: all 0.3s ease;
@@ -55,7 +57,7 @@ const Button = styled.div`
 
 const ItemTitle = styled.div`
   display: flex;
-  font-size: ${({ fontSize }) => fontSize || "22px"};
+  font-size: ${({ fontSize }) => fontSize || "18px"};
   font-weight: 500;
   color: ${({ theme }) => theme.text_primary};
   @media (max-width: 768px) {
@@ -72,17 +74,44 @@ const CardWrapper = styled.div`
 
 const Dashboard = ({ setOpenNewRule }) => {
   // Hooks
+  const dispath = useDispatch();
   const { currentUser } = useSelector((state) => state.user);
+  const [recentRules, setRecentRules] = useState([]);
+  const [loading, setLoading] = useState(false);
+
+  const getReentRules = async () => {
+    setLoading(true);
+    const token = localStorage.getItem("decisionhub-token-auth-x4");
+    await getRules(token)
+      .then((res) => {
+        setRecentRules(res.data);
+        setLoading(false);
+      })
+      .catch((err) => {
+        dispath(
+          openSnackbar({
+            message: err.response.data.message,
+            severity: "error",
+          })
+        );
+        setLoading(false);
+      });
+  };
+
+  useEffect(() => {
+    getReentRules();
+  }, []);
+
   return (
     <Container>
       <TopSection>
         <Flex>
           <Button onClick={() => setOpenNewRule(true)}>
-            <AddRounded />
+            <AddRounded sx={{ fontSize: "22px" }} />
             Create New Rule
           </Button>
           <Button style={{ background: "#9747FF" }}>
-            <RuleRounded />
+            <RuleRounded sx={{ fontSize: "22px" }} />
             Test Rules
           </Button>
         </Flex>
@@ -97,11 +126,14 @@ const Dashboard = ({ setOpenNewRule }) => {
       </CardWrapper>
       <ItemTitle>New Rules</ItemTitle>
       <CardWrapper>
-        <RulesCard />
-        <RulesCard />
-        <RulesCard />
-        <RulesCard />
-        <RulesCard />
+        {recentRules.length === 0 && (
+          <ItemTitle fontSize="18px" smallfontSize="14px">
+            No Rules Found
+          </ItemTitle>
+        )}
+        {recentRules.map((rule) => (
+          <RulesCard rule={rule} />
+        ))}
       </CardWrapper>
     </Container>
   );
