@@ -17,3 +17,21 @@ export const findUserByEmail = async (req, res, next) => {
     return next(error);
   }
 };
+
+export const getRecentActivity = async (req, res, next) => {
+  // get the rules modified and get max 10 rules
+  const userId = req.user.id;
+  try {
+    const user = await User.findOne({ where: { id: userId } });
+    if (!user) {
+      return next(createError(404, "User not found"));
+    }
+    const rules = await user.getRules({
+      order: [["updatedAt", "DESC"]],
+      limit: 10,
+    });
+    return res.status(200).json(rules);
+  } catch (error) {
+    return next(createError(error.status, error.message));
+  }
+};

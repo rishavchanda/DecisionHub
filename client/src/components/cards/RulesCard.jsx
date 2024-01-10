@@ -80,7 +80,26 @@ const Flex = styled.div`
   width: fit-content;
 `;
 
-const RulesCard = ({ rule }) => {
+const Button = styled.div`
+  width: max-content;
+  padding: 3px 10px;
+  border-radius: 4px;
+  background: ${({ theme }) => theme.primary};
+  color: white;
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  &:hover {
+    background: ${({ theme }) => theme.primary + 80};
+  }
+`;
+
+const RulesCard = ({ rule, test }) => {
   const theme = useTheme();
   const navigate = useNavigate();
   return (
@@ -99,19 +118,31 @@ const RulesCard = ({ rule }) => {
         <Title>{rule?.title}</Title>
         <Description>{rule?.descryption}</Description>
       </div>
-      <Flex>
-        <CalendarTodayOutlined
-          sx={{ color: theme.text_secondary + 90, fontSize: "12px" }}
-        />
-        <CreatedOn>
-          Created On:{" "}
-          {rule?.createdAt &&
-            new Intl.DateTimeFormat("en-US", {
-              year: "numeric",
-              month: "short",
-              day: "2-digit",
-            }).format(new Date(`${rule?.createdAt}`))}
-        </CreatedOn>
+      <Flex
+        style={{
+          justifyContent: "space-between",
+          width: "100%",
+        }}
+      >
+        <Flex>
+          <CalendarTodayOutlined
+            sx={{ color: theme.text_secondary + 90, fontSize: "12px" }}
+          />
+          <CreatedOn>
+            Created On:{" "}
+            {rule?.createdAt &&
+              new Intl.DateTimeFormat("en-US", {
+                year: "numeric",
+                month: "short",
+                day: "2-digit",
+              }).format(new Date(`${rule?.createdAt}`))}
+          </CreatedOn>
+        </Flex>
+        {test && (
+          <Button onClick={() => navigate(`/test/${rule?.id}`)}>
+            Test Now
+          </Button>
+        )}
       </Flex>
     </Card>
   );

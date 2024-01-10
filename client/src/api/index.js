@@ -25,6 +25,11 @@ export const resetPassword = async (data) =>
 export const findUserByEmail = async (data) =>
   await API.post(`/user/findUserByEmail`, data);
 
+export const getRecentActivity = async (token) =>
+  await API.get(`/user/getRecentActivity`, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+
 // Rules
 export const createRule = async (data, token) =>
   await API.post(

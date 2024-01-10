@@ -1,22 +1,11 @@
 import React, { useEffect, useState } from "react";
-import ReactFlow, {
-  Controls,
-  Background,
-  useNodesState,
-  useEdgesState,
-  Panel,
-} from "reactflow";
 import "reactflow/dist/style.css";
-import ConditionalNode from "../components/Nodes/ConditionalNode";
-import AttributeNode from "../components/Nodes/ArrtibuteNode";
-import OutputNode from "../components/Nodes/OutputNode";
 import styled, { useTheme } from "styled-components";
-import { MenuItem, Select } from "@mui/material";
-import { DeleteOutlineRounded } from "@mui/icons-material";
 import { useDispatch, useSelector } from "react-redux";
 import { getRules } from "../api";
 import { openSnackbar } from "../redux/reducers/snackbarSlice";
 import RulesCard from "../components/cards/RulesCard";
+import Loader from "../components/Loader";
 
 const Container = styled.div`
   padding: 20px 30px;
@@ -84,36 +73,6 @@ const CardWrapper = styled.div`
   margin-bottom: 20px;
 `;
 
-const inputAttributes = [
-  "account_no",
-  "loan_duration",
-  "date_of_birth",
-  "employment_status",
-  "annual_income",
-  "credit_score",
-];
-const outputAttributes = ["intrest_rate"];
-
-const nodeTypes = {
-  attributeNode: AttributeNode,
-  conditionalNode: ConditionalNode,
-  outputNode: OutputNode,
-};
-const flowData = {
-  nodes: [
-    {
-      id: "1",
-      type: "attributeNode",
-      data: {
-        label: "Loan Interest Rate",
-        inputAttributes: inputAttributes,
-        outputAttributes: outputAttributes,
-      },
-      position: { x: 234, y: 50 },
-    },
-  ],
-  edges: [],
-};
 
 const Rules = () => {
   // Hooks
@@ -147,17 +106,23 @@ const Rules = () => {
 
   return (
     <Container>
-      <ItemTitle>All Rules</ItemTitle>
-      <CardWrapper>
-        {recentRules.length === 0 && (
-          <ItemTitle fontSize="18px" smallfontSize="14px">
-            No Rules Found
-          </ItemTitle>
-        )}
-        {recentRules.map((rule) => (
-          <RulesCard rule={rule} />
-        ))}
-      </CardWrapper>
+      {loading ? (
+        <Loader />
+      ) : (
+        <>
+          <ItemTitle>All Rules</ItemTitle>
+          <CardWrapper>
+            {recentRules.length === 0 && (
+              <ItemTitle fontSize="18px" smallfontSize="14px">
+                No Rules Found
+              </ItemTitle>
+            )}
+            {recentRules.map((rule) => (
+              <RulesCard rule={rule} />
+            ))}
+          </CardWrapper>
+        </>
+      )}
     </Container>
   );
 };
