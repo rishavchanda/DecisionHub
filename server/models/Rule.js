@@ -1,4 +1,4 @@
-import { v4 as uuidv4 } from 'uuid';
+import { v4 as uuidv4 } from "uuid";
 
 export const Rule = (sequelize, DataTypes) => {
   const Rule = sequelize.define(
@@ -28,6 +28,10 @@ export const Rule = (sequelize, DataTypes) => {
       condition: {
         type: DataTypes.JSON,
         defaultValue: { nodes: [], edges: [] },
+      },
+      tested: {
+        type: DataTypes.BOOLEAN,
+        default: false,
       },
       version: {
         type: DataTypes.FLOAT,

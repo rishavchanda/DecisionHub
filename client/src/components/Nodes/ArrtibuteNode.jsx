@@ -283,7 +283,7 @@ const AttributeNode = ({ id, data }) => {
             id: id,
             data: {
               title: data.label,
-              descryption: data?.descryption,
+              description: data?.description,
               inputAttributes: data.inputAttributes,
               outputAttributes: data.outputAttributes,
               condition: JSON.stringify({

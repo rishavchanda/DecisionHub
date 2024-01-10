@@ -93,7 +93,7 @@ const NewRuleForm = ({ setOpenNewRule, updateForm }) => {
   const location = useLocation();
   const dispath = useDispatch();
   let path = location.pathname.split("/");
-  const getFlowData = (label, descryption) => {
+  const getFlowData = (label, description) => {
     return {
       nodes: [
         {
@@ -101,7 +101,7 @@ const NewRuleForm = ({ setOpenNewRule, updateForm }) => {
           type: "attributeNode",
           data: {
             label: label,
-            descryption: descryption,
+            description: description,
           },
           position: { x: 234, y: 50 },
         },
@@ -114,7 +114,7 @@ const NewRuleForm = ({ setOpenNewRule, updateForm }) => {
       ? updateForm.data
       : {
           title: "",
-          descryption: "",
+          description: "",
           inputAttributes: [],
           outputAttributes: [],
           condition: JSON.stringify(getFlowData("", "")),
@@ -149,7 +149,7 @@ const NewRuleForm = ({ setOpenNewRule, updateForm }) => {
   useEffect(() => {
     if (
       ruleData?.title !== "" &&
-      ruleData?.descryption !== "" &&
+      ruleData?.description !== "" &&
       ruleData?.inputAttributes?.length !== 0 &&
       ruleData?.outputAttributes?.length !== 0
     ) {
@@ -185,7 +185,7 @@ const NewRuleForm = ({ setOpenNewRule, updateForm }) => {
         });
     } else {
       ruleData.condition = JSON.stringify(
-        getFlowData(ruleData.title, ruleData.descryption)
+        getFlowData(ruleData.title, ruleData.description)
       );
       await createRule(ruleData, token)
         .then((res) => {
@@ -246,10 +246,10 @@ const NewRuleForm = ({ setOpenNewRule, updateForm }) => {
             <TextInput
               label="Rule Description"
               placeholder="Enter rule description"
-              name="descryption"
+              name="description"
               textArea
               rows={3}
-              value={ruleData.descryption}
+              value={ruleData.description}
               handelChange={handelInputs}
             />
             <TextInput

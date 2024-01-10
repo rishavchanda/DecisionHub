@@ -116,7 +116,7 @@ const RulesCard = ({ rule, test }) => {
       </CardTop>
       <div>
         <Title>{rule?.title}</Title>
-        <Description>{rule?.descryption}</Description>
+        <Description>{rule?.description}</Description>
       </div>
       <Flex
         style={{
