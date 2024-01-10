@@ -275,7 +275,7 @@ const addNewOutputNode = (currentNodeId, sourceHandle, reactFlow, data) => {
     id: newNodeId,
     type: "outputNode",
     data: {
-      label: "New Condition Node",
+      label: "New Output Node",
       inputAttributes: data.inputAttributes,
       outputAttributes: data.outputAttributes,
       outputFields: [{ field: "", value: "" }],

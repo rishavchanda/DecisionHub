@@ -15,8 +15,8 @@ import { CircularProgress, MenuItem, Select } from "@mui/material";
 import {
   ArrowBackRounded,
   DeleteOutlineRounded,
+  EditRounded,
   FlipCameraAndroidOutlined,
-  RuleRounded,
   SaveRounded,
 } from "@mui/icons-material";
 import { useNavigate, useParams } from "react-router-dom";
@@ -83,12 +83,6 @@ const Button = styled.div`
   cursor: pointer;
   &:hover {
     background-color: ${({ theme }) => theme.primary + 90};
-
-    ${({ outlined, theme }) =>
-      outlined &&
-      `
-    background-color: ${theme.green + 20};
-    `}
   }
 
   ${({ disabled, theme }) =>
@@ -97,14 +91,6 @@ const Button = styled.div`
     background-color: ${theme.primary + 50};
     cursor: not-allowed;
   `}
-
-  ${({ outlined, theme }) =>
-    outlined &&
-    `
-    background-color: transparent;
-    border: 1px solid ${theme.green + 90};
-    color: ${theme.green};
-    `}
 `;
 
 const nodeTypes = {
@@ -113,7 +99,7 @@ const nodeTypes = {
   outputNode: OutputNode,
 };
 
-const RulesDetails = () => {
+const TestDetails = () => {
   const { id } = useParams();
   const { reload } = useSelector((state) => state.rule);
 
@@ -248,8 +234,8 @@ const RulesDetails = () => {
           edges={edges}
           onNodesChange={onNodesChange}
           onEdgesChange={onEdgesChange}
-          nodesDraggable={true}
-          elementsSelectable={true}
+          nodesDraggable={false}
+          elementsSelectable={false}
           setNodes={setNodes}
           setEdges={setEdges}
           fitView={true}
@@ -284,64 +270,8 @@ const RulesDetails = () => {
                 <MenuItem value="2.2">Version: 1.1</MenuItem>
                 <MenuItem value="3.3">Version: 1.2</MenuItem>
               </Select>
-              <Button
-                outlined
-                onClick={() => navigate(`/test/${rule.id}`)}
-                style={{ padding: "10px", borderRadius: "50%" }}
-              >
-                <RuleRounded sx={{ fontSize: "16px" }} />
-              </Button>
-              <DeleteButton
-                onClick={() => deleterule()}
-                style={{ padding: "10px", borderRadius: "50%" }}
-              >
-                <DeleteOutlineRounded sx={{ fontSize: "16px" }} />
-              </DeleteButton>
-            </FlexDisplay>
-          </Panel>
-          <Panel position="bottom-right">
-            <FlexDisplay>
-              <Button disabled={saveLoading} onClick={() => saveRule()}>
-                {saveLoading ? (
-                  <>
-                    <CircularProgress
-                      sx={{
-                        color: "inherit",
-                        width: "14px !important",
-                        height: "14px !important",
-                      }}
-                    />
-                    Saving...
-                  </>
-                ) : (
-                  <>
-                    <SaveRounded sx={{ fontSize: "14px" }} />
-                    Save Rule
-                  </>
-                )}
-              </Button>
-              <Button
-                disabled={saveLoading}
-                onClick={() => saveRule()}
-                style={{ background: theme.secondary }}
-              >
-                {saveVersionLoading ? (
-                  <>
-                    <CircularProgress
-                      sx={{
-                        color: "inherit",
-                        width: "14px !important",
-                        height: "14px !important",
-                      }}
-                    />
-                    Creating Version...
-                  </>
-                ) : (
-                  <>
-                    <FlipCameraAndroidOutlined sx={{ fontSize: "14px" }} />
-                    Save New Version
-                  </>
-                )}
+              <Button onClick={() => navigate(`/rules/${rule.id}`)}>
+                <EditRounded style={{ fontSize: "12px" }} /> Edit Rule
               </Button>
             </FlexDisplay>
           </Panel>
@@ -351,4 +281,4 @@ const RulesDetails = () => {
   );
 };
 
-export default RulesDetails;
+export default TestDetails;

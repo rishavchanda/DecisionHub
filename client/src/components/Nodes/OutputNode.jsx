@@ -246,6 +246,8 @@ const OutputNode = ({ id, data, outputAttributes }) => {
             borderWidth: 2,
             padding: "6px 8px",
             cursor: "pointer !important",
+            borderColor: theme.white + 50,
+            color: theme.white,
           }}
           onClick={() => deleteNode()}
         >

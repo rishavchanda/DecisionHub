@@ -43,9 +43,15 @@ const Tag = styled.div`
   justify-content: center;
   padding: 3px 6px 2px 6px;
   border-radius: 4px;
+  background: ${({ theme }) => theme.text_secondary + 10};
+  color: ${({ theme }) => theme.text_secondary};
+  font-size: 10px;
+  ${({ green, theme }) =>
+    green &&
+    `
   background: ${({ theme }) => theme.green + 10};
   color: ${({ theme }) => theme.green};
-  font-size: 10px;
+  `}
 `;
 
 const LastUpdated = styled.div`
@@ -103,10 +109,10 @@ const RulesCard = ({ rule, test }) => {
   const theme = useTheme();
   const navigate = useNavigate();
   return (
-    <Card onClick={() => navigate(`/rules/${rule?.id}`)}>
+    <Card onClick={() => !test && navigate(`/rules/${rule?.id}`)}>
       {/* <Image src="https://firebasestorage.googleapis.com/v0/b/flexi-coding.appspot.com/o/reactflow%20(11).png?alt=media&token=6c50b741-cbb9-4a9f-bdcd-7b6aa2aa56f4" /> */}
       <CardTop>
-        <Tag>Tested</Tag>
+        {rule.tested ? <Tag green>Tested</Tag> : <Tag>Not Tested</Tag>}
         <Flex>
           <AccessTimeOutlined
             sx={{ color: theme.text_secondary, fontSize: "16px" }}

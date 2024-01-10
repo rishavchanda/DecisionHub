@@ -70,6 +70,9 @@ export const getRuleById = async (req, res, next) => {
     if (!ruleIds.includes(ruleId)) {
       return next(createError(403, "You are not owner of this rule"));
     }
+    // parse the json and return it
+    const condition = JSON.parse(rule.condition);
+    rule.condition = condition;
     return res.status(200).json(rule);
   } catch (error) {
     return next(error);

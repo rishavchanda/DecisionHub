@@ -12,6 +12,7 @@ import { useDispatch, useSelector } from "react-redux";
 import Authentication from "./pages/Authentication";
 import NewRuleForm from "./components/DialogForms/NewRuleForm";
 import RulesDetails from "./pages/RulesDetails";
+import TestDetails from "./pages/TestDetails";
 
 const Container = styled.div`
   width: 100%;
@@ -67,6 +68,7 @@ function App() {
                 <Route path="/rules" exact element={<Rules />} />
                 <Route path="/rules/:id" exact element={<RulesDetails />} />
                 <Route path="/test" exact element={<Test />} />
+                <Route path="/test/:id" exact element={<TestDetails />} />
               </Routes>
               {openNewRule && (
                 <NewRuleForm
