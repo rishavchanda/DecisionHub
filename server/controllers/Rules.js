@@ -1,12 +1,13 @@
 import db from "../models/index.js";
 import { createError } from "../error.js";
-import {Op} from "sequelize";
+import { Op } from "sequelize";
 
 const Rule = db.rule;
 const User = db.user;
+const Version = db.version;
 
 export const createRule = async (req, res, next) => {
-  const { title, descryption, inputAttributes, outputAttributes, condition } =
+  const { title, description, inputAttributes, outputAttributes, condition } =
     req.body;
   const userId = req.user.id;
   try {
@@ -16,12 +17,21 @@ export const createRule = async (req, res, next) => {
     }
     const rule = await Rule.create({
       title,
-      descryption,
+      description,
       inputAttributes,
       outputAttributes,
       condition,
     });
     await rule.setUser(user);
+    await Version.create({
+      title: rule.title,
+      description: rule.description,
+      inputAttributes: rule.inputAttributes,
+      outputAttributes: rule.outputAttributes,
+      condition: rule.condition,
+      version: rule.version,
+      ruleId: rule.id,
+    });
     return res.status(201).json(rule);
   } catch (error) {
     return next(error);
@@ -79,7 +89,7 @@ export const searchRule = async (req, res) => {
   }
 };
 
-export const updateRule = async (req, res, next) => {
+export const updateRuleWithVersion = async (req, res, next) => {
   const userId = req.user.id;
   const ruleId = req.params.id;
   const newRule = req.body;
@@ -93,7 +103,7 @@ export const updateRule = async (req, res, next) => {
       return next(createError(404, "No rule with that id"));
     }
     await Rule.update(
-      { ...newRule, version: rule.version + 1 },
+      { ...newRule, version: (rule.version + 0.1).toFixed(1) },
       {
         where: {
           id: ruleId,
@@ -101,6 +111,15 @@ export const updateRule = async (req, res, next) => {
       }
     );
     const updatedRule = await Rule.findOne({ where: { id: ruleId } });
+    await Version.create({
+      title: updatedRule.title,
+      description: updatedRule.description,
+      inputAttributes: updatedRule.inputAttributes,
+      outputAttributes: updatedRule.outputAttributes,
+      condition: updatedRule.condition,
+      version: updatedRule.version,
+      ruleId: updatedRule.id,
+    });
     return res.status(200).json(updatedRule);
   } catch (error) {
     return next(createError(error.status, error.message));
