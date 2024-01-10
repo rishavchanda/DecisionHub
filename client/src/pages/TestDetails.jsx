@@ -5,6 +5,8 @@ import ReactFlow, {
   useNodesState,
   useEdgesState,
   Panel,
+  useReactFlow,
+  MiniMap,
 } from "reactflow";
 import "reactflow/dist/style.css";
 import ConditionalNode from "../components/Nodes/ConditionalNode";
@@ -102,6 +104,7 @@ const nodeTypes = {
 const TestDetails = () => {
   const { id } = useParams();
   const { reload } = useSelector((state) => state.rule);
+  const { setViewport } = useReactFlow();
 
   //Hooks
   const theme = useTheme();
@@ -116,8 +119,6 @@ const TestDetails = () => {
 
   //loader
   const [loading, setLoading] = useState(true);
-  const [saveLoading, setSaveLoading] = useState(false);
-  const [saveVersionLoading, setSaveVersionLoading] = useState(false);
 
   //Functions
 
@@ -160,6 +161,7 @@ const TestDetails = () => {
       });
       setNodes(nodes);
       setEdges(edges);
+      setViewport({ x: 200, y: 0, zoom: 1 }, { duration: 800 });
     }
   }, [rule, inputAttributes, outputAttributes, reload]);
 

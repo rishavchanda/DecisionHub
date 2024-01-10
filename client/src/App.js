@@ -13,6 +13,8 @@ import Authentication from "./pages/Authentication";
 import NewRuleForm from "./components/DialogForms/NewRuleForm";
 import RulesDetails from "./pages/RulesDetails";
 import TestDetails from "./pages/TestDetails";
+import { ReactFlowProvider } from "reactflow";
+import ToastMessage from "./components/ToastMessage";
 
 const Container = styled.div`
   width: 100%;
@@ -52,36 +54,42 @@ function App() {
 
   return (
     <ThemeProvider theme={darkMode ? darkTheme : lightTheme}>
-      <BrowserRouter>
-        {currentUser ? (
-          <Container>
-            {menuOpen && <Sidebar setMenuOpen={setMenuOpen} />}
-            <Wrapper>
-              <Navbar menuOpen={menuOpen} setMenuOpen={setMenuOpen} />
+      <ReactFlowProvider>
+        <BrowserRouter>
+          {currentUser ? (
+            <Container>
+              {menuOpen && <Sidebar setMenuOpen={setMenuOpen} />}
+              <Wrapper>
+                <Navbar menuOpen={menuOpen} setMenuOpen={setMenuOpen} />
 
-              <Routes>
-                <Route
-                  path="/"
-                  exact
-                  element={<Dashboard setOpenNewRule={setOpenNewRule} />}
-                />
-                <Route path="/rules" exact element={<Rules />} />
-                <Route path="/rules/:id" exact element={<RulesDetails />} />
-                <Route path="/test" exact element={<Test />} />
-                <Route path="/test/:id" exact element={<TestDetails />} />
-              </Routes>
-              {openNewRule && (
-                <NewRuleForm
-                  setOpenNewRule={setOpenNewRule}
-                  updateForm={{ update: false }}
-                />
-              )}
-            </Wrapper>
-          </Container>
-        ) : (
-          <Authentication />
-        )}
-      </BrowserRouter>
+                <Routes>
+                  <Route
+                    path="/"
+                    exact
+                    element={<Dashboard setOpenNewRule={setOpenNewRule} />}
+                  />
+                  <Route path="/rules" exact element={<Rules />} />
+                  <Route path="/rules/:id" exact element={<RulesDetails />} />
+                  <Route path="/test" exact element={<Test />} />
+                  <Route path="/test/:id" exact element={<TestDetails />} />
+                </Routes>
+                {openNewRule && (
+                  <NewRuleForm
+                    setOpenNewRule={setOpenNewRule}
+                    updateForm={{ update: false }}
+                  />
+                )}
+              </Wrapper>
+            </Container>
+          ) : (
+            <Authentication />
+          )}
+
+          {open && (
+            <ToastMessage open={open} message={message} severity={severity} />
+          )}
+        </BrowserRouter>
+      </ReactFlowProvider>
     </ThemeProvider>
   );
 }

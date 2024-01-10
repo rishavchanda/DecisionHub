@@ -5,6 +5,7 @@ import ReactFlow, {
   useNodesState,
   useEdgesState,
   Panel,
+  useReactFlow,
 } from "reactflow";
 import "reactflow/dist/style.css";
 import ConditionalNode from "../components/Nodes/ConditionalNode";
@@ -116,6 +117,7 @@ const nodeTypes = {
 const RulesDetails = () => {
   const { id } = useParams();
   const { reload } = useSelector((state) => state.rule);
+  const { setViewport } = useReactFlow();
 
   //Hooks
   const theme = useTheme();
@@ -174,6 +176,7 @@ const RulesDetails = () => {
       });
       setNodes(nodes);
       setEdges(edges);
+      setViewport({ x: 200, y: 0, zoom: 1 }, { duration: 800 });
     }
   }, [rule, inputAttributes, outputAttributes, reload]);
 
@@ -190,6 +193,12 @@ const RulesDetails = () => {
         setRule(res.data);
         setInputAttributes(res.data.inputAttributes);
         setOutputAttributes(res.data.outputAttributes);
+        dispath(
+          openSnackbar({
+            message: "Rule Saved Successfully",
+            severity: "success",
+          })
+        );
         setSaveLoading(false);
       })
       .catch((err) => {
