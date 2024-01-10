@@ -67,7 +67,7 @@ export const getRuleById = async (req, res, next) => {
     //check if user is owner of this rule
     const userRules = await user.getRules();
     const ruleIds = userRules.map((rule) => rule.id);
-    if (!ruleIds.includes(parseInt(ruleId))) {
+    if (!ruleIds.includes(ruleId)) {
       return next(createError(403, "You are not owner of this rule"));
     }
     return res.status(200).json(rule);
@@ -111,7 +111,7 @@ export const updateRule = async (req, res, next) => {
     //check if user is owner of this rule
     const userRules = await user.getRules();
     const ruleIds = userRules.map((rule) => rule.id);
-    if (!ruleIds.includes(parseInt(ruleId))) {
+    if (!ruleIds.includes(ruleId)) {
       return next(createError(403, "You are not owner of this rule"));
     }
     await Rule.update(
@@ -145,7 +145,7 @@ export const updateRuleWithVersion = async (req, res, next) => {
     //check if user is owner of this rule
     const userRules = await user.getRules();
     const ruleIds = userRules.map((rule) => rule.id);
-    if (!ruleIds.includes(parseInt(ruleId))) {
+    if (!ruleIds.includes(ruleId)) {
       return next(createError(403, "You are not owner of this rule"));
     }
     await Rule.update(
@@ -183,6 +183,12 @@ export const deleteRule = async (req, res, next) => {
     const rule = await Rule.findOne({ where: { id: ruleId } });
     if (!rule) {
       return next(createError(404, "No rule with that id"));
+    }
+    //check if user is owner of this rule
+    const userRules = await user.getRules();
+    const ruleIds = userRules.map((rule) => rule.id);
+    if (!ruleIds.includes(ruleId)) {
+      return next(createError(403, "You are not owner of this rule"));
     }
     await Rule.destroy({
       where: {
