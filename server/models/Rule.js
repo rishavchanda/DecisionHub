@@ -1,6 +1,3 @@
-import { Deferrable } from "sequelize";
-import { User } from "./User.js";
-import db from "./index.js";
 
 export const Rule = (sequelize, DataTypes) => {
   const Rule = sequelize.define(
