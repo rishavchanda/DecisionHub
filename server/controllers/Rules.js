@@ -123,10 +123,10 @@ export const searchRule = async (req, res) => {
 };
 
 export const updateRule = async (req, res, next) => {
-  console.log(req.body);
   const userId = req.user.id;
   const ruleId = req.params.id;
   const newRule = req.body;
+  const version = req.body.version;
   try {
     const user = await User.findOne({ where: { id: userId } });
     if (!user) {
@@ -142,16 +142,44 @@ export const updateRule = async (req, res, next) => {
     if (!ruleIds.includes(ruleId)) {
       return next(createError(403, "You are not owner of this rule"));
     }
-    await Rule.update(
-      { ...newRule, version: rule.version },
-      {
+    if (!version) {
+      await Rule.update(
+        { ...newRule },
+        {
+          where: {
+            id: ruleId,
+          },
+        }
+      );
+      const updatedRule = await Rule.findOne({ where: { id: ruleId } });
+      await Version.update(
+        { ...newRule },
+        {
+          where: {
+            ruleId: ruleId,
+          }
+        }
+      )
+      return res.status(200).json(updatedRule);
+    } else {
+      const ruleVersion = await Version.findOne({
         where: {
-          id: ruleId,
-        },
-      }
-    );
-    const updatedRule = await Rule.findOne({ where: { id: ruleId } });
-    return res.status(200).json(updatedRule);
+          ruleId: ruleId,
+          version: version
+        }
+      })
+      await Version.update(
+        { ...newRule },
+        {
+          where: {
+            id: ruleVersion.id
+          }
+        })
+      const updatedVersion = await Version.findOne({ where: { id: ruleVersion.id } });
+
+      return res.status(200).json(updatedVersion);
+    }
+
   } catch (error) {
     return next(createError(error.status, error.message));
   }
@@ -203,6 +231,7 @@ export const updateRuleWithVersion = async (req, res, next) => {
 export const deleteRule = async (req, res, next) => {
   const userId = req.user.id;
   const ruleId = req.params.id;
+  const version = req.body.version;
   try {
     const user = await User.findOne({ where: { id: userId } });
     if (!user) {
@@ -218,12 +247,24 @@ export const deleteRule = async (req, res, next) => {
     if (!ruleIds.includes(ruleId)) {
       return next(createError(403, "You are not owner of this rule"));
     }
-    await Rule.destroy({
-      where: {
-        id: ruleId,
-      },
-    });
-    return res.status(200).json({ message: "Rule deleted succesfully" });
+    if (!version) {
+      const ruleVersions = await rule.getVersions();
+      await Promise.all(ruleVersions.map(version => version.destroy()));
+      await Rule.destroy({
+        where: {
+          id: ruleId,
+        },
+      });
+      return res.status(200).json({ message: "Rule deleted succesfully" });
+    }else{
+      await Version.destroy({
+        where: {
+          ruleId: ruleId,
+          version: version
+        }
+      })
+      return res.status(200).json({ message: "Version deleted succesfully" });
+    }
   } catch (error) {
     return next(createError(error.status, error.message));
   }
