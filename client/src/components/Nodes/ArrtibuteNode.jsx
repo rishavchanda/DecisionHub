@@ -20,13 +20,13 @@ const Wrapper = styled.div`
 const Node = styled.div`
   width: 100%;
   max-width: 500px;
-  min-width: 300px;
+  min-width: 250px;
   background-color: ${({ theme }) => theme.card};
   border-radius: 8px;
   box-shadow: 1px 1px 14px 0px ${({ theme }) => theme.shadow};
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 8px;
 `;
 
 const NodeHeader = styled.div`
@@ -34,14 +34,14 @@ const NodeHeader = styled.div`
   flex-direction: row;
   justify-content: center;
   align-items: center;
-  padding: 14px 16px;
+  padding: 12px 16px;
   background: ${({ theme }) => theme.secondary};
-  gap: 16px;
+  gap: 14px;
   border-radius: 8px 8px 0px 0px;
 `;
 
 const NodeTitle = styled.div`
-  font-size: 16px;
+  font-size: 14px;
   font-weight: 600;
   color: ${({ theme }) => theme.white};
 `;
@@ -51,14 +51,14 @@ const NodeBody = styled.div`
   flex-direction: column;
   justify-content: center;
   padding: 2px 16px 16px 16px;
-  gap: 14px;
+  gap: 12px;
 `;
 
 const OutlineWrapper = styled.div`
   border: 1px solid ${({ theme }) => theme.text_secondary + 50};
   border-radius: 8px;
   padding: 6px;
-  font-size: 12px;
+  font-size: 10px;
   color: ${({ theme }) => theme.text_primary};
   display: flex;
   flex-direction: row;
@@ -76,7 +76,7 @@ const VR = styled.div`
 const ItemWrapper = styled.div`
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 6px;
 `;
 
 const Title = styled.div`
@@ -89,14 +89,14 @@ const ChipsWrapper = styled.div`
   display: flex;
   flex-wrap: wrap;
   flex-direction: row;
-  gap: 6px;
+  gap: 4px;
 `;
 
 const Chip = styled.div`
   background: ${({ theme }) => theme.text_secondary + 10};
   border-radius: 30px;
   padding: 6px 14px;
-  font-size: 14px;
+  font-size: 12px;
   color: ${({ theme }) => theme.text_primary};
 `;
 
@@ -123,11 +123,11 @@ const AddNoNode = styled.div`
   flex-direction: row;
   justify-content: center;
   align-items: center;
-  gap: 8px;
+  gap: 6px;
   border: 2px solid ${({ theme }) => theme.arrow};
   border-radius: 50px;
   padding: 6px 6px;
-  font-size: 12px;
+  font-size: 10px;
   &:hover {
     background: ${({ theme }) => theme.arrow};
     color: ${({ theme }) => theme.card};
@@ -210,7 +210,7 @@ const AttributeNode = ({ id, data }) => {
         <NodeHeader>
           <NodeTitle>{data.label}</NodeTitle>
           <EditOutlined
-            sx={{ fontSize: "18px", color: theme.white, cursor: "pointer" }}
+            sx={{ fontSize: "16px", color: theme.white, cursor: "pointer" }}
             onClick={() => setOpenUpdateDialog(true)}
           />
         </NodeHeader>
@@ -255,7 +255,7 @@ const AttributeNode = ({ id, data }) => {
                 padding: "12px 16px",
                 gap: "8px",
                 width: "max-content",
-                fontSize: "14px",
+                fontSize: "12px",
                 fontWeight: "500",
                 "&:hover": {
                   background: theme.text_secondary + 50,
@@ -268,7 +268,7 @@ const AttributeNode = ({ id, data }) => {
               }}
             >
               <SubtitlesRounded
-                sx={{ fontSize: "20px", color: theme.yellow }}
+                sx={{ fontSize: "18px", color: theme.yellow }}
               />
               Add New Conditional Node
             </OutlineWrapper>

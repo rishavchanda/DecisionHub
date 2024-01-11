@@ -19,7 +19,7 @@ const Wrapper = styled.div`
 
 const Condition = styled.div`
   draggable: true;
-  height: 50px;
+  height: 46px;
   display: flex;
   flex-direction: row;
   justify-content: space-between;
@@ -37,7 +37,7 @@ const Move = styled.div`
   justify-content: center;
   align-items: center;
   gap: 2px;
-  font-size: 12px;
+  font-size: 10px;
 `;
 
 const VR = styled.div`
@@ -58,7 +58,7 @@ const OutlineWrapper = styled.div`
   border: 1px solid ${({ theme }) => theme.text_secondary + 50};
   border-radius: 8px;
   padding: 9px 8px;
-  font-size: 12px;
+  font-size: 10px;
   color: ${({ theme }) => theme.text_primary};
   &:focus {
     outline: none;
@@ -74,7 +74,7 @@ const Select = styled.select`
   background: transparent;
   border: none;
   padding-right: 2px;
-  font-size: 12px;
+  font-size: 10px;
   color: ${({ theme }) => theme.text_primary};
   background: ${({ theme }) => theme.card};
   &:focus {
@@ -83,10 +83,10 @@ const Select = styled.select`
 `;
 
 const Input = styled.input`
-  max-width: 80px;
+  max-width: 60px;
   background: transparent;
   border: none;
-  font-size: 12px;
+  font-size: 10px;
   font-weight: 600;
   color: ${({ theme }) => theme.text_primary};
   background: ${({ theme }) => theme.card};
@@ -106,7 +106,7 @@ const Button = styled.div`
   border: 1px solid ${({ theme }) => theme.text_secondary + 50};
   border-radius: 8px;
   padding: 6px 8px;
-  font-size: 12px;
+  font-size: 10px;
   ${({ booleanDisabled }) =>
     booleanDisabled &&
     `
@@ -346,7 +346,7 @@ const Conditions = ({
           style={{
             display: "flex",
             gap: "6px",
-            fontSize: "12px",
+            fontSize: "10px",
             justifyContent: "center",
             alignItems: "center",
             marginRight: "4px",
@@ -356,7 +356,7 @@ const Conditions = ({
           <Move>
             <ArrowDropUpRounded
               sx={{
-                fontSize: "14px",
+                fontSize: "12px",
                 color: theme.text_secondary,
                 padding: "0.4px",
                 borderRadius: "50%",
@@ -372,7 +372,7 @@ const Conditions = ({
             />
             <ArrowDropDownRounded
               sx={{
-                fontSize: "14px",
+                fontSize: "12px",
                 color: theme.text_secondary,
                 padding: "0.4px",
                 borderRadius: "50%",
@@ -513,7 +513,7 @@ const Conditions = ({
               <DeleteOutlineRounded
                 key={index}
                 sx={{
-                  fontSize: "20px",
+                  fontSize: "18px",
                   color: theme.text_secondary,
                   cursor: "pointer",
                 }}
@@ -530,7 +530,7 @@ const Conditions = ({
         <VR />
         <DeleteOutlineRounded
           sx={{
-            fontSize: "20px",
+            fontSize: "18px",
             color: theme.text_secondary,
             cursor:
               reactFlow.getNode(nodeId)?.data?.conditions?.length === 1 &&
@@ -550,15 +550,15 @@ const Conditions = ({
           <Button
             style={{
               width: "fit-content",
-              fontSize: "12px",
-              marginBottom: "8px",
+              fontSize: "10px",
+              marginBottom: "2px",
             }}
             booleanDisabled={booleanDisabled}
             onClick={() =>
               !booleanDisabled && addBooleanCondition(conditionIndex)
             }
           >
-            <AddRounded sx={{ fontSize: "16px", color: theme.primary }} />
+            <AddRounded sx={{ fontSize: "14px", color: theme.primary }} />
             Add Boolean Condition
           </Button>
         </>

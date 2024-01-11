@@ -26,14 +26,14 @@ const NodeHeader = styled.div`
   flex-direction: row;
   justify-content: center;
   align-items: center;
-  padding: 14px 16px;
+  padding: 10px 16px;
   background: ${({ theme }) => theme.primary};
   gap: 16px;
   border-radius: 8px 8px 0px 0px;
 `;
 
 const NodeTitle = styled.input`
-  font-size: 16px;
+  font-size: 14px;
   font-weight: 600;
   color: ${({ theme }) => theme.white};
   background: transparent;
