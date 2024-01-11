@@ -700,3 +700,148 @@ export const deleteRule = async (req, res, next) => {
         ]
     }
     */
+/*
+const inputData = {
+  account_no: 4543566,
+  loan_duration: 345654,
+  date_of_birth: 19/11/2003,
+  employment_status: "employed",
+  annual_income: 1200000,
+  credit_score: 800
+};
+*/
+function evaluateExpression(result, expression, inputData) {
+  let { inputAttribute, operator, value } = expression;
+  const inputValue = inputData[value]
+    ? parseInt(inputData[value])
+    : parseInt(value);
+
+  const getComparisonValue = (attribute) =>
+    attribute === null ? result : inputData[attribute];
+
+  const performComparison = (attribute) => {
+    const attributeValue = getComparisonValue(attribute);
+    switch (operator) {
+      case ">":
+        return attributeValue > inputValue;
+      case "<":
+        return attributeValue < inputValue;
+      case "==":
+        return attributeValue === inputValue;
+      case "!=":
+        return attributeValue !== inputValue;
+      case ">=":
+        return attributeValue >= inputValue;
+      case "<=":
+        return attributeValue <= inputValue;
+      case "/":
+        return attributeValue / inputValue;
+      case "*":
+        return attributeValue * inputValue;
+      case "+":
+        return attributeValue + inputValue;
+      case "-":
+        return attributeValue - inputValue;
+      case "%":
+        return attributeValue % inputValue;
+      default:
+        return false;
+    }
+  };
+
+  return performComparison(inputAttribute);
+}
+
+function evaluateCondition(condition, inputData) {
+  const { expression, boolean } = condition;
+
+  // Evaluate the first expression
+  let result = [];
+  result.push(evaluateExpression(null, expression[0], inputData));
+
+  // If there are more expressions, combine the results using boolean logic
+  for (let i = 1; i < expression.length; i++) {
+    result.push(evaluateExpression(result[i - 1], expression[i], inputData));
+  }
+  return result[result.length - 1];
+}
+function evaluateConditions(conditions, inputData) {
+  let result = [];
+  let logicalOperator = null;
+
+  for (const condition of conditions) {
+    const conditionResult = evaluateCondition(condition, inputData);
+    if (logicalOperator) {
+      // If a logical operator is present, combine the previous result with the current result
+      result[result.length - 1] = performLogicalOperation(
+        result[result.length - 1],
+        logicalOperator,
+        conditionResult
+      );
+      logicalOperator = null;
+    } else {
+      // If no logical operator, simply push the current result
+      result.push(conditionResult);
+    }
+
+    if (condition.boolean != null || condition.boolean != undefined) {
+      // If a logical operator is found, store it for the next iteration
+      logicalOperator = condition.boolean;
+    }
+  }
+
+  return result;
+}
+
+// Helper function to perform logical operations
+function performLogicalOperation(operand1, operator, operand2) {
+  switch (operator) {
+    case "&&":
+      return operand1 && operand2;
+    case "||":
+      return operand1 || operand2;
+    default:
+      return false; // Default to false if an invalid operator is provided
+  }
+}
+
+// Example usage with your provided data
+const conditions = [
+  {
+    multiple: false,
+    expression: [
+      {
+        inputAttribute: "loan_duration",
+        operator: "<",
+        value: "credit_score",
+      },
+    ],
+    boolean: "&&",
+  },
+  {
+    multiple: false,
+    expression: [
+      {
+        inputAttribute: "annual_income",
+        operator: "/",
+        value: "12",
+      },
+      {
+        inputAttribute: null,
+        operator: ">=",
+        value: "100000",
+      },
+    ],
+  },
+];
+
+const inputData = {
+  account_no: 4543566,
+  loan_duration: 12,
+  date_of_birth: 19 / 11 / 2003,
+  employment_status: "employed",
+  annual_income: 1200000,
+  credit_score: 800,
+};
+
+console.log(evaluateConditions(conditions, inputData));

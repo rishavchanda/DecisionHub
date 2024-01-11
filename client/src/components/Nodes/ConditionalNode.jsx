@@ -47,7 +47,7 @@ const NodeHeader = styled.div`
 
 const NodeTitle = styled.input`
   flex: 1;
-  font-size: 16px;
+  font-size: 14px;
   font-weight: 500;
   color: ${({ theme }) => theme.text_primary};
   background: transparent;
@@ -82,7 +82,7 @@ const Flex = styled.div`
   flex-direction: row;
   justify-content: space-between;
   align-items: center;
-  font-size: 12px;
+  font-size: 10px;
   gap: 8px;
 `;
 
@@ -96,13 +96,13 @@ const Button = styled.div`
   border: 1px solid ${({ theme }) => theme.text_secondary + 50};
   border-radius: 8px;
   padding: 6px 8px;
-  font-size: 12px;
+  font-size: 10px;
 `;
 const OutlineWrapper = styled.div`
   border: 1px solid ${({ theme }) => theme.text_secondary + 50};
   border-radius: 8px;
   padding: 6px;
-  font-size: 12px;
+  font-size: 10px;
   color: ${({ theme }) => theme.text_primary};
   display: flex;
   flex-direction: row;
@@ -115,7 +115,7 @@ const Select = styled.select`
   background: transparent;
   border: none;
   padding-right: 2px;
-  font-size: 12px;
+  font-size: 10px;
   color: ${({ theme }) => theme.text_primary};
   background: ${({ theme }) => theme.card};
   &:focus {
@@ -146,6 +146,7 @@ const No = styled.div`
   flex-direction: column;
   align-items: center;
   position: relative;
+  font-size: 10px;
 `;
 
 const Yes = styled.div`
@@ -179,7 +180,7 @@ const AddNoNode = styled.div`
   border: 2px solid ${({ theme }) => theme.arrow};
   border-radius: 50px;
   padding: 6px 6px;
-  font-size: 12px;
+  font-size: 10px;
   &:hover {
     background: ${({ theme }) => theme.arrow};
     color: ${({ theme }) => theme.card};
@@ -220,7 +221,7 @@ const addNewConditionalNode = (
           expression: [
             {
               inputAttribute: "",
-              operator: "Equal",
+              operator: "",
               value: "",
             },
           ],
@@ -356,7 +357,7 @@ const YesNode = ({ id, data }) => {
           display: "flex",
           justifyContent: "center",
           alignItems: "center",
-          fontSize: "20px",
+          fontSize: "18px",
         }}
       >
         Yes
@@ -378,7 +379,7 @@ const YesNode = ({ id, data }) => {
               padding: "12px 16px",
               gap: "8px",
               width: "max-content",
-              fontSize: "14px",
+              fontSize: "12px",
               fontWeight: "500",
               "&:hover": {
                 background: theme.text_secondary + 50,
@@ -392,7 +393,7 @@ const YesNode = ({ id, data }) => {
               );
             }}
           >
-            <SubtitlesRounded sx={{ fontSize: "20px", color: theme.yellow }} />
+            <SubtitlesRounded sx={{ fontSize: "18px", color: theme.yellow }} />
             Add New Conditional Node
           </OutlineWrapper>
           <OutlineWrapper
@@ -406,7 +407,7 @@ const YesNode = ({ id, data }) => {
               padding: "12px 16px",
               gap: "8px",
               width: "max-content",
-              fontSize: "14px",
+              fontSize: "12px",
               fontWeight: "500",
             }}
             onClick={async () => {
@@ -416,7 +417,7 @@ const YesNode = ({ id, data }) => {
               );
             }}
           >
-            <BubbleChartRounded sx={{ fontSize: "20x", color: theme.green }} />
+            <BubbleChartRounded sx={{ fontSize: "18px", color: theme.green }} />
             Add New Output Node
           </OutlineWrapper>
         </NodeButtons>
@@ -863,7 +864,7 @@ function ConditionalNode({ id, data }) {
           <Hr />
           <NodeFooter>
             <Button onClick={() => addCondition()}>
-              <AddRounded sx={{ fontSize: "18px", color: theme.primary }} />
+              <AddRounded sx={{ fontSize: "16px", color: theme.primary }} />
               Add Condition
             </Button>
           </NodeFooter>
