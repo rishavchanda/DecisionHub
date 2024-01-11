@@ -129,6 +129,8 @@ const RulesDetails = () => {
   const [nodes, setNodes, onNodesChange] = useNodesState();
   const [edges, setEdges, onEdgesChange] = useEdgesState();
   const [rule, setRule] = useState();
+  const [versions, setVersions] = useState([]);
+  const [version, setVersion] = useState();
 
   //loader
   const [loading, setLoading] = useState(true);
@@ -140,11 +142,12 @@ const RulesDetails = () => {
   const getRule = async () => {
     setLoading(true);
     const token = localStorage.getItem("decisionhub-token-auth-x4");
-    await getRuleById(id, token)
+    await getRuleById(id, token, version)
       .then((res) => {
-        setRule(res.data);
-        setInputAttributes(res.data.inputAttributes);
-        setOutputAttributes(res.data.outputAttributes);
+        setRule(res.data?.rule);
+        setVersions(res.data?.versions);
+        setInputAttributes(res.data?.rule?.inputAttributes);
+        setOutputAttributes(res.data?.rule?.outputAttributes);
         setLoading(false);
       })
       .catch((err) => {
@@ -160,7 +163,7 @@ const RulesDetails = () => {
 
   useEffect(() => {
     getRule();
-  }, [reload]);
+  }, [reload, version]);
 
   useEffect(() => {
     if (rule) {
@@ -176,8 +179,8 @@ const RulesDetails = () => {
       });
       setNodes(nodes);
       setEdges(edges);
-      setViewport({ x: 200, y: 0, zoom: 1 }, { duration: 800 });
     }
+      setViewport({ x: 200, y: 0, zoom: 1 }, { duration: 800 });
   }, [rule, inputAttributes, outputAttributes, reload]);
 
   // update rule
@@ -190,7 +193,7 @@ const RulesDetails = () => {
     const token = localStorage.getItem("decisionhub-token-auth-x4");
     await updateRule(id, updatedRule, token)
       .then((res) => {
-        setRule(res.data);
+        setRule(res.data?.rule);
         setInputAttributes(res.data.inputAttributes);
         setOutputAttributes(res.data.outputAttributes);
         dispath(
@@ -274,7 +277,8 @@ const RulesDetails = () => {
           <Panel position="top-right">
             <FlexDisplay>
               <Select
-                value="1.1"
+                value={rule?.version}
+                onChange={(e) => setVersion(e.target.value)}
                 autoWidth
                 displayEmpty
                 size="small"
@@ -289,9 +293,9 @@ const RulesDetails = () => {
                   },
                 }}
               >
-                <MenuItem value="1.1">Version: 1.0</MenuItem>
-                <MenuItem value="2.2">Version: 1.1</MenuItem>
-                <MenuItem value="3.3">Version: 1.2</MenuItem>
+                {versions?.map((version) => (
+                  <MenuItem value={version}>Version: {version}</MenuItem>
+                ))}
               </Select>
               <Button
                 outlined

@@ -44,10 +44,14 @@ export const getRules = async (token) =>
     headers: { Authorization: `Bearer ${token}` },
   });
 
-export const getRuleById = async (id, token) =>
-  await API.get(`/rule/${id}`, {
-    headers: { Authorization: `Bearer ${token}` },
-  });
+export const getRuleById = async (id, token, version) =>
+  await API.post(
+    `/rule/${id}`,
+    { version },
+    {
+      headers: { Authorization: `Bearer ${token}` },
+    }
+  );
 
 export const updateRule = async (id, data, token) =>
   await API.patch(`/rule/${id}`, data, {
