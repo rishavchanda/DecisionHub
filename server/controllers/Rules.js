@@ -52,40 +52,65 @@ export const getRules = async (req, res, next) => {
   }
 };
 
-export const getRuleById = async (req, res, next) => {
+export const getRuleByIdAndVersion = async (req, res, next) => {
   const userId = req.user.id;
-  const ruleId = req.params.id;
+  const { id } = req.params;
+  const version = req.body.version;
   try {
     const user = await User.findOne({ where: { id: userId } });
     if (!user) {
       return next(createError(404, "User not found"));
     }
-    const rule = await Rule.findOne({ where: { id: ruleId } });
+    const rule = await Rule.findOne({ where: { id: id } });
     if (!rule) {
-      return next(createError(404, "No rule with this id"));
+      return res.status(404).json({ error: 'Rule not found' });
     }
-    //check if user is owner of this rule
     const userRules = await user.getRules();
     const ruleIds = userRules.map((rule) => rule.id);
-    if (!ruleIds.includes(ruleId)) {
+    if (!ruleIds.includes(id)) {
       return next(createError(403, "You are not owner of this rule"));
     }
-    // // parse the json and return it
-    // const condition = JSON.parse(rule.condition);
-    // rule.condition = condition;
-    return res.status(200).json(rule);
+    const versions = await rule.getVersions();
+    let versionValues = [];
+    await versions.map((version) => {
+      versionValues.push(version.version)
+    })
+    if (!version) {
+      return res.status(200).json({ rule: rule, versions: versionValues });
+    } else {
+      const ruleVersion = await Version.findOne({
+        where: {
+          ruleId: id,
+          version: version
+        }
+      })
+      if (!ruleVersion) {
+        return res.status(404).json({ error: 'Rule not found' });
+      }
+      return res.status(200).json({ rule: ruleVersion, versions: versionValues });
+    }
   } catch (error) {
-    return next(error);
+    return next(createError(error.status, error.message));
   }
 };
 
+
 export const searchRule = async (req, res) => {
+  const userId = req.user.id;
   const query = req.query.title;
   try {
+    const user = await User.findOne({ where: { id: userId } });
+    if (!user) {
+      return next(createError(404, "User not found"));
+    }
+    const userRules = await user.getRules();
     const rules = await Rule.findAll({
       where: {
+        id: {
+          [Op.in]: userRules.map((rule) => rule.id),
+        },
         title: {
-          [Op.iLike]: `%${query}%`, // Case-insensitive search
+          [Op.iLike]: `%${query}%`,
         },
       },
       limit: 40,
