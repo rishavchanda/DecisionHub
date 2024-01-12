@@ -754,7 +754,12 @@ export const deleteRule = async (req, res, next) => {
                     "type": "arrowclosed",
                     "width": 12,
                     "height": 12
+                    color: '#FF0072',
                 }
+    style: {
+      strokeWidth: 2,
+      stroke: '#FF0072',
+    },
             },
             {
                 "id": "4-yes-8",
