@@ -72,9 +72,11 @@ export const getRuleByIdAndVersion = async (req, res, next) => {
     }
     const versions = await rule.getVersions();
     let versionValues = [];
-    await versions.map((version) => {
-      versionValues.push(version.version);
-    });
+    await versions
+      .sort((a, b) => a.version - b.version)
+      .map((version) => {
+        versionValues.push(version.version);
+      });
     if (!version) {
       return res.status(200).json({ rule: rule, versions: versionValues });
     } else {
@@ -145,7 +147,14 @@ export const updateRule = async (req, res, next) => {
     }
     if (version == rule.version) {
       await Rule.update(
-        { ...newRule },
+        {
+          title: newRule.title,
+          description: newRule.description,
+          inputAttributes: newRule.inputAttributes,
+          outputAttributes: newRule.outputAttributes,
+          condition: newRule.condition,
+          version: newRule.version,
+        },
         {
           where: {
             id: ruleId,
@@ -154,7 +163,14 @@ export const updateRule = async (req, res, next) => {
       );
       const updatedRule = await Rule.findOne({ where: { id: ruleId } });
       await Version.update(
-        { ...newRule },
+        {
+          title: newRule.title,
+          description: newRule.description,
+          inputAttributes: newRule.inputAttributes,
+          outputAttributes: newRule.outputAttributes,
+          condition: newRule.condition,
+          version: newRule.version,
+        },
         {
           where: {
             ruleId: ruleId,
@@ -178,7 +194,14 @@ export const updateRule = async (req, res, next) => {
         },
       });
       await Version.update(
-        { ...newRule },
+        {
+          title: newRule.title,
+          description: newRule.description,
+          inputAttributes: newRule.inputAttributes,
+          outputAttributes: newRule.outputAttributes,
+          condition: newRule.condition,
+          version: newRule.version,
+        },
         {
           where: {
             id: ruleVersion.id,
@@ -242,9 +265,11 @@ export const updateRuleWithVersion = async (req, res, next) => {
     await version.setRule(updatedRule);
     const versions = await rule.getVersions();
     let versionValues = [];
-    await versions.map((version) => {
-      versionValues.push(version.version);
-    });
+    await versions
+      .sort((a, b) => a.version - b.version)
+      .map((version) => {
+        versionValues.push(version.version);
+      });
     return res.status(200).json({ rule: updatedRule, versions: versionValues });
   } catch (error) {
     return next(createError(error.status, error.message));
@@ -287,23 +312,55 @@ export const deleteRule = async (req, res, next) => {
         return res.status(204).json({ message: "Rule deleted succesfully" });
       } else {
         let versionValues = [];
-        await ruleVersions.map((version) => {
-          versionValues.push(version.version);
+        await ruleVersions
+          .sort((a, b) => a.version - b.version)
+          .map((version) => {
+            versionValues.push(version.version);
+          });
+
+        const latestVersion = ruleVersions[ruleVersions.length - 1];
+        console.log({
+          title: latestVersion.title,
+          description: latestVersion.description,
+          inputAttributes: latestVersion.inputAttributes,
+          outputAttributes: latestVersion.outputAttributes,
+          condition: latestVersion.condition,
+          version: latestVersion.version,
         });
-        await ruleVersions.sort((a, b) => b.version - a.version);
+
         await Rule.update(
-          { ...ruleVersions[0] }, {
+          {
+            title: latestVersion.title,
+            description: latestVersion.description,
+            inputAttributes: latestVersion.inputAttributes,
+            outputAttributes: latestVersion.outputAttributes,
+            condition: latestVersion.condition,
+            version: latestVersion.version,
+          },
+          {
+            where: {
+              id: ruleId,
+            },
+          }
+        );
+        const newLatestRule = await Rule.findOne({
           where: {
             id: ruleId,
           },
-        })
-        const newLatestRule = await Rule.findOne({
-          where: {
-            id: ruleId
-          }
-        })
-        return res.status(200).json({ rule: newLatestRule, versions: versionValues });
+        });
+        return res
+          .status(200)
+          .json({ rule: newLatestRule, versions: versionValues });
       }
+    } else {
+      const ruleVersions = await rule.getVersions();
+      let versionValues = [];
+      await ruleVersions
+        .sort((a, b) => a.version - b.version)
+        .map((version) => {
+          versionValues.push(version.version);
+        });
+      return res.status(200).json({ rule: rule, versions: versionValues });
     }
   } catch (error) {
     return next(createError(error.status, error.message));

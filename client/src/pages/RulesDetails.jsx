@@ -155,6 +155,7 @@ const RulesDetails = () => {
         await setOutputAttributes(res.data?.rule?.outputAttributes);
         await setVersions(res.data?.versions);
         await createFlow(res.data?.rule);
+        console.log(res.data?.rule);
         setLoading(false);
       })
       .catch((err) => {
@@ -267,15 +268,28 @@ const RulesDetails = () => {
     setLoading(true);
     const token = localStorage.getItem("decisionhub-token-auth-x4");
     await deleteRule(id, rule?.version, token)
-      .then(() => {
+      .then(async (res) => {
         setLoading(false);
-        navigate("/rules/");
-        dispath(
-          openSnackbar({
-            message: "Rule Deleted Successfully",
-            severity: "success",
-          })
-        );
+        if (res.status === 204) {
+          dispath(
+            openSnackbar({
+              message: "Rule Deleted Successfully",
+            })
+          );
+          navigate("/rules/");
+        } else {
+          await setRule(res.data?.rule);
+          await setVersions(res.data?.versions);
+          await setInputAttributes(res.data?.rule?.inputAttributes);
+          await setOutputAttributes(res.data?.rule?.outputAttributes);
+          await createFlow(res.data?.rule);
+          setLoading(false);
+          dispath(
+            openSnackbar({
+              message: `Version: ${rule?.version} Deleted Successfully`,
+            })
+          );
+        }
       })
       .catch((err) => {
         dispath(
