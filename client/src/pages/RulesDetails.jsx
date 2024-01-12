@@ -21,9 +21,15 @@ import {
   SaveRounded,
 } from "@mui/icons-material";
 import { useNavigate, useParams } from "react-router-dom";
-import { getRuleById, updateRule, deleteRule } from "../api";
+import {
+  getRuleById,
+  updateRule,
+  deleteRule,
+  updateRuleWithVersion,
+} from "../api";
 import { useDispatch, useSelector } from "react-redux";
 import { openSnackbar } from "../redux/reducers/snackbarSlice";
+import { ruleReload } from "../redux/reducers/rulesSlice";
 
 const FlexDisplay = styled.div`
   display: flex;
@@ -145,6 +151,7 @@ const RulesDetails = () => {
     await getRuleById(id, token, version)
       .then((res) => {
         setRule(res.data?.rule);
+        createFlow(res.data?.rule);
         setVersions(res.data?.versions);
         setInputAttributes(res.data?.rule?.inputAttributes);
         setOutputAttributes(res.data?.rule?.outputAttributes);
@@ -165,23 +172,25 @@ const RulesDetails = () => {
     getRule();
   }, [reload, version]);
 
+  const createFlow = async (rule) => {
+    setLoading(true);
+    const { nodes, edges } = JSON.parse(rule?.condition);
+    await nodes.forEach((node) => {
+      if (node.type === "attributeNode") {
+        node.data.label = rule.title;
+        node.data.descryption = rule.descryption;
+      }
+      node.data.inputAttributes = inputAttributes;
+      node.data.outputAttributes = outputAttributes;
+    });
+    await setNodes(nodes);
+    await setEdges(edges);
+    setLoading(false);
+  };
+
   useEffect(() => {
-    if (rule) {
-      const { nodes, edges } = JSON.parse(rule.condition);
-      //add input and output attributes to nodes
-      nodes.forEach((node) => {
-        if (node.type === "attributeNode") {
-          node.data.label = rule.title;
-          node.data.descryption = rule.descryption;
-        }
-        node.data.inputAttributes = inputAttributes;
-        node.data.outputAttributes = outputAttributes;
-      });
-      setNodes(nodes);
-      setEdges(edges);
-    }
-      setViewport({ x: 200, y: 0, zoom: 1 }, { duration: 800 });
-  }, [rule, inputAttributes, outputAttributes, reload]);
+    setViewport({ x: 200, y: 0, zoom: 1 }, { duration: 800 });
+  }, [reload, setViewport]);
 
   // update rule
   const saveRule = async () => {
@@ -194,8 +203,11 @@ const RulesDetails = () => {
     await updateRule(id, updatedRule, token)
       .then((res) => {
         setRule(res.data?.rule);
-        setInputAttributes(res.data.inputAttributes);
-        setOutputAttributes(res.data.outputAttributes);
+        createFlow(res.data?.rule);
+        setVersions(res.data?.versions);
+        setInputAttributes(res.data?.rule?.inputAttributes);
+        setOutputAttributes(res.data?.rule?.outputAttributes);
+        dispath(ruleReload());
         dispath(
           openSnackbar({
             message: "Rule Saved Successfully",
@@ -215,11 +227,45 @@ const RulesDetails = () => {
       });
   };
 
+  // save new version
+  const saveNewVersion = async () => {
+    setSaveVersionLoading(true);
+    const updatedRule = {
+      ...rule,
+      condition: JSON.stringify({ nodes, edges }),
+    };
+    const token = localStorage.getItem("decisionhub-token-auth-x4");
+    await updateRuleWithVersion(id, updatedRule, token)
+      .then((res) => {
+        setRule(res.data?.rule);
+        createFlow(res.data?.rule);
+        setVersions(res.data?.versions);
+        setInputAttributes(res.data?.rule?.inputAttributes);
+        setOutputAttributes(res.data?.rule?.outputAttributes);
+        dispath(
+          openSnackbar({
+            message: "New Version Created Successfully",
+            severity: "success",
+          })
+        );
+        setSaveVersionLoading(false);
+      })
+      .catch((err) => {
+        dispath(
+          openSnackbar({
+            message: err.response.data.message,
+            severity: "error",
+          })
+        );
+        setSaveVersionLoading(false);
+      });
+  };
+
   // Delete Rule
   const deleterule = async () => {
     setLoading(true);
     const token = localStorage.getItem("decisionhub-token-auth-x4");
-    await deleteRule(id, token)
+    await deleteRule(id, rule?.version, token)
       .then(() => {
         setLoading(false);
         navigate("/rules/");
@@ -278,7 +324,10 @@ const RulesDetails = () => {
             <FlexDisplay>
               <Select
                 value={rule?.version}
-                onChange={(e) => setVersion(e.target.value)}
+                onChange={(e) => {
+                  setVersion(e.target.value);
+                  dispath(ruleReload());
+                }}
                 autoWidth
                 displayEmpty
                 size="small"
@@ -335,7 +384,7 @@ const RulesDetails = () => {
               </Button>
               <Button
                 disabled={saveLoading}
-                onClick={() => saveRule()}
+                onClick={() => saveNewVersion()}
                 style={{ background: theme.secondary }}
               >
                 {saveVersionLoading ? (

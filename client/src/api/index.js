@@ -58,7 +58,12 @@ export const updateRule = async (id, data, token) =>
     headers: { Authorization: `Bearer ${token}` },
   });
 
-export const deleteRule = async (id, token) =>
-  await API.delete(`/rule/${id}`, {
+export const updateRuleWithVersion = async (id, data, token) =>
+  await API.patch(`/rule/updateRuleVersion/${id}`, data, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+
+export const deleteRule = async (id, version, token) =>
+  await API.delete(`/rule/${id}/${version}`, {
     headers: { Authorization: `Bearer ${token}` },
   });

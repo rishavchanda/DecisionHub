@@ -23,15 +23,15 @@ export const createRule = async (req, res, next) => {
       condition,
     });
     await rule.setUser(user);
-    await Version.create({
+    const version = await Version.create({
       title: rule.title,
       description: rule.description,
       inputAttributes: rule.inputAttributes,
       outputAttributes: rule.outputAttributes,
       condition: rule.condition,
       version: rule.version,
-      ruleId: rule.id,
     });
+    await version.setRule(rule);
     return res.status(201).json(rule);
   } catch (error) {
     return next(error);
@@ -63,7 +63,7 @@ export const getRuleByIdAndVersion = async (req, res, next) => {
     }
     const rule = await Rule.findOne({ where: { id: id } });
     if (!rule) {
-      return res.status(404).json({ error: 'Rule not found' });
+      return res.status(404).json({ error: "Rule not found" });
     }
     const userRules = await user.getRules();
     const ruleIds = userRules.map((rule) => rule.id);
@@ -73,27 +73,28 @@ export const getRuleByIdAndVersion = async (req, res, next) => {
     const versions = await rule.getVersions();
     let versionValues = [];
     await versions.map((version) => {
-      versionValues.push(version.version)
-    })
+      versionValues.push(version.version);
+    });
     if (!version) {
       return res.status(200).json({ rule: rule, versions: versionValues });
     } else {
       const ruleVersion = await Version.findOne({
         where: {
           ruleId: id,
-          version: version
-        }
-      })
+          version: version,
+        },
+      });
       if (!ruleVersion) {
-        return res.status(404).json({ error: 'Rule not found' });
+        return res.status(404).json({ error: "Rule not found" });
       }
-      return res.status(200).json({ rule: ruleVersion, versions: versionValues });
+      return res
+        .status(200)
+        .json({ rule: ruleVersion, versions: versionValues });
     }
   } catch (error) {
     return next(createError(error.status, error.message));
   }
 };
-
 
 export const searchRule = async (req, res) => {
   const userId = req.user.id;
@@ -142,7 +143,7 @@ export const updateRule = async (req, res, next) => {
     if (!ruleIds.includes(ruleId)) {
       return next(createError(403, "You are not owner of this rule"));
     }
-    if (!version) {
+    if (version == rule.version) {
       await Rule.update(
         { ...newRule },
         {
@@ -157,29 +158,46 @@ export const updateRule = async (req, res, next) => {
         {
           where: {
             ruleId: ruleId,
-          }
+            version: version,
+          },
         }
-      )
-      return res.status(200).json(updatedRule);
+      );
+      const versions = await rule.getVersions();
+      let versionValues = [];
+      await versions.map((version) => {
+        versionValues.push(version.version);
+      });
+      return res
+        .status(200)
+        .json({ rule: updatedRule, versions: versionValues });
     } else {
       const ruleVersion = await Version.findOne({
         where: {
           ruleId: ruleId,
-          version: version
-        }
-      })
+          version: version,
+        },
+      });
       await Version.update(
         { ...newRule },
         {
           where: {
-            id: ruleVersion.id
-          }
-        })
-      const updatedVersion = await Version.findOne({ where: { id: ruleVersion.id } });
+            id: ruleVersion.id,
+          },
+        }
+      );
+      const updatedVersion = await Version.findOne({
+        where: { id: ruleVersion.id },
+      });
+      const versions = await rule.getVersions();
+      let versionValues = [];
+      await versions.map((version) => {
+        versionValues.push(version.version);
+      });
 
-      return res.status(200).json(updatedVersion);
+      return res
+        .status(200)
+        .json({ rule: updatedVersion, versions: versionValues });
     }
-
   } catch (error) {
     return next(createError(error.status, error.message));
   }
@@ -213,16 +231,21 @@ export const updateRuleWithVersion = async (req, res, next) => {
       }
     );
     const updatedRule = await Rule.findOne({ where: { id: ruleId } });
-    await Version.create({
+    const version = await Version.create({
       title: updatedRule.title,
       description: updatedRule.description,
       inputAttributes: updatedRule.inputAttributes,
       outputAttributes: updatedRule.outputAttributes,
       condition: updatedRule.condition,
       version: updatedRule.version,
-      ruleId: updatedRule.id,
     });
-    return res.status(200).json(updatedRule);
+    await version.setRule(updatedRule);
+    const versions = await rule.getVersions();
+    let versionValues = [];
+    await versions.map((version) => {
+      versionValues.push(version.version);
+    });
+    return res.status(200).json({ rule: updatedRule, versions: versionValues });
   } catch (error) {
     return next(createError(error.status, error.message));
   }
@@ -231,7 +254,7 @@ export const updateRuleWithVersion = async (req, res, next) => {
 export const deleteRule = async (req, res, next) => {
   const userId = req.user.id;
   const ruleId = req.params.id;
-  const version = req.body.version;
+  const version = req.params.versionId;
   try {
     const user = await User.findOne({ where: { id: userId } });
     if (!user) {
@@ -249,20 +272,20 @@ export const deleteRule = async (req, res, next) => {
     }
     if (!version) {
       const ruleVersions = await rule.getVersions();
-      await Promise.all(ruleVersions.map(version => version.destroy()));
+      await Promise.all(ruleVersions.map((version) => version.destroy()));
       await Rule.destroy({
         where: {
           id: ruleId,
         },
       });
       return res.status(200).json({ message: "Rule deleted succesfully" });
-    }else{
+    } else {
       await Version.destroy({
         where: {
           ruleId: ruleId,
-          version: version
-        }
-      })
+          version: version,
+        },
+      });
       return res.status(200).json({ message: "Version deleted succesfully" });
     }
   } catch (error) {

@@ -18,6 +18,6 @@ router.post("/:id", verifyToken, getRuleByIdAndVersion);
 router.get("/searchRule", verifyToken, searchRule);
 router.patch("/:id", verifyToken, updateRule);
 router.patch("/updateRuleVersion/:id", verifyToken, updateRuleWithVersion);
-router.delete("/:id", verifyToken, deleteRule);
+router.delete("/:id/:versionId", verifyToken, deleteRule);
 
 export default router;
