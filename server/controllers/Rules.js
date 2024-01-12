@@ -816,6 +816,55 @@ const inputData = {
   credit_score: 800
 };
 */
+
+const evaluateNodes = (node, rule, traversalNodes) => {
+  //evaluate condition function
+    const result = "yes"
+    if (result === "yes") {
+      rule.edges.map((edge) => {
+        if (edge.id.startsWith(node.toString()) && /-yes-|-no-/.test(edge.id) == 'yes') traversalNodes.push(Number(edge.id.slice(-1)));
+      })
+    } else {
+      rule.edges.map((edge) => {
+        if (edge.id.startsWith(node.toString()) && /-yes-|-no-/.test(edge.id) == 'no') traversalNodes.push(Number(edge.id.slice(-1)));
+      })
+    }
+    const nextNode = rule.nodes.find((node)=>node.id == Number(edge.id.slice(-1)));
+
+}
+export const testing = async () => {
+  const ruleId = req.params.id;
+  const userId = req.user.id;
+  try {
+    const user = await User.findOne({ where: { id: userId } });
+    if (!user) {
+      return next(createError(404, "User not found"));
+    }
+    const rule = await Rule.findOne({ where: { id: ruleId } });
+    if (!rule) {
+      return next(createError(404, "No rule with that id"));
+    }
+    //check if user is owner of this rule
+    const userRules = await user.getRules();
+    const ruleIds = userRules.map((rule) => rule.id);
+    if (!ruleIds.includes(ruleId)) {
+      return next(createError(403, "You are not owner of this rule"));
+    }
+    const conditionalNodes = rule.nodes.filter(node => node.type === 'conditionalNode');
+
+    const firstConditionalNode = conditionalNodes.reduce((minId, currentNode) => {
+      return currentNode.id < minId ? currentNode.id : minId;
+    }, conditionalNodes[0].id);
+    const edges = rule.edges;
+    let traversalNodes = [];
+    const outputNode = evaluateNodes(firstConditionalNode, rule, traversalNodes);
+    // The rest of your code goes here...
+
+  } catch (error) {
+    // Handle any errors that might occur during the database query
+    console.error(error);
+  }
+}
 function evaluateExpression(result, expression, inputData) {
   let { inputAttribute, operator, value } = expression;
   const inputValue = inputData[value]
