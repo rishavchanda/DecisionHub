@@ -883,8 +883,11 @@ const evaluateNodes = (node, rule, traversalNodes) => {
   //evaluate condition function
     const result = "yes"
     if (result === "yes") {
-      rule.condition.edges.map((edge) => {
-        if (edge.id.startsWith(node.toString()) && /-yes-/.test(edge.id)) traversalNodes.push(Number(edge.id.slice(-1)));
+      rule.condition.edges.map((edge, index) => {
+        if (edge.id.startsWith(node.toString()) && /-yes-/.test(edge.id)) {
+          traversalNodes.push(Number(edge.id.slice(-1)));
+          //change the color of the edge, yes no both will have green color
+        }
       })
     } else {
       rule.condition.edges.map((edge) => {
@@ -892,7 +895,11 @@ const evaluateNodes = (node, rule, traversalNodes) => {
       })
     }
     if(traversalNodes.length===0) return;
-    //check if else if
+    if(traversalNodes.length > 1){
+          //check if else if
+          //set nextNode as node with yes output remove rest
+          //yes edge will have green color no will have red
+    }
     const nextNode = rule.condition.nodes.find((node)=>node.id == traversalNodes[0]);
     console.log(nextNode);
     traversalNodes.shift();
