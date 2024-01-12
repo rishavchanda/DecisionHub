@@ -270,23 +270,40 @@ export const deleteRule = async (req, res, next) => {
     if (!ruleIds.includes(ruleId)) {
       return next(createError(403, "You are not owner of this rule"));
     }
-    if (!version) {
+    await Version.destroy({
+      where: {
+        ruleId: ruleId,
+        version: version,
+      },
+    });
+    if (version == rule.version) {
       const ruleVersions = await rule.getVersions();
-      await Promise.all(ruleVersions.map((version) => version.destroy()));
-      await Rule.destroy({
-        where: {
-          id: ruleId,
-        },
-      });
-      return res.status(200).json({ message: "Rule deleted succesfully" });
-    } else {
-      await Version.destroy({
-        where: {
-          ruleId: ruleId,
-          version: version,
-        },
-      });
-      return res.status(200).json({ message: "Version deleted succesfully" });
+      if (ruleVersions.length == 0) {
+        await Rule.destroy({
+          where: {
+            id: ruleId,
+          },
+        });
+        return res.status(204).json({ message: "Rule deleted succesfully" });
+      } else {
+        let versionValues = [];
+        await ruleVersions.map((version) => {
+          versionValues.push(version.version);
+        });
+        await ruleVersions.sort((a, b) => b.version - a.version);
+        await Rule.update(
+          { ...ruleVersions[0] }, {
+          where: {
+            id: ruleId,
+          },
+        })
+        const newLatestRule = await Rule.findOne({
+          where: {
+            id: ruleId
+          }
+        })
+        return res.status(200).json({ rule: newLatestRule, versions: versionValues });
+      }
     }
   } catch (error) {
     return next(createError(error.status, error.message));
