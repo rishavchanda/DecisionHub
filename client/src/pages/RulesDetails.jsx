@@ -149,12 +149,12 @@ const RulesDetails = () => {
     setLoading(true);
     const token = localStorage.getItem("decisionhub-token-auth-x4");
     await getRuleById(id, token, version)
-      .then((res) => {
-        setRule(res.data?.rule);
-        createFlow(res.data?.rule);
-        setVersions(res.data?.versions);
-        setInputAttributes(res.data?.rule?.inputAttributes);
-        setOutputAttributes(res.data?.rule?.outputAttributes);
+      .then(async (res) => {
+        await setRule(res.data?.rule);
+        await setInputAttributes(res.data?.rule?.inputAttributes);
+        await setOutputAttributes(res.data?.rule?.outputAttributes);
+        await setVersions(res.data?.versions);
+        await createFlow(res.data?.rule);
         setLoading(false);
       })
       .catch((err) => {
@@ -180,8 +180,8 @@ const RulesDetails = () => {
         node.data.label = rule.title;
         node.data.descryption = rule.descryption;
       }
-      node.data.inputAttributes = inputAttributes;
-      node.data.outputAttributes = outputAttributes;
+      node.data.inputAttributes = rule?.inputAttributes;
+      node.data.outputAttributes = rule?.outputAttributes;
     });
     await setNodes(nodes);
     await setEdges(edges);
@@ -192,7 +192,7 @@ const RulesDetails = () => {
     setViewport({ x: 200, y: 0, zoom: 1 }, { duration: 800 });
   }, [reload, setViewport]);
 
-  // update rule
+  // update rule on each version change
   const saveRule = async () => {
     setSaveLoading(true);
     const updatedRule = {
@@ -201,13 +201,13 @@ const RulesDetails = () => {
     };
     const token = localStorage.getItem("decisionhub-token-auth-x4");
     await updateRule(id, updatedRule, token)
-      .then((res) => {
-        setRule(res.data?.rule);
-        createFlow(res.data?.rule);
-        setVersions(res.data?.versions);
-        setInputAttributes(res.data?.rule?.inputAttributes);
-        setOutputAttributes(res.data?.rule?.outputAttributes);
-        dispath(ruleReload());
+      .then(async (res) => {
+        await setRule(res.data?.rule);
+        await setVersions(res.data?.versions);
+        await setInputAttributes(res.data?.rule?.inputAttributes);
+        await setOutputAttributes(res.data?.rule?.outputAttributes);
+        await createFlow(res.data?.rule);
+        // dispath(ruleReload());
         dispath(
           openSnackbar({
             message: "Rule Saved Successfully",
@@ -227,7 +227,7 @@ const RulesDetails = () => {
       });
   };
 
-  // save new version
+  // save or create new version
   const saveNewVersion = async () => {
     setSaveVersionLoading(true);
     const updatedRule = {
@@ -236,12 +236,13 @@ const RulesDetails = () => {
     };
     const token = localStorage.getItem("decisionhub-token-auth-x4");
     await updateRuleWithVersion(id, updatedRule, token)
-      .then((res) => {
-        setRule(res.data?.rule);
-        createFlow(res.data?.rule);
-        setVersions(res.data?.versions);
-        setInputAttributes(res.data?.rule?.inputAttributes);
-        setOutputAttributes(res.data?.rule?.outputAttributes);
+      .then(async (res) => {
+        await setRule(res.data?.rule);
+        await setVersions(res.data?.versions);
+        await setInputAttributes(res.data?.rule?.inputAttributes);
+        await setOutputAttributes(res.data?.rule?.outputAttributes);
+        await createFlow(res.data?.rule);
+        // dispath(ruleReload());
         dispath(
           openSnackbar({
             message: "New Version Created Successfully",
