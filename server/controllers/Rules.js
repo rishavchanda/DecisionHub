@@ -883,43 +883,48 @@ const evaluateNodes = (node, rule, traversalNodes) => {
   //evaluate condition function
     const result = "yes"
     if (result === "yes") {
-      rule.edges.map((edge) => {
-        if (edge.id.startsWith(node.toString()) && /-yes-|-no-/.test(edge.id) == 'yes') traversalNodes.push(Number(edge.id.slice(-1)));
+      rule.condition.edges.map((edge) => {
+        if (edge.id.startsWith(node.toString()) && /-yes-/.test(edge.id)) traversalNodes.push(Number(edge.id.slice(-1)));
       })
     } else {
-      rule.edges.map((edge) => {
-        if (edge.id.startsWith(node.toString()) && /-yes-|-no-/.test(edge.id) == 'no') traversalNodes.push(Number(edge.id.slice(-1)));
+      rule.condition.edges.map((edge) => {
+        if (edge.id.startsWith(node.toString()) && /-no-/.test(edge.id)) traversalNodes.push(Number(edge.id.slice(-1)));
       })
     }
-    const nextNode = rule.nodes.find((node)=>node.id == Number(edge.id.slice(-1)));
-
+    if(traversalNodes.length===0) return;
+    //check if else if
+    const nextNode = rule.condition.nodes.find((node)=>node.id == traversalNodes[0]);
+    console.log(nextNode);
+    traversalNodes.shift();
+    console.log(traversalNodes);
+    if(nextNode.type === "outputNode") {console.log(nextNode);return;}
+    evaluateNodes(nextNode.id, rule, traversalNodes);
 }
-export const testing = async () => {
-  const ruleId = req.params.id;
-  const userId = req.user.id;
+export const testing = async (req, res) => {
+  // const ruleId = req.params.id;
+  // const userId = req.user.id;
+  const rule = req.body;
   try {
-    const user = await User.findOne({ where: { id: userId } });
-    if (!user) {
-      return next(createError(404, "User not found"));
-    }
-    const rule = await Rule.findOne({ where: { id: ruleId } });
-    if (!rule) {
-      return next(createError(404, "No rule with that id"));
-    }
-    //check if user is owner of this rule
-    const userRules = await user.getRules();
-    const ruleIds = userRules.map((rule) => rule.id);
-    if (!ruleIds.includes(ruleId)) {
-      return next(createError(403, "You are not owner of this rule"));
-    }
-    const conditionalNodes = rule.nodes.filter(node => node.type === 'conditionalNode');
-
+    // const user = await User.findOne({ where: { id: userId } });
+    // if (!user) {
+    //   return next(createError(404, "User not found"));
+    // }
+    // const rule = await Rule.findOne({ where: { id: ruleId } });
+    // if (!rule) {
+    //   return next(createError(404, "No rule with that id"));
+    // }
+    // //check if user is owner of this rule
+    // const userRules = await user.getRules();
+    // const ruleIds = userRules.map((rule) => rule.id);
+    // if (!ruleIds.includes(ruleId)) {
+    //   return next(createError(403, "You are not owner of this rule"));
+    // }
+    const conditionalNodes = rule.condition.nodes.filter(node => node.type === 'conditionalNode');
     const firstConditionalNode = conditionalNodes.reduce((minId, currentNode) => {
       return currentNode.id < minId ? currentNode.id : minId;
     }, conditionalNodes[0].id);
-    const edges = rule.edges;
     let traversalNodes = [];
-    const outputNode = evaluateNodes(firstConditionalNode, rule, traversalNodes);
+    await evaluateNodes(firstConditionalNode, rule, traversalNodes);
     // The rest of your code goes here...
 
   } catch (error) {
