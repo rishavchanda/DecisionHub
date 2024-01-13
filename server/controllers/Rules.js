@@ -882,10 +882,7 @@ const specialFunctions = ["date_diff", "time_diff"];
 const specialArrtibutes = ["current_date", "current_time"];
 function evaluateExpression(result, expression, inputData) {
   let { inputAttribute, operator, value } = expression;
-  if (checkSpecialFunction(inputAttribute?.split(",")[0])) {
-    inputAttribute = evaluateSpecialFunction(inputAttribute, inputData);
-    console.log(inputAttribute);
-  }
+
   const inputValue = inputData[value]
     ? parseInt(inputData[value])
     : parseInt(value);
@@ -894,7 +891,12 @@ function evaluateExpression(result, expression, inputData) {
     attribute === null ? result : inputData[attribute];
 
   const performComparison = (attribute) => {
-    const attributeValue = getComparisonValue(attribute);
+    let attributeValue = 0;
+    if (checkSpecialFunction(attribute?.split(",")[0])) {
+      attributeValue = evaluateSpecialFunction(attribute, inputData);
+    } else {
+      attributeValue = getComparisonValue(attribute);
+    }
     switch (operator) {
       case ">":
         return attributeValue > inputValue;
@@ -1037,11 +1039,13 @@ function evaluateConditions(conditions, rule, inputData) {
       logicalOperator = condition.boolean;
     }
   }
+  console.log(result);
   if (rule === "Any") {
     if (result.includes(true)) return true;
   } else if (rule === "All") {
     if (result.includes(false)) return false;
   }
+  console.log(result);
 
   return result;
 }
@@ -1059,14 +1063,14 @@ function performLogicalOperation(operand1, operator, operand2) {
 }
 
 // Example usage with your provided data
-const rule = "All";
+const rule = "Any";
 const conditions = [
   {
     multiple: false,
     expression: [
       {
         inputAttribute: "date_diff,current_date,date_of_birth,years",
-        operator: "<",
+        operator: ">",
         value: "18",
       },
     ],
@@ -1093,7 +1097,7 @@ const conditions = [
       {
         inputAttribute: "annual_income",
         operator: "/",
-        value: "12000",
+        value: "12",
       },
       {
         inputAttribute: null,

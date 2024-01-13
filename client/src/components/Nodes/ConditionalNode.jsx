@@ -58,7 +58,6 @@ const NodeBody = styled.div`
   display: flex;
   flex-direction: column;
   justify-content: center;
-  draggable: true;
 `;
 
 const NodeFooter = styled.div`
@@ -553,6 +552,8 @@ function ConditionalNode({ id, data }) {
   const theme = useTheme();
   const dispatch = useDispatch();
   const reactFlow = useReactFlow();
+  const { updated } = useSelector((state) => state.rule);
+  const [noOfEdgesParent, setNoOfEdgesParent] = useState(0);
 
   // handel node title change
   const handelTitleChange = (event) => {
@@ -760,6 +761,48 @@ function ConditionalNode({ id, data }) {
     dispatch(ruleUpdated());
   };
 
+  // check if parent node have more than 1 yes edges
+  const getNoOfEdgesParent = () => {
+    const mySourceHandel = reactFlow
+      .getEdges()
+      .find((edge) => edge.target === id).sourceHandle;
+    const parentEdges = reactFlow
+      .getEdges()
+      .filter(
+        (edge) => edge.target === id && edge.sourceHandle === mySourceHandel
+      );
+
+    if (parentEdges.length === 0) {
+      return 0;
+    }
+
+    const parentNodeId = parentEdges[0]?.source;
+    const parentNode = reactFlow
+      .getNodes()
+      .find((node) => node.id === parentNodeId);
+
+    if (!parentNode) {
+      return 0;
+    }
+
+    const parentNodeEdges = reactFlow
+      .getEdges()
+      .filter(
+        (edge) =>
+          edge.source === parentNode.id && edge.sourceHandle === mySourceHandel
+      ).length;
+
+    return parentNodeEdges;
+  };
+
+  useEffect(
+    () => {
+      setNoOfEdgesParent(getNoOfEdgesParent());
+    },
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [reactFlow, updated]
+  );
+
   return (
     <Wrapper>
       <FlexRight>
@@ -871,8 +914,15 @@ function ConditionalNode({ id, data }) {
         </Node>
         <YesNode id={id} data={data} />
       </FlexRight>
-      <Hr style={{ height: "3px", background: theme.arrow, width: "100px" }} />
-      <NoNode id={id} data={data} />
+
+      {noOfEdgesParent <= 1 && (
+        <>
+          <Hr
+            style={{ height: "3px", background: theme.arrow, width: "100px" }}
+          />
+          <NoNode id={id} data={data} />
+        </>
+      )}
     </Wrapper>
   );
 }
