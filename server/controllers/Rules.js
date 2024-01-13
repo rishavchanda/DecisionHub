@@ -880,7 +880,7 @@ const inputData = {
 */
 
 const setEdgeColor = (rule, node, traversalNodes, color, result) => {
-  rule.condition.edges.map((edge, index) => {
+  JSON.parse(rule.condition).edges.map((edge, index) => {
     if (edge.source === node && edge.sourceHandle === result) {
       traversalNodes.push(Number(edge.id.slice(-1)));
       rule.condition.edges[index] = {
@@ -903,7 +903,7 @@ const setEdgeColor = (rule, node, traversalNodes, color, result) => {
 const evaluateNodes = async (node, rule, traversalNodes, inputAttributes) => {
   //evaluate condition function
   const result = evaluateConditions(node.data.conditions, inputAttributes);
-  console.log(result);
+
   if (result) {
     setEdgeColor(rule, node, traversalNodes, "green", "yes")
   } else {
@@ -913,15 +913,17 @@ const evaluateNodes = async (node, rule, traversalNodes, inputAttributes) => {
     node = { ...node, error: true }
     return;
   }
+
   let nextNode;
   if (traversalNodes.length > 0) {
     //check if else if
     //set nextNode as node with yes output remove rest
+    let nestedResult;
     for (let i; i < traversalNodes.length; i++) {
-      r = ["yes", "no", "no"]
-      if (r[i] === "yes") nextNode = traversalNodes[0];
+      nestedResult = evaluateConditions(traversalNodes[i].data.conditions, inputAttributes)
+      if (nestedResult) nextNode = traversalNodes[0];
       else {
-        rule.condition.edges.forEach((edge, index) => {
+        JSON.parse(rule.condition).edges.forEach((edge, index) => {
           if (edge.source === node && edge.sourceHandle === "no") {
             rule.condition.edges[index] = {
               ...edge,
@@ -943,13 +945,16 @@ const evaluateNodes = async (node, rule, traversalNodes, inputAttributes) => {
     }
     traversalNodes = [];
   } else {
-    nextNode = rule.condition.nodes.find((node) => node.id == traversalNodes[0]);
+    nextNode = JSON.parse(rule.condition.nodes).find((node) => node.id == traversalNodes[0]);
     traversalNodes.shift();
   }
-  if (nextNode.type === "outputNode") { console.log(nextNode); return; }
+  if (nextNode.type === "outputNode") { 
+    console.log(nextNode);
+    return rule;
+  }
   evaluateNodes(nextNode.id, rule, traversalNodes, inputAttributes);
 }
-export const testing = async (req, res) => {
+export const testing = async (req, res, next) => {
   const inputAttributes = req.body;
   const { id, version } = req.params;
   const userId = req.user.id;
@@ -984,12 +989,10 @@ export const testing = async (req, res) => {
       return currentNode.id < minNode.id ? currentNode : minNode;
     }, conditionalNodes[0]);
     let traversalNodes = [];
-    await evaluateNodes(firstConditionalNode, rule, traversalNodes, inputAttributes);
-    // The rest of your code goes here...
-
+    const testedRule = await evaluateNodes(firstConditionalNode, rule, traversalNodes, inputAttributes);
+    return res.status(200).json(testedRule);
   } catch (error) {
-    // Handle any errors that might occur during the database query
-    console.error(error);
+    return next(createError(error.status, error.message));
   }
 }
 
