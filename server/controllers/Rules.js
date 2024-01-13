@@ -878,75 +878,14 @@ const inputData = {
   credit_score: 800
 };
 */
-
-const evaluateNodes = (node, rule, traversalNodes) => {
-  //evaluate condition function
-  const result = "yes";
-  if (result === "yes") {
-    rule.edges.map((edge) => {
-      if (
-        edge.id.startsWith(node.toString()) &&
-        /-yes-|-no-/.test(edge.id) == "yes"
-      )
-        traversalNodes.push(Number(edge.id.slice(-1)));
-    });
-  } else {
-    rule.edges.map((edge) => {
-      if (
-        edge.id.startsWith(node.toString()) &&
-        /-yes-|-no-/.test(edge.id) == "no"
-      )
-        traversalNodes.push(Number(edge.id.slice(-1)));
-    });
-  }
-  const nextNode = rule.nodes.find(
-    (node) => node.id == Number(edge.id.slice(-1))
-  );
-};
-export const testing = async () => {
-  const ruleId = req.params.id;
-  const userId = req.user.id;
-  try {
-    const user = await User.findOne({ where: { id: userId } });
-    if (!user) {
-      return next(createError(404, "User not found"));
-    }
-    const rule = await Rule.findOne({ where: { id: ruleId } });
-    if (!rule) {
-      return next(createError(404, "No rule with that id"));
-    }
-    //check if user is owner of this rule
-    const userRules = await user.getRules();
-    const ruleIds = userRules.map((rule) => rule.id);
-    if (!ruleIds.includes(ruleId)) {
-      return next(createError(403, "You are not owner of this rule"));
-    }
-    const conditionalNodes = rule.nodes.filter(
-      (node) => node.type === "conditionalNode"
-    );
-
-    const firstConditionalNode = conditionalNodes.reduce(
-      (minId, currentNode) => {
-        return currentNode.id < minId ? currentNode.id : minId;
-      },
-      conditionalNodes[0].id
-    );
-    const edges = rule.edges;
-    let traversalNodes = [];
-    const outputNode = evaluateNodes(
-      firstConditionalNode,
-      rule,
-      traversalNodes
-    );
-    // The rest of your code goes here...
-  } catch (error) {
-    // Handle any errors that might occur during the database query
-    console.error(error);
-  }
-};
-
+const specialFunctions = ["date_diff", "time_diff"];
+const specialArrtibutes = ["current_date", "current_time"];
 function evaluateExpression(result, expression, inputData) {
   let { inputAttribute, operator, value } = expression;
+  if (checkSpecialFunction(inputAttribute?.split(",")[0])) {
+    inputAttribute = evaluateSpecialFunction(inputAttribute, inputData);
+    console.log(inputAttribute);
+  }
   const inputValue = inputData[value]
     ? parseInt(inputData[value])
     : parseInt(value);
@@ -985,6 +924,80 @@ function evaluateExpression(result, expression, inputData) {
   };
 
   return performComparison(inputAttribute);
+}
+
+function checkSpecialFunction(func) {
+  return specialFunctions.includes(func);
+}
+
+function evaluateSpecialFunction(inputAttribute, inputData) {
+  const [specialFunction, attribute1, attribute2, unit] =
+    inputAttribute.split(",");
+
+  const getDateAttributeValue = (attribute) => {
+    return attribute.toLowerCase() === "current_date"
+      ? new Date()
+      : new Date(inputData[attribute]);
+  };
+
+  const getDateTimeAttributeValue = (attribute) => {
+    return attribute.toLowerCase() === "current_time"
+      ? new Date()
+      : new Date(inputData[attribute]);
+  };
+
+  const date1 = getDateAttributeValue(attribute1);
+  const date2 = getDateAttributeValue(attribute2);
+
+  const time1 = getDateTimeAttributeValue(attribute1);
+  const time2 = getDateTimeAttributeValue(attribute2);
+
+  const calculateDateDifference = (date1, date2, unit) => {
+    const diffInMilliseconds = Math.abs(date1 - date2);
+
+    switch (unit) {
+      case "years":
+        return Math.floor(diffInMilliseconds / (365 * 24 * 60 * 60 * 1000));
+
+      case "months":
+        return Math.floor(diffInMilliseconds / (30 * 24 * 60 * 60 * 1000));
+
+      case "days":
+        return Math.floor(diffInMilliseconds / (24 * 60 * 60 * 1000));
+
+      default:
+        return null; // Handle unknown units
+    }
+  };
+
+  const calculateTimeDifference = (time1, time2, unit) => {
+    const diffInSeconds = Math.abs(time1 - time2) / 1000;
+
+    switch (unit) {
+      case "seconds":
+        return Math.floor(diffInSeconds);
+
+      case "minutes":
+        return Math.floor(diffInSeconds / 60);
+
+      case "hours":
+        return Math.floor(diffInSeconds / (60 * 60));
+
+      default:
+        return null; // Handle unknown units
+    }
+  };
+
+  switch (specialFunction) {
+    case "date_diff":
+      return calculateDateDifference(date1, date2, unit);
+
+    case "time_diff":
+      return calculateTimeDifference(time1, time2, unit);
+
+    default:
+      return 0; // Handle unknown special functions
+  }
 }
 
 function evaluateCondition(condition, inputData) {
@@ -1052,9 +1065,9 @@ const conditions = [
     multiple: false,
     expression: [
       {
-        inputAttribute: "loan_duration",
+        inputAttribute: "date_diff,current_date,date_of_birth,years",
         operator: "<",
-        value: "credit_score",
+        value: "18",
       },
     ],
     boolean: "&&",
@@ -1092,12 +1105,12 @@ const conditions = [
 ];
 
 const inputData = {
-  account_no: 4543566,
-  loan_duration: 12,
-  date_of_birth: 19 / 11 / 2003,
+  account_no: "4543566",
+  loan_duration: "12",
+  date_of_birth: "2003/11/19",
   employment_status: "employed",
-  annual_income: 1200000,
-  credit_score: 800,
+  annual_income: "1200000",
+  credit_score: "800",
 };
 
 console.log(evaluateConditions(conditions, rule, inputData));
