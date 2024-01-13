@@ -15,7 +15,7 @@ const router = express.Router();
 
 router.post("/", verifyToken, createRule);
 router.get("/", verifyToken, getRules);
-router.post("/testing", testing);
+router.post("/testing/:id/:version", verifyToken, testing);
 router.post("/:id", verifyToken, getRuleByIdAndVersion);
 router.get("/searchRule", verifyToken, searchRule);
 router.patch("/:id", verifyToken, updateRule);

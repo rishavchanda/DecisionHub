@@ -879,59 +879,112 @@ const inputData = {
 };
 */
 
-const evaluateNodes = (node, rule, traversalNodes) => {
-  //evaluate condition function
-    const result = "yes"
-    if (result === "yes") {
-      rule.condition.edges.map((edge, index) => {
-        if (edge.id.startsWith(node.toString()) && /-yes-/.test(edge.id)) {
-          traversalNodes.push(Number(edge.id.slice(-1)));
-          //change the color of the edge, yes no both will have green color
+const setEdgeColor = (rule, node, traversalNodes, color, result) => {
+  rule.condition.edges.map((edge, index) => {
+    if (edge.source === node && edge.sourceHandle === result) {
+      traversalNodes.push(Number(edge.id.slice(-1)));
+      rule.condition.edges[index] = {
+        ...edge,
+        animated: true,
+        markerEnd: {
+          type: "arrowclosed",
+          width: 12,
+          height: 12,
+          color: color,
+        },
+        style: {
+          strokeWidth: 2,
+          stroke: '#FF0072',
         }
-      })
-    } else {
-      rule.condition.edges.map((edge) => {
-        if (edge.id.startsWith(node.toString()) && /-no-/.test(edge.id)) traversalNodes.push(Number(edge.id.slice(-1)));
-      })
+      }
     }
-    if(traversalNodes.length===0) return;
-    if(traversalNodes.length > 1){
-          //check if else if
-          //set nextNode as node with yes output remove rest
-          //yes edge will have green color no will have red
+  })
+}
+const evaluateNodes = async (node, rule, traversalNodes, inputAttributes) => {
+  //evaluate condition function
+  const result = evaluateConditions(node.data.conditions, inputAttributes);
+  console.log(result);
+  if (result) {
+    setEdgeColor(rule, node, traversalNodes, "green", "yes")
+  } else {
+    setEdgeColor(rule, node, traversalNodes, "green", "no")
+  }
+  if (traversalNodes.length === 0) {
+    node = { ...node, error: true }
+    return;
+  }
+  let nextNode;
+  if (traversalNodes.length > 0) {
+    //check if else if
+    //set nextNode as node with yes output remove rest
+    for (let i; i < traversalNodes.length; i++) {
+      r = ["yes", "no", "no"]
+      if (r[i] === "yes") nextNode = traversalNodes[0];
+      else {
+        rule.condition.edges.forEach((edge, index) => {
+          if (edge.source === node && edge.sourceHandle === "no") {
+            rule.condition.edges[index] = {
+              ...edge,
+              animated: true,
+              markerEnd: {
+                type: "arrowclosed",
+                width: 12,
+                height: 12,
+                color: "red",
+              },
+              style: {
+                strokeWidth: 2,
+                stroke: '#FF0072',
+              }
+            };
+          }
+        });
+      }
     }
-    const nextNode = rule.condition.nodes.find((node)=>node.id == traversalNodes[0]);
-    console.log(nextNode);
+    traversalNodes = [];
+  } else {
+    nextNode = rule.condition.nodes.find((node) => node.id == traversalNodes[0]);
     traversalNodes.shift();
-    console.log(traversalNodes);
-    if(nextNode.type === "outputNode") {console.log(nextNode);return;}
-    evaluateNodes(nextNode.id, rule, traversalNodes);
+  }
+  if (nextNode.type === "outputNode") { console.log(nextNode); return; }
+  evaluateNodes(nextNode.id, rule, traversalNodes, inputAttributes);
 }
 export const testing = async (req, res) => {
-  // const ruleId = req.params.id;
-  // const userId = req.user.id;
-  const rule = req.body;
+  const inputAttributes = req.body;
+  const { id, version } = req.params;
+  const userId = req.user.id;
   try {
-    // const user = await User.findOne({ where: { id: userId } });
-    // if (!user) {
-    //   return next(createError(404, "User not found"));
-    // }
-    // const rule = await Rule.findOne({ where: { id: ruleId } });
-    // if (!rule) {
-    //   return next(createError(404, "No rule with that id"));
-    // }
-    // //check if user is owner of this rule
-    // const userRules = await user.getRules();
-    // const ruleIds = userRules.map((rule) => rule.id);
-    // if (!ruleIds.includes(ruleId)) {
-    //   return next(createError(403, "You are not owner of this rule"));
-    // }
-    const conditionalNodes = rule.condition.nodes.filter(node => node.type === 'conditionalNode');
-    const firstConditionalNode = conditionalNodes.reduce((minId, currentNode) => {
-      return currentNode.id < minId ? currentNode.id : minId;
-    }, conditionalNodes[0].id);
+    const user = await User.findOne({ where: { id: userId } });
+    if (!user) {
+      return next(createError(404, "User not found"));
+    }
+    const rule = await Rule.findOne({ where: { id: id } });
+    if (!rule) {
+      return next(createError(404, "No rule with that id"));
+    }
+    //check if user is owner of this rule
+    const userRules = await user.getRules();
+    const ruleIds = userRules.map((rule) => rule.id);
+    if (!ruleIds.includes(id)) {
+      return next(createError(403, "You are not owner of this rule"));
+    }
+    const testRule = await Version.findOne({
+      where: {
+        ruleId: id,
+        version: version
+      }
+    })
+    if (!testRule) {
+      return next(createError(404, "Version not found"));
+    }
+
+    const condition = JSON.parse(testRule.condition);
+    const conditionalNodes = condition.nodes.filter(node => node.type === 'conditionalNode');
+    const firstConditionalNode = conditionalNodes.reduce((minNode, currentNode) => {
+      return currentNode.id < minNode.id ? currentNode : minNode;
+    }, conditionalNodes[0]);
     let traversalNodes = [];
-    await evaluateNodes(firstConditionalNode, rule, traversalNodes);
+    await evaluateNodes(firstConditionalNode, rule, traversalNodes, inputAttributes);
     // The rest of your code goes here...
 
   } catch (error) {
@@ -939,6 +992,7 @@ export const testing = async (req, res) => {
     console.error(error);
   }
 }
+
 function evaluateExpression(result, expression, inputData) {
   let { inputAttribute, operator, value } = expression;
   const inputValue = inputData[value]
@@ -1018,7 +1072,6 @@ function evaluateConditions(conditions, inputData) {
       logicalOperator = condition.boolean;
     }
   }
-
   return result;
 }
 
