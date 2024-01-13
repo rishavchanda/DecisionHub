@@ -880,6 +880,124 @@ const inputData = {
 */
 const specialFunctions = ["date_diff", "time_diff"];
 const specialArrtibutes = ["current_date", "current_time"];
+
+const setEdgeColor = (rule, node, traversalNodes, color, result) => {
+  JSON.parse(rule.condition).edges.map((edge, index) => {
+    if (edge.source === node && edge.sourceHandle === result) {
+      traversalNodes.push(Number(edge.id.slice(-1)));
+      rule.condition.edges[index] = {
+        ...edge,
+        animated: true,
+        markerEnd: {
+          type: "arrowclosed",
+          width: 12,
+          height: 12,
+          color: color,
+        },
+        style: {
+          strokeWidth: 2,
+          stroke: '#FF0072',
+        }
+      }
+    }
+  })
+}
+const evaluateNodes = async (node, rule, traversalNodes, inputAttributes) => {
+  //evaluate condition function
+  const result = evaluateConditions(node.data.conditions, inputAttributes);
+
+  if (result) {
+    setEdgeColor(rule, node, traversalNodes, "green", "yes")
+  } else {
+    setEdgeColor(rule, node, traversalNodes, "green", "no")
+  }
+  if (traversalNodes.length === 0) {
+    node = { ...node, error: true }
+    return;
+  }
+
+  let nextNode;
+  if (traversalNodes.length > 0) {
+    //check if else if
+    //set nextNode as node with yes output remove rest
+    let nestedResult;
+    for (let i; i < traversalNodes.length; i++) {
+      nestedResult = evaluateConditions(traversalNodes[i].data.conditions, inputAttributes)
+      if (nestedResult) nextNode = traversalNodes[0];
+      else {
+        JSON.parse(rule.condition).edges.forEach((edge, index) => {
+          if (edge.source === node && edge.sourceHandle === "no") {
+            rule.condition.edges[index] = {
+              ...edge,
+              animated: true,
+              markerEnd: {
+                type: "arrowclosed",
+                width: 12,
+                height: 12,
+                color: "red",
+              },
+              style: {
+                strokeWidth: 2,
+                stroke: '#FF0072',
+              }
+            };
+          }
+        });
+      }
+    }
+    traversalNodes = [];
+  } else {
+    nextNode = JSON.parse(rule.condition.nodes).find((node) => node.id == traversalNodes[0]);
+    traversalNodes.shift();
+  }
+  if (nextNode.type === "outputNode") { 
+    console.log(nextNode);
+    return rule;
+  }
+  evaluateNodes(nextNode.id, rule, traversalNodes, inputAttributes);
+}
+export const testing = async (req, res, next) => {
+  const inputAttributes = req.body;
+  const { id, version } = req.params;
+  const userId = req.user.id;
+  try {
+    const user = await User.findOne({ where: { id: userId } });
+    if (!user) {
+      return next(createError(404, "User not found"));
+    }
+    const rule = await Rule.findOne({ where: { id: id } });
+    if (!rule) {
+      return next(createError(404, "No rule with that id"));
+    }
+    //check if user is owner of this rule
+    const userRules = await user.getRules();
+    const ruleIds = userRules.map((rule) => rule.id);
+    if (!ruleIds.includes(id)) {
+      return next(createError(403, "You are not owner of this rule"));
+    }
+    const testRule = await Version.findOne({
+      where: {
+        ruleId: id,
+        version: version
+      }
+    })
+    if (!testRule) {
+      return next(createError(404, "Version not found"));
+    }
+
+    const condition = JSON.parse(testRule.condition);
+    const conditionalNodes = condition.nodes.filter(node => node.type === 'conditionalNode');
+    const firstConditionalNode = conditionalNodes.reduce((minNode, currentNode) => {
+      return currentNode.id < minNode.id ? currentNode : minNode;
+    }, conditionalNodes[0]);
+    let traversalNodes = [];
+    const testedRule = await evaluateNodes(firstConditionalNode, rule, traversalNodes, inputAttributes);
+    return res.status(200).json(testedRule);
+  } catch (error) {
+    return next(createError(error.status, error.message));
+  }
+}
+
 function evaluateExpression(result, expression, inputData) {
   let { inputAttribute, operator, value } = expression;
 
