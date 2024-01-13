@@ -18,6 +18,16 @@ const Label = styled.label`
     `
     color: ${theme.red};
   `}
+  ${({ small }) =>
+    small &&
+    `
+    font-size: 8px;
+  `}
+  ${({ popup, theme }) =>
+    popup &&
+    `
+  color: ${theme.popup_text_secondary};
+  `}
 `;
 
 const OutlinedInput = styled.div`
@@ -48,6 +58,20 @@ const OutlinedInput = styled.div`
     gap: 8px;
     min-height: ${height}
   `}
+
+  ${({ small }) =>
+    small &&
+    `
+    border-radius: 6px;
+    padding: 8px 10px;
+  `}
+
+  ${({ popup, theme }) =>
+    popup &&
+    `
+  color: ${theme.popup_text_secondary};
+  border: 0.5px solid ${theme.popup_text_secondary + 60};
+  `}
 `;
 
 const Input = styled.input`
@@ -60,18 +84,28 @@ const Input = styled.input`
   &:focus {
     outline: none;
   }
-`;
+  ${({ small }) =>
+    small &&
+    `
+    font-size: 12px;
+  `}
 
-const DisplayFlex = styled.div`
-  display: flex;
-  align-items: center;
-  gap: 10px;
+  ${({ popup, theme }) =>
+    popup &&
+    `
+  color: ${theme.popup_text_secondary};
+  `} ${({ theme }) => theme.popup_text_secondary};
 `;
 
 const Error = styled.p`
   font-size: 12px;
   margin: 0px 4px;
   color: ${({ theme }) => theme.red};
+  ${({ small }) =>
+    small &&
+    `
+    font-size: 8px;
+  `}
 `;
 
 const ChipWrapper = styled.div`
@@ -107,11 +141,17 @@ const TextInput = ({
   chipableArray,
   removeChip,
   height,
+  small,
+  popup,
 }) => {
   return (
-    <Container>
-      <Label error={error}>{label}</Label>
+    <Container small={small}>
+      <Label small={small} popup={popup} error={error}>
+        {label}
+      </Label>
       <OutlinedInput
+        small={small}
+        popup={popup}
         error={error}
         chipableInput={chipableInput}
         height={height}
@@ -136,6 +176,8 @@ const TextInput = ({
           </ChipWrapper>
         ) : (
           <Input
+            popup={popup}
+            small={small}
             as={textArea ? "textarea" : "input"}
             name={name}
             rows={rows}
@@ -146,7 +188,11 @@ const TextInput = ({
           />
         )}
       </OutlinedInput>
-      {error && <Error>{error}</Error>}
+      {error && (
+        <Error small={small} popup={popup}>
+          {error}
+        </Error>
+      )}
     </Container>
   );
 };

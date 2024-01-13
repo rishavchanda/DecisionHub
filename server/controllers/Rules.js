@@ -878,6 +878,8 @@ const inputData = {
   credit_score: 800
 };
 */
+const specialFunctions = ["date_diff", "time_diff"];
+const specialArrtibutes = ["current_date", "current_time"];
 
 const setEdgeColor = (rule, node, traversalNodes, color, result) => {
   JSON.parse(rule.condition).edges.map((edge, index) => {
@@ -998,6 +1000,10 @@ export const testing = async (req, res, next) => {
 
 function evaluateExpression(result, expression, inputData) {
   let { inputAttribute, operator, value } = expression;
+  if (checkSpecialFunction(inputAttribute?.split(",")[0])) {
+    inputAttribute = evaluateSpecialFunction(inputAttribute, inputData);
+    console.log(inputAttribute);
+  }
   const inputValue = inputData[value]
     ? parseInt(inputData[value])
     : parseInt(value);
@@ -1038,6 +1044,80 @@ function evaluateExpression(result, expression, inputData) {
   return performComparison(inputAttribute);
 }
 
+function checkSpecialFunction(func) {
+  return specialFunctions.includes(func);
+}
+
+function evaluateSpecialFunction(inputAttribute, inputData) {
+  const [specialFunction, attribute1, attribute2, unit] =
+    inputAttribute.split(",");
+
+  const getDateAttributeValue = (attribute) => {
+    return attribute.toLowerCase() === "current_date"
+      ? new Date()
+      : new Date(inputData[attribute]);
+  };
+
+  const getDateTimeAttributeValue = (attribute) => {
+    return attribute.toLowerCase() === "current_time"
+      ? new Date()
+      : new Date(inputData[attribute]);
+  };
+
+  const date1 = getDateAttributeValue(attribute1);
+  const date2 = getDateAttributeValue(attribute2);
+
+  const time1 = getDateTimeAttributeValue(attribute1);
+  const time2 = getDateTimeAttributeValue(attribute2);
+
+  const calculateDateDifference = (date1, date2, unit) => {
+    const diffInMilliseconds = Math.abs(date1 - date2);
+
+    switch (unit) {
+      case "years":
+        return Math.floor(diffInMilliseconds / (365 * 24 * 60 * 60 * 1000));
+
+      case "months":
+        return Math.floor(diffInMilliseconds / (30 * 24 * 60 * 60 * 1000));
+
+      case "days":
+        return Math.floor(diffInMilliseconds / (24 * 60 * 60 * 1000));
+
+      default:
+        return null; // Handle unknown units
+    }
+  };
+
+  const calculateTimeDifference = (time1, time2, unit) => {
+    const diffInSeconds = Math.abs(time1 - time2) / 1000;
+
+    switch (unit) {
+      case "seconds":
+        return Math.floor(diffInSeconds);
+
+      case "minutes":
+        return Math.floor(diffInSeconds / 60);
+
+      case "hours":
+        return Math.floor(diffInSeconds / (60 * 60));
+
+      default:
+        return null; // Handle unknown units
+    }
+  };
+
+  switch (specialFunction) {
+    case "date_diff":
+      return calculateDateDifference(date1, date2, unit);
+
+    case "time_diff":
+      return calculateTimeDifference(time1, time2, unit);
+
+    default:
+      return 0; // Handle unknown special functions
+  }
+}
+
 function evaluateCondition(condition, inputData) {
   const { expression, boolean } = condition;
 
@@ -1051,7 +1131,7 @@ function evaluateCondition(condition, inputData) {
   }
   return result[result.length - 1];
 }
-function evaluateConditions(conditions, inputData) {
+function evaluateConditions(conditions, rule, inputData) {
   let result = [];
   let logicalOperator = null;
 
@@ -1075,6 +1155,12 @@ function evaluateConditions(conditions, inputData) {
       logicalOperator = condition.boolean;
     }
   }
+  if (rule === "Any") {
+    if (result.includes(true)) return true;
+  } else if (rule === "All") {
+    if (result.includes(false)) return false;
+  }
+
   return result;
 }
 
@@ -1091,14 +1177,15 @@ function performLogicalOperation(operand1, operator, operand2) {
 }
 
 // Example usage with your provided data
+const rule = "All";
 const conditions = [
   {
     multiple: false,
     expression: [
       {
-        inputAttribute: "loan_duration",
+        inputAttribute: "date_diff,current_date,date_of_birth,years",
         operator: "<",
-        value: "credit_score",
+        value: "18",
       },
     ],
     boolean: "&&",
@@ -1118,15 +1205,30 @@ const conditions = [
       },
     ],
   },
+  {
+    multiple: false,
+    expression: [
+      {
+        inputAttribute: "annual_income",
+        operator: "/",
+        value: "12000",
+      },
+      {
+        inputAttribute: null,
+        operator: ">=",
+        value: "100000",
+      },
+    ],
+  },
 ];
 
 const inputData = {
-  account_no: 4543566,
-  loan_duration: 12,
-  date_of_birth: 19 / 11 / 2003,
+  account_no: "4543566",
+  loan_duration: "12",
+  date_of_birth: "2003/11/19",
   employment_status: "employed",
-  annual_income: 1200000,
-  credit_score: 800,
+  annual_income: "1200000",
+  credit_score: "800",
 };
 
-console.log(evaluateConditions(conditions, inputData));
+console.log(evaluateConditions(conditions, rule, inputData));

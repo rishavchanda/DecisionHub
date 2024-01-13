@@ -1,3 +1,4 @@
+/* eslint-disable react-hooks/exhaustive-deps */
 import React, { useEffect, useState } from "react";
 import ReactFlow, {
   Controls,
@@ -6,7 +7,6 @@ import ReactFlow, {
   useEdgesState,
   Panel,
   useReactFlow,
-  MiniMap,
 } from "reactflow";
 import "reactflow/dist/style.css";
 import ConditionalNode from "../components/Nodes/ConditionalNode";
@@ -14,17 +14,13 @@ import AttributeNode from "../components/Nodes/ArrtibuteNode";
 import OutputNode from "../components/Nodes/OutputNode";
 import styled, { useTheme } from "styled-components";
 import { CircularProgress, MenuItem, Select } from "@mui/material";
-import {
-  ArrowBackRounded,
-  DeleteOutlineRounded,
-  EditRounded,
-  FlipCameraAndroidOutlined,
-  SaveRounded,
-} from "@mui/icons-material";
-import { useNavigate, useParams } from "react-router-dom";
-import { getRuleById, updateRule, deleteRule } from "../api";
+import { ArrowBackRounded, EditRounded } from "@mui/icons-material";
+import { useNavigate, useParams, useLocation } from "react-router-dom";
+import { getRuleById } from "../api";
 import { useDispatch, useSelector } from "react-redux";
 import { openSnackbar } from "../redux/reducers/snackbarSlice";
+import { ruleReload } from "../redux/reducers/rulesSlice";
+import TestRuleForm from "../components/DialogForms/TestRuleForm";
 
 const FlexDisplay = styled.div`
   display: flex;
@@ -103,6 +99,8 @@ const nodeTypes = {
 
 const TestDetails = () => {
   const { id } = useParams();
+  const location = useLocation();
+  let path = location.pathname.split("/");
   const { reload } = useSelector((state) => state.rule);
   const { setViewport } = useReactFlow();
 
@@ -116,20 +114,26 @@ const TestDetails = () => {
   const [nodes, setNodes, onNodesChange] = useNodesState();
   const [edges, setEdges, onEdgesChange] = useEdgesState();
   const [rule, setRule] = useState();
+  const [versions, setVersions] = useState([]);
+  const [version, setVersion] = useState();
 
   //loader
   const [loading, setLoading] = useState(true);
+  const [submitLoading, setSubmitLoading] = useState(false);
 
   //Functions
 
   const getRule = async () => {
     setLoading(true);
     const token = localStorage.getItem("decisionhub-token-auth-x4");
-    await getRuleById(id, token)
-      .then((res) => {
-        setRule(res.data);
-        setInputAttributes(res.data.inputAttributes);
-        setOutputAttributes(res.data.outputAttributes);
+    await getRuleById(id, token, version)
+      .then(async (res) => {
+        setRule(res.data?.rule);
+        setInputAttributes(res.data?.rule?.inputAttributes);
+        setOutputAttributes(res.data?.rule?.outputAttributes);
+        setVersions(res.data?.versions);
+        await createFlow(res.data?.rule);
+        console.log(res.data?.rule);
         setLoading(false);
       })
       .catch((err) => {
@@ -145,25 +149,33 @@ const TestDetails = () => {
 
   useEffect(() => {
     getRule();
-  }, [reload]);
+  }, [reload, version]);
+
+  const createFlow = async (rule) => {
+    setLoading(true);
+    const { nodes, edges } = JSON.parse(rule?.condition);
+    await nodes.forEach((node) => {
+      if (node.type === "attributeNode") {
+        node.data.label = rule.title;
+        node.data.descryption = rule.descryption;
+      }
+      node.data.inputAttributes = rule?.inputAttributes;
+      node.data.outputAttributes = rule?.outputAttributes;
+    });
+    await setNodes(nodes);
+    await setEdges(edges);
+    setLoading(false);
+  };
 
   useEffect(() => {
-    if (rule) {
-      const { nodes, edges } = JSON.parse(rule.condition);
-      //add input and output attributes to nodes
-      nodes.forEach((node) => {
-        if (node.type === "attributeNode") {
-          node.data.label = rule.title;
-          node.data.descryption = rule.descryption;
-        }
-        node.data.inputAttributes = inputAttributes;
-        node.data.outputAttributes = outputAttributes;
-      });
-      setNodes(nodes);
-      setEdges(edges);
-      setViewport({ x: 200, y: 0, zoom: 1 }, { duration: 800 });
-    }
-  }, [rule, inputAttributes, outputAttributes, reload]);
+    setViewport({ x: 200, y: 0, zoom: 1 }, { duration: 800 });
+  }, [reload, setViewport, getRule]);
+
+  const handelSubmitTestData = (testData) => {
+    setSubmitLoading(true);
+    console.log(testData);
+    // setLoading(false);
+  };
 
   return (
     <div style={{ height: "100%" }}>
@@ -194,15 +206,19 @@ const TestDetails = () => {
           <Background />
           <Controls />
           <Panel position="top-left">
-            <TextButton onClick={() => navigate("/rules/")}>
+            <TextButton onClick={() => navigate("/test/")}>
               <ArrowBackRounded sx={{ fontSize: "16px" }} />
-              Back to Rules
+              Back
             </TextButton>
           </Panel>
           <Panel position="top-right">
             <FlexDisplay>
               <Select
-                value="1.1"
+                value={rule?.version}
+                onChange={(e) => {
+                  setVersion(e.target.value);
+                  dispath(ruleReload());
+                }}
                 autoWidth
                 displayEmpty
                 size="small"
@@ -217,15 +233,21 @@ const TestDetails = () => {
                   },
                 }}
               >
-                <MenuItem value="1.1">Version: 1.0</MenuItem>
-                <MenuItem value="2.2">Version: 1.1</MenuItem>
-                <MenuItem value="3.3">Version: 1.2</MenuItem>
+                {versions?.map((version) => (
+                  <MenuItem value={version}>Version: {version}</MenuItem>
+                ))}
               </Select>
-              <Button onClick={() => navigate(`/rules/${rule.id}`)}>
+              <TestRuleForm
+                attributes={inputAttributes}
+                loading={submitLoading}
+                submitTestData={(testData) => handelSubmitTestData(testData)}
+              />
+              <Button onClick={() => navigate(`/rules/${path[2]}`)}>
                 <EditRounded style={{ fontSize: "12px" }} /> Edit Rule
               </Button>
             </FlexDisplay>
           </Panel>
+          <Panel position="bottom-right"></Panel>
         </ReactFlow>
       )}
     </div>
