@@ -881,19 +881,28 @@ const inputData = {
 
 const evaluateNodes = (node, rule, traversalNodes) => {
   //evaluate condition function
-    const result = "yes"
-    if (result === "yes") {
-      rule.edges.map((edge) => {
-        if (edge.id.startsWith(node.toString()) && /-yes-|-no-/.test(edge.id) == 'yes') traversalNodes.push(Number(edge.id.slice(-1)));
-      })
-    } else {
-      rule.edges.map((edge) => {
-        if (edge.id.startsWith(node.toString()) && /-yes-|-no-/.test(edge.id) == 'no') traversalNodes.push(Number(edge.id.slice(-1)));
-      })
-    }
-    const nextNode = rule.nodes.find((node)=>node.id == Number(edge.id.slice(-1)));
-
-}
+  const result = "yes";
+  if (result === "yes") {
+    rule.edges.map((edge) => {
+      if (
+        edge.id.startsWith(node.toString()) &&
+        /-yes-|-no-/.test(edge.id) == "yes"
+      )
+        traversalNodes.push(Number(edge.id.slice(-1)));
+    });
+  } else {
+    rule.edges.map((edge) => {
+      if (
+        edge.id.startsWith(node.toString()) &&
+        /-yes-|-no-/.test(edge.id) == "no"
+      )
+        traversalNodes.push(Number(edge.id.slice(-1)));
+    });
+  }
+  const nextNode = rule.nodes.find(
+    (node) => node.id == Number(edge.id.slice(-1))
+  );
+};
 export const testing = async () => {
   const ruleId = req.params.id;
   const userId = req.user.id;
@@ -912,21 +921,30 @@ export const testing = async () => {
     if (!ruleIds.includes(ruleId)) {
       return next(createError(403, "You are not owner of this rule"));
     }
-    const conditionalNodes = rule.nodes.filter(node => node.type === 'conditionalNode');
+    const conditionalNodes = rule.nodes.filter(
+      (node) => node.type === "conditionalNode"
+    );
 
-    const firstConditionalNode = conditionalNodes.reduce((minId, currentNode) => {
-      return currentNode.id < minId ? currentNode.id : minId;
-    }, conditionalNodes[0].id);
+    const firstConditionalNode = conditionalNodes.reduce(
+      (minId, currentNode) => {
+        return currentNode.id < minId ? currentNode.id : minId;
+      },
+      conditionalNodes[0].id
+    );
     const edges = rule.edges;
     let traversalNodes = [];
-    const outputNode = evaluateNodes(firstConditionalNode, rule, traversalNodes);
+    const outputNode = evaluateNodes(
+      firstConditionalNode,
+      rule,
+      traversalNodes
+    );
     // The rest of your code goes here...
-
   } catch (error) {
     // Handle any errors that might occur during the database query
     console.error(error);
   }
-}
+};
+
 function evaluateExpression(result, expression, inputData) {
   let { inputAttribute, operator, value } = expression;
   const inputValue = inputData[value]
@@ -982,7 +1000,7 @@ function evaluateCondition(condition, inputData) {
   }
   return result[result.length - 1];
 }
-function evaluateConditions(conditions, inputData) {
+function evaluateConditions(conditions, rule, inputData) {
   let result = [];
   let logicalOperator = null;
 
@@ -1006,6 +1024,11 @@ function evaluateConditions(conditions, inputData) {
       logicalOperator = condition.boolean;
     }
   }
+  if (rule === "Any") {
+    if (result.includes(true)) return true;
+  } else if (rule === "All") {
+    if (result.includes(false)) return false;
+  }
 
   return result;
 }
@@ -1023,6 +1046,7 @@ function performLogicalOperation(operand1, operator, operand2) {
 }
 
 // Example usage with your provided data
+const rule = "All";
 const conditions = [
   {
     multiple: false,
@@ -1050,6 +1074,21 @@ const conditions = [
       },
     ],
   },
+  {
+    multiple: false,
+    expression: [
+      {
+        inputAttribute: "annual_income",
+        operator: "/",
+        value: "12000",
+      },
+      {
+        inputAttribute: null,
+        operator: ">=",
+        value: "100000",
+      },
+    ],
+  },
 ];
 
 const inputData = {
@@ -1061,4 +1100,4 @@ const inputData = {
   credit_score: 800,
 };
 
-console.log(evaluateConditions(conditions, inputData));
+console.log(evaluateConditions(conditions, rule, inputData));

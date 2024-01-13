@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import ReactFlow, {
   Controls,
   Background,
@@ -145,15 +145,16 @@ const RulesDetails = () => {
 
   //Functions
 
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   const getRule = async () => {
     setLoading(true);
     const token = localStorage.getItem("decisionhub-token-auth-x4");
     await getRuleById(id, token, version)
       .then(async (res) => {
-        await setRule(res.data?.rule);
-        await setInputAttributes(res.data?.rule?.inputAttributes);
-        await setOutputAttributes(res.data?.rule?.outputAttributes);
-        await setVersions(res.data?.versions);
+        setRule(res.data?.rule);
+        setInputAttributes(res.data?.rule?.inputAttributes);
+        setOutputAttributes(res.data?.rule?.outputAttributes);
+        setVersions(res.data?.versions);
         await createFlow(res.data?.rule);
         console.log(res.data?.rule);
         setLoading(false);
@@ -191,7 +192,7 @@ const RulesDetails = () => {
 
   useEffect(() => {
     setViewport({ x: 200, y: 0, zoom: 1 }, { duration: 800 });
-  }, [reload, setViewport]);
+  }, [reload, setViewport, version]);
 
   // update rule on each version change
   const saveRule = async () => {
