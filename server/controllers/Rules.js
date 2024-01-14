@@ -889,23 +889,22 @@ const setEdgeColor = (condition, node, traversalNodes, color, result) => {
       const targetNode = condition.nodes.find(node => node.id === edge.target);
       if (targetNode) {
         traversalNodes.push(targetNode);
-      } 
+      }
       // Rule ta ke update korte hobe json parse kore tai error asche
-      condition.edges[index] = {
-        ...edge,
-        animated: true,
-        markerEnd: {
-          type: "arrowclosed",
-          width: 12,
-          height: 12,
-          color: color,
-        },
-        style: { 
-          strokeWidth: 2,
-          stroke: "#FF0072",
-        },
-      };
-      console.log(condition.edges[index]);
+      // condition.edges[index] = {
+      //   ...edge,
+      //   animated: true,
+      //   markerEnd: {
+      //     type: "arrowclosed",
+      //     width: 12,
+      //     height: 12,
+      //     color: color,
+      //   },
+      //   style: {
+      //     strokeWidth: 2,
+      //     stroke: color,
+      //   },
+      // };
     });
 };
 const evaluateNodes = async (node, condition, rule, traversalNodes, inputAttributes) => {
@@ -915,9 +914,9 @@ const evaluateNodes = async (node, condition, rule, traversalNodes, inputAttribu
     node.data.rule,
     inputAttributes
   );
-    // console.log(result, node.data.label)
+  // console.log(result, node.data.label)
   if (result[0]) {
-    setEdgeColor(condition, node, traversalNodes, "green", "yes"); 
+    setEdgeColor(condition, node, traversalNodes, "green", "yes");
   } else {
     setEdgeColor(condition, node, traversalNodes, "green", "no");
   }
@@ -932,7 +931,8 @@ const evaluateNodes = async (node, condition, rule, traversalNodes, inputAttribu
     //set nextNode as node with yes output remove rest
     let nestedResult;
     for (let i = 0; i < traversalNodes.length; i++) {
-      if(traversalNodes[i].type === "outputNode") {
+      if (traversalNodes[i].type === "outputNode") {
+        console.log(traversalNodes[i]);
         return rule;
       }
       else {
@@ -944,39 +944,38 @@ const evaluateNodes = async (node, condition, rule, traversalNodes, inputAttribu
       }
       if (nestedResult) nextNode = traversalNodes[0];
       else {
-        // JSON.parse(rule.condition).edges.forEach((edge, index) => {
-        //   if (edge.source === node && edge.sourceHandle === "no") {
-        //     rule.condition.edges[index] = {
-        //       ...edge,
-        //       animated: true,
-        //       markerEnd: {
-        //         type: "arrowclosed",
-        //         width: 12,
-        //         height: 12,
-        //         color: "red",
-        //       },
-        //       style: {
-        //         strokeWidth: 2,
-        //         stroke: "#FF0072",
-        //       },
-        //     };
-        //   }
-        // });
+        condition.edges.forEach((edge, index) => {
+          if (edge.source === node && edge.sourceHandle === "no") {
+            condition.edges[index] = {
+              ...edge,
+              animated: true,
+              markerEnd: {
+                type: "arrowclosed",
+                width: 12,
+                height: 12,
+                color: "red",
+              },
+              style: {
+                strokeWidth: 2,
+                stroke: "#FF0072",
+              },
+            };
+          }
+        });
       }
     }
     traversalNodes = [];
   } else {
-    nextNode = JSON.parse(rule.condition.nodes).find(
+    nextNode = condition.nodes.find(
       (node) => node.id == traversalNodes[0]
     );
     traversalNodes.shift();
   }
   console.log(nextNode)
   if (nextNode.type === "outputNode") {
-    console.log(nextNode);
     return rule;
   }
-  else{
+  else {
     evaluateNodes(nextNode, condition, rule, traversalNodes, inputAttributes);
   }
 };
@@ -1009,21 +1008,18 @@ export const testing = async (req, res, next) => {
       return next(createError(404, "Version not found"));
     }
     const condition = JSON.parse(testRule.condition);
-    // const conditionalNodes = condition.nodes.filter(
-    //   (node) => node.type === "conditionalNode"
-    // );
     let testedRule;
     const firstConditionalNodeId = condition.edges.find(edge => edge.source === "1").target;
-    if(firstConditionalNodeId){
+    if (firstConditionalNodeId) {
       const firstConditionalNode = condition.nodes.find(node => node.id === firstConditionalNodeId);
       let traversalNodes = [];
-    testedRule = await evaluateNodes(
-      firstConditionalNode,
-      condition,
-      rule,
-      traversalNodes,
-      inputAttributes
-    );
+      testedRule = await evaluateNodes(
+        firstConditionalNode,
+        condition,
+        rule,
+        traversalNodes,
+        inputAttributes
+      );
     }
     return res.json(testedRule);
   } catch (error) {
