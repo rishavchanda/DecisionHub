@@ -7,6 +7,7 @@ import {
   getConnectedEdges,
   useReactFlow,
 } from "reactflow";
+import { nanoid } from "nanoid";
 import {
   AddRounded,
   SubtitlesRounded,
@@ -203,7 +204,7 @@ const addNewConditionalNode = (
         edges.source === currentNodeId && edges.sourceHandle === sourceHandle
     ).length;
 
-  const newNodeId = `${existingNodes.length + 1}`;
+  const newNodeId = nanoid(5);
   const depth = parentNode.position.y + parentNode.height;
 
   const newNode = {
@@ -268,7 +269,7 @@ const addNewOutputNode = (currentNodeId, sourceHandle, reactFlow, data) => {
         edges.source === currentNodeId && edges.sourceHandle === sourceHandle
     ).length;
 
-  const newNodeId = `${existingNodes.length + 1}`;
+  const newNodeId = nanoid(5);
   const depth = parentNode.position.y + parentNode.height;
 
   const newNode = {
@@ -327,6 +328,7 @@ const calculateNodePosition = (
 };
 
 const YesNode = ({ id, data }) => {
+  const dispatch = useDispatch();
   const theme = useTheme();
   const reactFlow = useReactFlow();
   const { updated } = useSelector((state) => state.rule);
@@ -390,6 +392,7 @@ const YesNode = ({ id, data }) => {
               setConnectedEdges(
                 getConnectedEdges(reactFlow.getNodes(), reactFlow.getEdges())
               );
+              dispatch(ruleUpdated());
             }}
           >
             <SubtitlesRounded sx={{ fontSize: "18px", color: theme.yellow }} />
@@ -414,6 +417,7 @@ const YesNode = ({ id, data }) => {
               setConnectedEdges(
                 getConnectedEdges(reactFlow.getNodes(), reactFlow.getEdges())
               );
+              dispatch(ruleUpdated());
             }}
           >
             <BubbleChartRounded sx={{ fontSize: "18px", color: theme.green }} />
@@ -428,6 +432,7 @@ const YesNode = ({ id, data }) => {
             setConnectedEdges(
               getConnectedEdges(reactFlow.getNodes(), reactFlow.getEdges())
             );
+            dispatch(ruleUpdated());
           }}
         >
           <AddRounded sx={{ fontSize: "18px" }} />
@@ -440,6 +445,7 @@ const YesNode = ({ id, data }) => {
 
 const NoNode = ({ id, data }) => {
   const theme = useTheme();
+  const dispatch = useDispatch();
   const reactFlow = useReactFlow();
   const { updated } = useSelector((state) => state.rule);
   const [connectedEdges, setConnectedEdges] = useState(
@@ -498,6 +504,7 @@ const NoNode = ({ id, data }) => {
               setConnectedEdges(
                 getConnectedEdges(reactFlow.getNodes(), reactFlow.getEdges())
               );
+              dispatch(ruleUpdated());
             }}
           >
             <SubtitlesRounded sx={{ fontSize: "20px", color: theme.yellow }} />
@@ -522,6 +529,7 @@ const NoNode = ({ id, data }) => {
               setConnectedEdges(
                 getConnectedEdges(reactFlow.getNodes(), reactFlow.getEdges())
               );
+              dispatch(ruleUpdated());
             }}
           >
             <BubbleChartRounded sx={{ fontSize: "20px", color: theme.green }} />
@@ -538,6 +546,7 @@ const NoNode = ({ id, data }) => {
             setConnectedEdges(
               getConnectedEdges(reactFlow.getNodes(), reactFlow.getEdges())
             );
+            dispatch(ruleUpdated());
           }}
         >
           <AddRounded sx={{ fontSize: "14px" }} />
@@ -765,11 +774,11 @@ function ConditionalNode({ id, data }) {
   const getNoOfEdgesParent = () => {
     const mySourceHandel = reactFlow
       .getEdges()
-      .find((edge) => edge.target === id).sourceHandle;
+      .find((edge) => edge.target === id)?.sourceHandle;
     const parentEdges = reactFlow
       .getEdges()
       .filter(
-        (edge) => edge.target === id && edge.sourceHandle === mySourceHandel
+        (edge) => edge.target === id && edge?.sourceHandle === mySourceHandel
       );
 
     if (parentEdges.length === 0) {
@@ -791,6 +800,22 @@ function ConditionalNode({ id, data }) {
         (edge) =>
           edge.source === parentNode.id && edge.sourceHandle === mySourceHandel
       ).length;
+
+    if (parentNodeEdges >= 2) {
+      // delete all edges connected to source handel no of this node
+      const connectedEdges = getConnectedEdges(
+        [reactFlow.getNode(id, data)],
+        reactFlow.getEdges()
+      );
+      // const updatedEdges = reactFlow.getEdges().filter((edge) => {
+      //   return !connectedEdges.some(
+      //     (connectedEdge) =>
+      //       connectedEdge.source === edge.source && edge.sourceHandle === "no"
+      //   );
+      // });
+      // reactFlow.setEdges(updatedEdges);
+      dispatch(ruleUpdated());
+    }
 
     return parentNodeEdges;
   };

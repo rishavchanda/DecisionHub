@@ -9,6 +9,7 @@ import {
 import { useDispatch, useSelector } from "react-redux";
 import { ruleUpdated } from "../../redux/reducers/rulesSlice";
 import NewRuleForm from "../DialogForms/NewRuleForm";
+import { nanoid } from "nanoid";
 
 const Wrapper = styled.div`
   display: flex;
@@ -155,7 +156,7 @@ const AttributeNode = ({ id, data }) => {
     const existingNodes = reactFlow.getNodes();
     const parentNode = existingNodes.find((node) => node.id === id);
 
-    const newNodeId = `${existingNodes.length + 1}`;
+    const newNodeId = nanoid(5);
     const depth = parentNode.position.y + parentNode.height;
 
     const newNode = {
