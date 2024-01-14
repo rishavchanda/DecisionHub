@@ -890,9 +890,29 @@ const setEdgeColor = (condition, node, traversalNodes, color, result) => {
       if (targetNode) {
         traversalNodes.push(targetNode);
       }
+      console.log({
+        id: edge?.id,
+        source: edge?.source,
+        target: edge?.target,
+        sourceHandle: edge?.sourceHandle,
+        animated: true,
+        markerEnd: {
+          type: "arrowclosed",
+          width: 12,
+          height: 12,
+          color: color,
+        },
+        style: {
+          strokeWidth: 2,
+          stroke: color,
+        },
+    });
       // Rule ta ke update korte hobe json parse kore tai error asche
       // condition.edges[index] = {
-      //   ...edge,
+      //   id: edge.id,
+      //   source: edge.source,
+      //   target: edge.target,
+      //   sourceHandle: edge.sourceHandle,
       //   animated: true,
       //   markerEnd: {
       //     type: "arrowclosed",
@@ -905,6 +925,7 @@ const setEdgeColor = (condition, node, traversalNodes, color, result) => {
       //     stroke: color,
       //   },
       // };
+      
     });
 };
 const evaluateNodes = async (node, condition, rule, traversalNodes, inputAttributes) => {
@@ -1007,7 +1028,7 @@ export const testing = async (req, res, next) => {
     if (!testRule) {
       return next(createError(404, "Version not found"));
     }
-    const condition = JSON.parse(testRule.condition);
+    let condition = JSON.parse(testRule.condition);
     let testedRule;
     const firstConditionalNodeId = condition.edges.find(edge => edge.source === "1").target;
     if (firstConditionalNodeId) {
