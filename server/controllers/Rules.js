@@ -882,47 +882,65 @@ const specialFunctions = ["date_diff", "time_diff"];
 const specialArrtibutes = ["current_date", "current_time"];
 
 const setEdgeColor = (rule, node, traversalNodes, color, result) => {
-  JSON.parse(rule.condition).edges.map((edge, index) => {
-    if (edge.source === node && edge.sourceHandle === result) {
-      traversalNodes.push(Number(edge.id.slice(-1)));
-      rule.condition.edges[index] = {
-        ...edge,
-        animated: true,
-        markerEnd: {
-          type: "arrowclosed",
-          width: 12,
-          height: 12,
-          color: color,
-        },
-        style: {
-          strokeWidth: 2,
-          stroke: '#FF0072',
-        }
-      }
-    }
-  })
-}
+  JSON.parse(rule.condition)
+    .edges.filter(
+      (edge) => edge.source === node.id && edge.sourceHandle === "yes"
+    )
+    .map((edge, index) => {
+      console.log(edge);
+      traversalNodes.push(Number(edge.target));
+      console.log(traversalNodes);
+      // console.log(JSON.parse(rule.condition).edges[index]);
+      // Rule ta ke update korte hobe json parse kore tai error asche
+      // rule.condition.edges[index] = {
+      //   ...edge,
+      //   animated: true,
+      //   markerEnd: {
+      //     type: "arrowclosed",
+      //     width: 12,
+      //     height: 12,
+      //     color: color,
+      //   },
+      //   style: {
+      //     strokeWidth: 2,
+      //     stroke: "#FF0072",
+      //   },
+      // };
+    });
+};
 const evaluateNodes = async (node, rule, traversalNodes, inputAttributes) => {
   //evaluate condition function
-  const result = evaluateConditions(node.data.conditions, inputAttributes);
-
+  const result = evaluateConditions(
+    node.data.conditions,
+    node.data.rule,
+    inputAttributes
+  );
+  console.log(result);
   if (result) {
-    setEdgeColor(rule, node, traversalNodes, "green", "yes")
+    setEdgeColor(rule, node, traversalNodes, "green", "yes");
   } else {
-    setEdgeColor(rule, node, traversalNodes, "green", "no")
+    setEdgeColor(rule, node, traversalNodes, "green", "no");
   }
   if (traversalNodes.length === 0) {
-    node = { ...node, error: true }
+    node = { ...node, error: true };
     return;
   }
 
   let nextNode;
   if (traversalNodes.length > 0) {
+    console.log(traversalNodes.length);
     //check if else if
     //set nextNode as node with yes output remove rest
     let nestedResult;
-    for (let i; i < traversalNodes.length; i++) {
-      nestedResult = evaluateConditions(traversalNodes[i].data.conditions, inputAttributes)
+    for (let i = 0; i < traversalNodes.length; i++) {
+      console.log(traversalNodes[i]);
+      // traversal node e ba id ache
+      nestedResult = evaluateConditions(
+        traversalNodes[i].data.conditions,
+        traversalNodes[i].data.rule,
+        inputAttributes
+      );
+      console.log(nestedResult);
       if (nestedResult) nextNode = traversalNodes[0];
       else {
         JSON.parse(rule.condition).edges.forEach((edge, index) => {
@@ -938,8 +956,8 @@ const evaluateNodes = async (node, rule, traversalNodes, inputAttributes) => {
               },
               style: {
                 strokeWidth: 2,
-                stroke: '#FF0072',
-              }
+                stroke: "#FF0072",
+              },
             };
           }
         });
@@ -947,15 +965,17 @@ const evaluateNodes = async (node, rule, traversalNodes, inputAttributes) => {
     }
     traversalNodes = [];
   } else {
-    nextNode = JSON.parse(rule.condition.nodes).find((node) => node.id == traversalNodes[0]);
+    nextNode = JSON.parse(rule.condition.nodes).find(
+      (node) => node.id == traversalNodes[0]
+    );
     traversalNodes.shift();
   }
-  if (nextNode.type === "outputNode") { 
+  if (nextNode.type === "outputNode") {
     console.log(nextNode);
     return rule;
   }
   evaluateNodes(nextNode.id, rule, traversalNodes, inputAttributes);
-}
+};
 export const testing = async (req, res, next) => {
   const inputAttributes = req.body;
   const { id, version } = req.params;
@@ -978,25 +998,35 @@ export const testing = async (req, res, next) => {
     const testRule = await Version.findOne({
       where: {
         ruleId: id,
-        version: version
-      }
-    })
+        version: version,
+      },
+    });
     if (!testRule) {
       return next(createError(404, "Version not found"));
     }
 
     const condition = JSON.parse(testRule.condition);
-    const conditionalNodes = condition.nodes.filter(node => node.type === 'conditionalNode');
-    const firstConditionalNode = conditionalNodes.reduce((minNode, currentNode) => {
-      return currentNode.id < minNode.id ? currentNode : minNode;
-    }, conditionalNodes[0]);
+    const conditionalNodes = condition.nodes.filter(
+      (node) => node.type === "conditionalNode"
+    );
+    const firstConditionalNode = conditionalNodes.reduce(
+      (minNode, currentNode) => {
+        return currentNode.id < minNode.id ? currentNode : minNode;
+      },
+      conditionalNodes[0]
+    );
     let traversalNodes = [];
-    const testedRule = await evaluateNodes(firstConditionalNode, rule, traversalNodes, inputAttributes);
+    const testedRule = await evaluateNodes(
+      firstConditionalNode,
+      rule,
+      traversalNodes,
+      inputAttributes
+    );
     return res.status(200).json(testedRule);
   } catch (error) {
     return next(createError(error.status, error.message));
   }
-}
+};
 
 function evaluateExpression(result, expression, inputData) {
   let { inputAttribute, operator, value } = expression;
@@ -1122,23 +1152,21 @@ function evaluateSpecialFunction(inputAttribute, inputData) {
 
 function evaluateCondition(condition, inputData) {
   const { expression, boolean } = condition;
-
   // Evaluate the first expression
   let result = [];
   result.push(evaluateExpression(null, expression[0], inputData));
-
   // If there are more expressions, combine the results using boolean logic
   for (let i = 1; i < expression.length; i++) {
     result.push(evaluateExpression(result[i - 1], expression[i], inputData));
   }
   return result[result.length - 1];
 }
-function evaluateConditions(conditions, rule, inputData) {
+function evaluateConditions(conditions, rule, inputAttributes) {
   let result = [];
   let logicalOperator = null;
 
   for (const condition of conditions) {
-    const conditionResult = evaluateCondition(condition, inputData);
+    const conditionResult = evaluateCondition(condition, inputAttributes);
     if (logicalOperator) {
       // If a logical operator is present, combine the previous result with the current result
       result[result.length - 1] = performLogicalOperation(
@@ -1157,7 +1185,7 @@ function evaluateConditions(conditions, rule, inputData) {
       logicalOperator = condition.boolean;
     }
   }
-  console.log(result);
+
   if (rule === "Any") {
     if (result.includes(true)) return true;
   } else if (rule === "All") {
