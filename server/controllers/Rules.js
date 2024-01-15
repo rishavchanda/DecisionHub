@@ -882,60 +882,49 @@ const specialFunctions = ["date_diff", "time_diff"];
 const specialArrtibutes = ["current_date", "current_time"];
 
 const setEdgeColor = (condition, node, traversalNodes, color, result) => {
-  condition.edges.filter(
+  const targetEdge = condition.edges.filter(
     (edge) => edge.source === node.id && edge.sourceHandle === result
-  )
-    .map((edge, index) => {
-      const targetNode = condition.nodes.find(node => node.id === edge.target);
-      if (targetNode) {
-        traversalNodes.push(targetNode);
-      }
-      console.log({
-        id: edge?.id,
-        source: edge?.source,
-        target: edge?.target,
-        sourceHandle: edge?.sourceHandle,
-        animated: true,
-        markerEnd: {
-          type: "arrowclosed",
-          width: 12,
-          height: 12,
-          color: color,
-        },
-        style: {
-          strokeWidth: 2,
-          stroke: color,
-        },
-    });
-      // Rule ta ke update korte hobe json parse kore tai error asche
-      // condition.edges[index] = {
-      //   id: edge.id,
-      //   source: edge.source,
-      //   target: edge.target,
-      //   sourceHandle: edge.sourceHandle,
-      //   animated: true,
-      //   markerEnd: {
-      //     type: "arrowclosed",
-      //     width: 12,
-      //     height: 12,
-      //     color: color,
-      //   },
-      //   style: {
-      //     strokeWidth: 2,
-      //     stroke: color,
-      //   },
-      // };
-      
-    });
+  );
+  targetEdge.map((edge, index) => {
+    const targetNode = condition.nodes.find((node) => node.id === edge.target);
+    if (targetNode) {
+      traversalNodes.push(targetNode);
+    }
+    // Rule ta ke update korte hobe json parse kore tai error asche
+    targetEdge[index] = {
+      ...edge,
+      animated: true,
+      markerEnd: {
+        type: "arrowclosed",
+        width: 12,
+        height: 12,
+        color: color,
+      },
+      style: {
+        strokeWidth: 2,
+        stroke: color,
+      },
+    };
+    condition.edges = condition.edges.map((edge) =>
+      edge.id === targetEdge[index].id ? targetEdge[index] : edge
+    );
+  });
+  return condition;
+
 };
-const evaluateNodes = async (node, condition, rule, traversalNodes, inputAttributes) => {
+const evaluateNodes = async (
+  node,
+  condition,
+  rule,
+  traversalNodes,
+  inputAttributes
+) => {
   //evaluate condition function
   const result = evaluateConditions(
     node.data.conditions,
     node.data.rule,
     inputAttributes
   );
-  // console.log(result, node.data.label)
   if (result[0]) {
     setEdgeColor(condition, node, traversalNodes, "green", "yes");
   } else {
@@ -953,10 +942,9 @@ const evaluateNodes = async (node, condition, rule, traversalNodes, inputAttribu
     let nestedResult;
     for (let i = 0; i < traversalNodes.length; i++) {
       if (traversalNodes[i].type === "outputNode") {
-        console.log(traversalNodes[i]);
+        console.log(traversalNodes[i])
         return rule;
-      }
-      else {
+      } else {
         nestedResult = evaluateConditions(
           traversalNodes[i].data.conditions,
           traversalNodes[i].data.rule,
@@ -965,38 +953,36 @@ const evaluateNodes = async (node, condition, rule, traversalNodes, inputAttribu
       }
       if (nestedResult) nextNode = traversalNodes[0];
       else {
-        condition.edges.forEach((edge, index) => {
-          if (edge.source === node && edge.sourceHandle === "no") {
-            condition.edges[index] = {
-              ...edge,
-              animated: true,
-              markerEnd: {
-                type: "arrowclosed",
-                width: 12,
-                height: 12,
-                color: "red",
-              },
-              style: {
-                strokeWidth: 2,
-                stroke: "#FF0072",
-              },
-            };
-          }
-        });
+        // condition.edges.forEach((edge, index) => {
+        //   if (edge.source === node && edge.sourceHandle === "no") {
+        //     condition.edges[index] = {
+        //       ...edge,
+        //       animated: true,
+        //       markerEnd: {
+        //         type: "arrowclosed",
+        //         width: 12,
+        //         height: 12,
+        //         color: "red",
+        //       },
+        //       style: {
+        //         strokeWidth: 2,
+        //         stroke: "#FF0072",
+        //       },
+        //     };
+        //   }
+        // });
       }
     }
     traversalNodes = [];
   } else {
-    nextNode = condition.nodes.find(
-      (node) => node.id == traversalNodes[0]
-    );
+    nextNode = condition.nodes.find((node) => node.id == traversalNodes[0]);
     traversalNodes.shift();
   }
   console.log(nextNode)
   if (nextNode.type === "outputNode") {
+    console.log(nextNode)
     return rule;
-  }
-  else {
+  } else {
     evaluateNodes(nextNode, condition, rule, traversalNodes, inputAttributes);
   }
 };
@@ -1028,11 +1014,16 @@ export const testing = async (req, res, next) => {
     if (!testRule) {
       return next(createError(404, "Version not found"));
     }
-    let condition = JSON.parse(testRule.condition);
+    const condition = JSON.parse(testRule.condition);
+    console.log(condition);
     let testedRule;
-    const firstConditionalNodeId = condition.edges.find(edge => edge.source === "1").target;
+    const firstConditionalNodeId = condition.edges.find(
+      (edge) => edge.source === "1"
+    ).target;
     if (firstConditionalNodeId) {
-      const firstConditionalNode = condition.nodes.find(node => node.id === firstConditionalNodeId);
+      const firstConditionalNode = condition.nodes.find(
+        (node) => node.id === firstConditionalNodeId
+      );
       let traversalNodes = [];
       testedRule = await evaluateNodes(
         firstConditionalNode,
@@ -1187,7 +1178,7 @@ function evaluateConditions(conditions, rule, inputAttributes) {
   for (const condition of conditions) {
     const conditionResult = evaluateCondition(condition, inputAttributes);
     if (logicalOperator) {
-      // If a logical operator is present, combine the previous result with the current result 
+      // If a logical operator is present, combine the previous result with the current result
       result[result.length - 1] = performLogicalOperation(
         result[result.length - 1],
         logicalOperator,
