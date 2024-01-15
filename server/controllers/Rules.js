@@ -882,11 +882,12 @@ const specialFunctions = ["date_diff", "time_diff"];
 const specialArrtibutes = ["current_date", "current_time"];
 
 const setEdgeColor = (condition, node, traversalNodes, color, result) => {
-  condition.edges.filter(
-    (edge) => edge.source === node.id && edge.sourceHandle === result
-  )
+  condition.edges
+    .filter((edge) => edge.source === node.id && edge.sourceHandle === result)
     .map((edge, index) => {
-      const targetNode = condition.nodes.find(node => node.id === edge.target);
+      const targetNode = condition.nodes.find(
+        (node) => node.id === edge.target
+      );
       if (targetNode) {
         traversalNodes.push(targetNode);
       }
@@ -907,7 +908,13 @@ const setEdgeColor = (condition, node, traversalNodes, color, result) => {
       // };
     });
 };
-const evaluateNodes = async (node, condition, rule, traversalNodes, inputAttributes) => {
+const evaluateNodes = async (
+  node,
+  condition,
+  rule,
+  traversalNodes,
+  inputAttributes
+) => {
   //evaluate condition function
   const result = evaluateConditions(
     node.data.conditions,
@@ -934,8 +941,7 @@ const evaluateNodes = async (node, condition, rule, traversalNodes, inputAttribu
       if (traversalNodes[i].type === "outputNode") {
         console.log(traversalNodes[i]);
         return rule;
-      }
-      else {
+      } else {
         nestedResult = evaluateConditions(
           traversalNodes[i].data.conditions,
           traversalNodes[i].data.rule,
@@ -966,16 +972,13 @@ const evaluateNodes = async (node, condition, rule, traversalNodes, inputAttribu
     }
     traversalNodes = [];
   } else {
-    nextNode = condition.nodes.find(
-      (node) => node.id == traversalNodes[0]
-    );
+    nextNode = condition.nodes.find((node) => node.id == traversalNodes[0]);
     traversalNodes.shift();
   }
-  console.log(nextNode)
+  console.log(nextNode);
   if (nextNode.type === "outputNode") {
     return rule;
-  }
-  else {
+  } else {
     evaluateNodes(nextNode, condition, rule, traversalNodes, inputAttributes);
   }
 };
@@ -1009,9 +1012,13 @@ export const testing = async (req, res, next) => {
     }
     const condition = JSON.parse(testRule.condition);
     let testedRule;
-    const firstConditionalNodeId = condition.edges.find(edge => edge.source === "1").target;
+    const firstConditionalNodeId = condition.edges.find(
+      (edge) => edge.source === "1"
+    ).target;
     if (firstConditionalNodeId) {
-      const firstConditionalNode = condition.nodes.find(node => node.id === firstConditionalNodeId);
+      const firstConditionalNode = condition.nodes.find(
+        (node) => node.id === firstConditionalNodeId
+      );
       let traversalNodes = [];
       testedRule = await evaluateNodes(
         firstConditionalNode,
@@ -1166,7 +1173,7 @@ function evaluateConditions(conditions, rule, inputAttributes) {
   for (const condition of conditions) {
     const conditionResult = evaluateCondition(condition, inputAttributes);
     if (logicalOperator) {
-      // If a logical operator is present, combine the previous result with the current result 
+      // If a logical operator is present, combine the previous result with the current result
       result[result.length - 1] = performLogicalOperation(
         result[result.length - 1],
         logicalOperator,
