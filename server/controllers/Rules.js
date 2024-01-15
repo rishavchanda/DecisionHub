@@ -882,31 +882,34 @@ const specialFunctions = ["date_diff", "time_diff"];
 const specialArrtibutes = ["current_date", "current_time"];
 
 const setEdgeColor = (condition, node, traversalNodes, color, result) => {
-  condition.edges
-    .filter((edge) => edge.source === node.id && edge.sourceHandle === result)
-    .map((edge, index) => {
-      const targetNode = condition.nodes.find(
-        (node) => node.id === edge.target
-      );
-      if (targetNode) {
-        traversalNodes.push(targetNode);
-      }
-      // Rule ta ke update korte hobe json parse kore tai error asche
-      // condition.edges[index] = {
-      //   ...edge,
-      //   animated: true,
-      //   markerEnd: {
-      //     type: "arrowclosed",
-      //     width: 12,
-      //     height: 12,
-      //     color: color,
-      //   },
-      //   style: {
-      //     strokeWidth: 2,
-      //     stroke: color,
-      //   },
-      // };
-    });
+  const targetEdge = condition.edges.filter(
+    (edge) => edge.source === node.id && edge.sourceHandle === result
+  );
+  targetEdge.map((edge, index) => {
+    const targetNode = condition.nodes.find((node) => node.id === edge.target);
+    if (targetNode) {
+      traversalNodes.push(targetNode);
+    }
+    // Rule ta ke update korte hobe json parse kore tai error asche
+    targetEdge[index] = {
+      ...edge,
+      animated: true,
+      markerEnd: {
+        type: "arrowclosed",
+        width: 12,
+        height: 12,
+        color: color,
+      },
+      style: {
+        strokeWidth: 2,
+        stroke: color,
+      },
+    };
+    condition.edges = condition.edges.map((edge) =>
+      edge.id === targetEdge[index].id ? targetEdge[index] : edge
+    );
+  });
+  return condition;
 };
 const evaluateNodes = async (
   node,
@@ -921,7 +924,6 @@ const evaluateNodes = async (
     node.data.rule,
     inputAttributes
   );
-  // console.log(result, node.data.label)
   if (result[0]) {
     setEdgeColor(condition, node, traversalNodes, "green", "yes");
   } else {
@@ -950,24 +952,24 @@ const evaluateNodes = async (
       }
       if (nestedResult) nextNode = traversalNodes[0];
       else {
-        condition.edges.forEach((edge, index) => {
-          if (edge.source === node && edge.sourceHandle === "no") {
-            condition.edges[index] = {
-              ...edge,
-              animated: true,
-              markerEnd: {
-                type: "arrowclosed",
-                width: 12,
-                height: 12,
-                color: "red",
-              },
-              style: {
-                strokeWidth: 2,
-                stroke: "#FF0072",
-              },
-            };
-          }
-        });
+        // condition.edges.forEach((edge, index) => {
+        //   if (edge.source === node && edge.sourceHandle === "no") {
+        //     condition.edges[index] = {
+        //       ...edge,
+        //       animated: true,
+        //       markerEnd: {
+        //         type: "arrowclosed",
+        //         width: 12,
+        //         height: 12,
+        //         color: "red",
+        //       },
+        //       style: {
+        //         strokeWidth: 2,
+        //         stroke: "#FF0072",
+        //       },
+        //     };
+        //   }
+        // });
       }
     }
     traversalNodes = [];
@@ -977,6 +979,7 @@ const evaluateNodes = async (
   }
   console.log(nextNode);
   if (nextNode.type === "outputNode") {
+    console.log(nextNode);
     return rule;
   } else {
     evaluateNodes(nextNode, condition, rule, traversalNodes, inputAttributes);
@@ -1011,6 +1014,7 @@ export const testing = async (req, res, next) => {
       return next(createError(404, "Version not found"));
     }
     const condition = JSON.parse(testRule.condition);
+    console.log(condition);
     let testedRule;
     const firstConditionalNodeId = condition.edges.find(
       (edge) => edge.source === "1"
