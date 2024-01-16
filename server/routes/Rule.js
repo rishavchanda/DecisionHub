@@ -1,7 +1,6 @@
 import express from "express";
 import {
   createRule,
-  createRuleWithText,
   deleteRule,
   getRuleByIdAndVersion,
   getRules,
@@ -14,7 +13,7 @@ import { verifyToken } from "../middleware/verifyToken.js";
 
 const router = express.Router();
 
-router.post("/ruleWithText", createRuleWithText);
+// router.post("/ruleWithText", createRuleWithText);
 router.post("/", verifyToken, createRule);
 router.get("/", verifyToken, getRules);
 router.post("/testing/:id/:version", verifyToken, testing);
