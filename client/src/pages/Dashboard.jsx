@@ -15,9 +15,9 @@ const Container = styled.div`
   overflow-y: scroll;
   display: flex;
   flex-direction: column;
-  gap: 20px;
+  gap: 30px;
   @media (max-width: 768px) {
-    padding: 6px 0px;
+    padding: 20px 12px;
   }
   background: ${({ theme }) => theme.bg};
 `;
@@ -28,7 +28,6 @@ const TopSection = styled.div`
   justify-content: flex-end;
   gap: 20px;
   @media (max-width: 768px) {
-    flex-direction: column;
   }
 `;
 
@@ -36,10 +35,12 @@ const Flex = styled.div`
   display: flex;
   align-items: center;
   gap: 12px;
-  @media (max-width: 768px) {
-    flex-direction: column;
-    justify-content: end;
-  }
+`;
+
+const Section = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
 `;
 
 const Button = styled.div`
@@ -55,6 +56,9 @@ const Button = styled.div`
   justify-content: center;
   gap: 4px;
   padding: 10px 24px;
+  @media (max-width: 600px) {
+    padding: 8px 12px;
+  }
 `;
 
 const ItemTitle = styled.div`
@@ -134,7 +138,7 @@ const Dashboard = ({ setOpenNewRule }) => {
       {loading ? (
         <Loader />
       ) : (
-        <>
+        <Section>
           <ItemTitle>
             Recent Activity{" "}
             <TextButton onClick={() => navigate("/rules")}>View All</TextButton>
@@ -149,7 +153,7 @@ const Dashboard = ({ setOpenNewRule }) => {
               <RulesCard rule={rule} />
             ))}
           </CardWrapper>
-        </>
+        </Section>
       )}
     </Container>
   );
