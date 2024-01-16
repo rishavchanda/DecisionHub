@@ -1,6 +1,7 @@
 import express from "express";
 import {
   createRule,
+  createRuleWithText,
   deleteRule,
   getRuleByIdAndVersion,
   getRules,

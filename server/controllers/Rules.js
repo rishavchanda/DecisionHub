@@ -1,7 +1,14 @@
 import db from "../models/index.js";
 import { createError } from "../error.js";
 import { Op } from "sequelize";
+import OpenAI from "openai";
+import {createRuleRequest} from "../utils/prompt.js";
+import * as dotenv from "dotenv";
+dotenv.config();
 
+const openai = new OpenAI({
+  apiKey: process.env.OPENAI_API_KEY,
+});
 const Rule = db.rule;
 const User = db.user;
 const Version = db.version;
@@ -9,6 +16,8 @@ const Version = db.version;
 export const createRule = async (req, res, next) => {
   const { title, description, inputAttributes, outputAttributes, condition } =
     req.body;
+    const test = (JSON.parse(req.body.condition))
+    console.log(test.nodes)
   const userId = req.user.id;
   try {
     const user = await User.findOne({ where: { id: userId } });
@@ -104,10 +113,13 @@ export const searchRule = async (req, res) => {
   try {
     const user = await User.findOne({ where: { id: userId } });
     if (!user) {
-      return next(createError(404, "User not found"));
+      return res.status(404).json({ error: "User not found" });
     }
+    
     const userRules = await user.getRules();
+    
     const rules = await Rule.findAll({
+      attributes: ['id', 'title', 'description'], // Select only the required attributes
       where: {
         id: {
           [Op.in]: userRules.map((rule) => rule.id),
@@ -118,12 +130,14 @@ export const searchRule = async (req, res) => {
       },
       limit: 40,
     });
+    
     res.status(200).json(rules);
   } catch (err) {
-    console.log(err);
-    res.json({ message: err.message });
+    console.error(err);
+    res.status(500).json({ error: "Internal Server Error" });
   }
 };
+
 
 export const updateRule = async (req, res, next) => {
   const userId = req.user.id;
@@ -178,6 +192,7 @@ export const updateRule = async (req, res, next) => {
           },
         }
       );
+      
       const versions = await rule.getVersions();
       let versionValues = [];
       await versions.map((version) => {
@@ -366,6 +381,25 @@ export const deleteRule = async (req, res, next) => {
     return next(createError(error.status, error.message));
   }
 };
+
+export const createRuleWithText = () => async(req, res, next) => {
+  // const userId = req.user.id;
+  try{
+    // const user = await User.findOne({ where: { id: userId } });
+    // if (!user) {
+    //   return next(createError(404, "User not found"));
+    // }
+    const completion = await openai.chat.completions.create({
+      messages: [{ role: "user", content: "You are a helpful assistant." }],
+      model: "gpt-3.5-turbo",
+    });
+  
+    console.log("here"); 
+    return completion;
+  }catch(error){
+    return next(createError(error.status, error.message));
+  }
+} 
 
 /*"condition": {
         "nodes": [
@@ -966,7 +1000,7 @@ const evaluateNodes = async (
     node.data.rule,
     inputAttributes
   );
-  console.log(node.id, result[0]);
+
   if (result[0]) {
     let updatedCondition = setEdgeColor(
       condition,
@@ -981,7 +1015,7 @@ const evaluateNodes = async (
       traversalNodes,
       "#02ab40",
       "yes",
-      result
+      result[1]
     );
     condition = updatedCondition;
     testedRule.condition = JSON.stringify(updatedCondition);
@@ -999,7 +1033,7 @@ const evaluateNodes = async (
       traversalNodes,
       "#02ab40",
       "no",
-      result
+      result[1]
     );
     condition = updatedCondition;
     testedRule.condition = JSON.stringify(updatedCondition);
@@ -1041,7 +1075,8 @@ const evaluateNodes = async (
           traversalNodes[i],
           traversalNodes,
           "#FF0072",
-          [false]
+          "null",
+          nestedResult[1]
         );
         condition = updatedCondition;
         // sethe edge color to red which target is this node and source is the previous node
@@ -1059,11 +1094,11 @@ const evaluateNodes = async (
                     type: "arrowclosed",
                     width: 12,
                     height: 12,
-                    color: "#02ab40",
+                    color: "#FF0072",
                   },
                   style: {
                     strokeWidth: 5,
-                    stroke: "#02ab40",
+                    stroke: "#FF0072",
                   },
                 }
               : e
@@ -1355,10 +1390,12 @@ function evaluateCondition(condition, inputData) {
 }
 function evaluateConditions(conditions, rule, inputAttributes) {
   let result = [];
+  const eachConditionResult = [];
   let logicalOperator = null;
 
   for (const condition of conditions) {
     const conditionResult = evaluateCondition(condition, inputAttributes);
+    eachConditionResult.push(conditionResult);
     if (logicalOperator) {
       // If a logical operator is present, combine the previous result with the current result
       result[result.length - 1] = performLogicalOperation(
@@ -1379,12 +1416,12 @@ function evaluateConditions(conditions, rule, inputAttributes) {
   }
 
   if (rule === "Any") {
-    if (result.includes(true)) return [true];
+    if (result.includes(true)) return [true, eachConditionResult];
   } else if (rule === "All") {
-    if (result.includes(false)) return [false];
+    if (result.includes(false)) return [false, eachConditionResult];
   }
 
-  return result;
+  return [result[0], eachConditionResult];
 }
 
 // Helper function to perform logical operations
@@ -1398,58 +1435,3 @@ function performLogicalOperation(operand1, operator, operand2) {
       return false; // Default to false if an invalid operator is provided
   }
 }
-
-// Example usage with your provided data
-const rule = "Any";
-const conditions = [
-  {
-    multiple: false,
-    expression: [
-      {
-        inputAttribute: "date_diff,current_date,date_of_birth,years",
-        operator: ">",
-        value: "18",
-      },
-    ],
-    boolean: "&&",
-  },
-  {
-    multiple: false,
-    expression: [
-      {
-        inputAttribute: "annual_income",
-        operator: "/",
-        value: "12",
-      },
-      {
-        inputAttribute: null,
-        operator: ">=",
-        value: "100000",
-      },
-    ],
-  },
-  {
-    multiple: false,
-    expression: [
-      {
-        inputAttribute: "annual_income",
-        operator: "/",
-        value: "12",
-      },
-      {
-        inputAttribute: null,
-        operator: ">=",
-        value: "100000",
-      },
-    ],
-  },
-];
-
-const inputData = {
-  account_no: "4543566",
-  loan_duration: "12",
-  date_of_birth: "2003/11/19",
-  employment_status: "employed",
-  annual_income: "1200000",
-  credit_score: "800",
-};
