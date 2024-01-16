@@ -29,26 +29,6 @@ const FlexDisplay = styled.div`
   align-items: center;
 `;
 
-const DeleteButton = styled.div`
-  border: 2px solid ${({ theme }) => theme.red + 90};
-  border-radius: 8px;
-  padding: 8px 12px;
-  font-size: 12px;
-  color: ${({ theme }) => theme.red};
-  display: flex;
-  flex-direction: row;
-  justify-content: center;
-  align-items: center;
-  gap: 4px;
-  cursor: pointer;
-  span {
-    font-weight: 500;
-  }
-  &:hover {
-    background-color: ${({ theme }) => theme.red + 10};
-  }
-`;
-
 const TextButton = styled.div`
   border-radius: 8px;
   padding: 4px 6px;
@@ -171,7 +151,6 @@ const TestDetails = () => {
     const token = localStorage.getItem("decisionhub-token-auth-x4");
     await testRule(id, rule?.version, testData, token)
       .then(async (res) => {
-        console.log(res.data?.rule);
         await setRule(res.data?.rule);
         await setInputAttributes(res.data?.rule?.inputAttributes);
         await setOutputAttributes(res.data?.rule?.outputAttributes);

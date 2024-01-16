@@ -26,24 +26,45 @@ const Wrapper = styled.div`
   align-items: center;
 `;
 
+const Indicator = styled.div`
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  display: none;
+  ${({ computed, color }) =>
+    computed &&
+    color &&
+    `   display: flex;
+        background-color: ${color};
+  `}
+`;
+
 const Node = styled.div`
   background-color: ${({ theme }) => theme.card};
+  border-left: 6px solid ${({ theme }) => theme.yellow + 90};
   border-radius: 8px;
   box-shadow: 1px 1px 14px 0px ${({ theme }) => theme.shadow};
-  padding: 14px 20px;
+  padding: 14px 0px;
   display: flex;
   flex-direction: column;
   gap: 12px;
   position: relative;
+  ${({ computed, color }) =>
+    computed &&
+    color &&
+    `
+        border-left: 4px solid ${color};
+        box-shadow: 1px 2px 30px 1px ${color + 20};
+  `}
 `;
 
 const NodeHeader = styled.div`
-  width: 100%;
+  padding: 0px 20px;
   display: flex;
   flex-direction: row;
   justify-content: space-between;
   align-items: center;
-  gap: 20px;
+  gap: 10px;
 `;
 
 const NodeTitle = styled.input`
@@ -56,12 +77,14 @@ const NodeTitle = styled.input`
 `;
 
 const NodeBody = styled.div`
+  padding: 0px 20px;
   display: flex;
   flex-direction: column;
   justify-content: center;
 `;
 
 const NodeFooter = styled.div`
+  padding: 0px 20px;
   display: flex;
   flex-direction: row;
   justify-content: space-between;
@@ -348,10 +371,17 @@ const YesNode = ({ id, data }) => {
 
   return (
     <Yes>
-      <VR style={{ height: "60px", background: theme.arrow, width: "3px" }} />
+      <VR
+        style={{
+          height: "60px",
+          background: data?.computed === "yes" ? data?.color : theme.arrow,
+          width: "3px",
+        }}
+      />
       <OutlineWrapper
         style={{
-          borderColor: theme.arrow,
+          borderColor: data?.computed === "yes" ? data?.color : theme.arrow,
+          color: data?.computed === "yes" && data?.color,
           width: "100px",
           borderWidth: "3px",
           height: "40px",
@@ -426,7 +456,11 @@ const YesNode = ({ id, data }) => {
         </NodeButtons>
       ) : (
         <AddNoNode
-          style={{ marginTop: "4px" }}
+          style={{
+            marginTop: "4px",
+            borderColor: data?.computed === "yes" ? data?.color : theme.arrow,
+            color: data?.computed === "yes" && data?.color,
+          }}
           onClick={async () => {
             await addNewConditionalNode(id, "yes", reactFlow, data);
             setConnectedEdges(
@@ -435,7 +469,7 @@ const YesNode = ({ id, data }) => {
             dispatch(ruleUpdated());
           }}
         >
-          <AddRounded sx={{ fontSize: "18px" }} />
+          <AddRounded sx={{ fontSize: "18px", color: "inherit" }} />
         </AddNoNode>
       )}
       <Handle id="yes" type="source" position={Position.Bottom} />
@@ -467,7 +501,8 @@ const NoNode = ({ id, data }) => {
     <No>
       <OutlineWrapper
         style={{
-          borderColor: theme.arrow,
+          borderColor: data?.computed === "no" ? data?.color : theme.arrow,
+          color: data?.computed === "no" && data?.color,
           borderWidth: "3px",
           width: "100px",
           height: "40px",
@@ -540,6 +575,9 @@ const NoNode = ({ id, data }) => {
         <AddNoNode
           style={{
             marginTop: "4px",
+            borderColor: data?.computed === "no" ? data?.color : theme.arrow,
+            color: data?.computed === "no" && data?.color,
+            background: data?.computed === "no" && data.color + 10,
           }}
           onClick={async () => {
             await addNewConditionalNode(id, "no", reactFlow, data);
@@ -549,7 +587,7 @@ const NoNode = ({ id, data }) => {
             dispatch(ruleUpdated());
           }}
         >
-          <AddRounded sx={{ fontSize: "14px" }} />
+          <AddRounded sx={{ fontSize: "14px", color: "inherit" }} />
         </AddNoNode>
       )}
       <Handle id="no" type="source" position={Position.Bottom} />
@@ -831,9 +869,10 @@ function ConditionalNode({ id, data }) {
   return (
     <Wrapper>
       <FlexRight>
-        <Node>
+        <Node color={data?.color} computed={data?.computed}>
           <Handle id="input" type="target" position="top" />
           <NodeHeader>
+            <Indicator color={data?.color} computed={data?.computed} />
             <NodeTitle
               value={data.label}
               onChange={(e) => handelTitleChange(e)}
@@ -867,6 +906,7 @@ function ConditionalNode({ id, data }) {
               Delete
             </OutlineWrapper>
           </NodeHeader>
+          <Hr />
           <NodeBody>
             {data.conditions?.map((condition, index) => (
               <div key={index}>
@@ -943,7 +983,11 @@ function ConditionalNode({ id, data }) {
       {noOfEdgesParent <= 1 && (
         <>
           <Hr
-            style={{ height: "3px", background: theme.arrow, width: "100px" }}
+            style={{
+              height: "3px",
+              background: data?.computed === "no" ? data?.color : theme.arrow,
+              width: "100px",
+            }}
           />
           <NoNode id={id} data={data} />
         </>
