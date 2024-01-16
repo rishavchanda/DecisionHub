@@ -53,6 +53,7 @@ const Node = styled.div`
     computed &&
     color &&
     `
+        border: 2px dashed ${color};
         border-left: 4px solid ${color};
         box-shadow: 1px 2px 30px 1px ${color + 20};
   `}

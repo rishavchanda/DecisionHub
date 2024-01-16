@@ -1005,15 +1005,6 @@ const evaluateNodes = async (
     testedRule.condition = JSON.stringify(updatedCondition);
   }
 
-  // // set the color of the current node
-  // if (result[0]) {
-  //   setNodeColor(condition, node, traversalNodes, "#00b87a", "yes", result);
-  // } else {
-  //   setNodeColor(condition, node, traversalNodes, "#00b87a", "no", result);
-  // }
-
-  // console.log(traversalNodes);
-
   let nextNode;
 
   if (traversalNodes.length === 1) {
@@ -1044,6 +1035,36 @@ const evaluateNodes = async (
           [false]
         );
         condition = updatedCondition;
+        // sethe edge color to red which target is this node and source is the previous node
+        const targetEdges = condition.edges.filter(
+          (edge) => edge.target === traversalNodes[i].id
+        );
+
+        targetEdges.forEach((edge, index) => {
+          condition.edges = condition.edges.map((e) =>
+            e.id === targetEdges[index].id
+              ? {
+                  ...e,
+                  animated: true,
+                  markerEnd: {
+                    type: "arrowclosed",
+                    width: 12,
+                    height: 12,
+                    color: "#FF0072",
+                  },
+                  style: {
+
+                    strokeWidth: 5,
+                    stroke: "#FF0072",
+                  },
+                }
+              : e
+          );
+        });
+        testedRule.condition = JSON.stringify(updatedCondition);
+
+        console.log(targetEdges);
+
         testedRule.condition = JSON.stringify(updatedCondition);
       }
     }
