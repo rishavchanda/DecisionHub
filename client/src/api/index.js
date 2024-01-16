@@ -39,6 +39,13 @@ export const createRule = async (data, token) =>
     { withCredentials: true }
   );
 
+export const searchRule = async (title, token) =>
+  await API.get(
+    `/rule/searchRule?title=${title}`,
+    { headers: { Authorization: `Bearer ${token}` } },
+    { withCredentials: true }
+  );
+
 export const getRules = async (token) =>
   await API.get("/rule", {
     headers: { Authorization: `Bearer ${token}` },

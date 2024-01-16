@@ -3,7 +3,7 @@ import React, { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import styled from "styled-components";
 import RulesCard from "../components/cards/RulesCard";
-import { getRecentActivity, getRules } from "../api";
+import { getRecentActivity } from "../api";
 import { openSnackbar } from "../redux/reducers/snackbarSlice";
 import Loader from "../components/Loader";
 import { useNavigate } from "react-router-dom";

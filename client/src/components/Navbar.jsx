@@ -1,15 +1,17 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import styled from "styled-components";
-import { Avatar, IconButton } from "@mui/material";
+import { Avatar, CircularProgress, IconButton } from "@mui/material";
 import { Link, useLocation } from "react-router-dom";
 import { MenuRounded, SearchRounded } from "@mui/icons-material";
 import DropdownIcon from "@mui/icons-material/ArrowDropDown";
 import { useSelector } from "react-redux";
+import SearchItemCard from "./cards/SearchItemCard";
+import { searchRule } from "../api";
 // import UserProfile from "./Profile";
 // import Logo from "../Images/Logo.svg";
 
 const Container = styled.div`
-  width: 100%;
+  flex: 1;
   background: ${({ theme }) => theme.navbar};
   color: ${({ theme }) => theme.menu_primary_text};
   display: flex;
@@ -23,8 +25,10 @@ const Container = styled.div`
 `;
 
 const Flex = styled.div`
+  flex: 1;
   display: flex;
   align-items: center;
+  justify-content: space-between;
   gap: 20px;
   @media only screen and (max-width: 600px) {
     gap: 8px;
@@ -40,10 +44,6 @@ const MenuIcon = styled(IconButton)`
 `;
 
 const LogoText = styled(Link)`
-  @media (max-width: 1100px) {
-    display: flex;
-    font-size: 20px;
-  }
   display: none;
   font-weight: bold;
   align-items: center;
@@ -70,6 +70,7 @@ const LogoImg = styled.img`
 `;
 
 const Path = styled.div`
+  flex: 1;
   font-size: 20px;
   font-weight: 600;
   @media (max-width: 1100px) {
@@ -78,10 +79,7 @@ const Path = styled.div`
 `;
 
 const Search = styled.div`
-  width: 40%;
-  @media screen and (max-width: 480px) {
-    width: 50%;
-  }
+  flex: 1;
   left: 0px;
   right: 0px;
   margin: auto;
@@ -93,7 +91,6 @@ const Search = styled.div`
   background-color: ${({ theme }) => theme.bg};
 `;
 const Input = styled.input`
-  width: 100%;
   border: none;
   font-size: 15px;
   padding: 14px 22px;
@@ -101,28 +98,50 @@ const Input = styled.input`
   background-color: transparent;
   outline: none;
   color: ${({ theme }) => theme.text_primary};
+  @media (max-width: 400px) {
+    max-width: 130px;
+  }
+`;
+
+const Searched = styled.div`
+  position: absolute;
+  flex: 1;
+  z-index: 1000;
+  width: 30%;
+  min-width: 250px;
+  margin-top: 4px;
+  margin-left: 18px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  border-radius: 6px;
+  gap: 1px;
+  background: ${({ theme }) => theme.bg};
+  box-shadow: 1px 1px 10px 2px ${({ theme }) => theme.black + 50};
+  transition: all 0.3s ease;
+  @media (max-width: 400px) {
+    min-width: 200px;
+  }
 `;
 
 const User = styled.div`
+  flex: 1;
   display: flex;
   align-items: center;
+  justify-content: flex-end;
   gap: 10px;
   padding: 0px 8px;
   display: flex;
   cursor: pointer;
 `;
 
-const UserName = styled.span`
-  font-weight: 500;
-  margin-right: 10px;
-  @media only screen and (max-width: 600px) {
-    display: none;
-  }
-`;
-
 const Navbar = ({ setMenuOpen, menuOpen }) => {
   // Hooks
   const { currentUser } = useSelector((state) => state.user);
+  const [openSearch, setOpenSearch] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [search, setSearch] = useState("");
+  const [searchResult, setSearchResult] = useState([]);
   const location = useLocation();
 
   // Open the account dialog
@@ -164,6 +183,31 @@ const Navbar = ({ setMenuOpen, menuOpen }) => {
   else if (path === "profile") path = "Profile";
   else path = "";
 
+  // handle search
+  const hadelSearch = async (value) => {
+    setOpenSearch(true);
+    setLoading(true);
+    const token = localStorage.getItem("decisionhub-token-auth-x4");
+    setSearch(value);
+    await searchRule(value, token)
+      .then((res) => {
+        setSearchResult(res.data);
+        console.log(value);
+        setLoading(false);
+      })
+      .catch((err) => {
+        console.log(err);
+        setLoading(false);
+      });
+  };
+
+  useEffect(() => {
+    if (search.length === 0) {
+      setOpenSearch(false);
+      setSearchResult([]);
+    }
+  }, [search]);
+
   return (
     <Container>
       <Flex>
@@ -176,13 +220,47 @@ const Navbar = ({ setMenuOpen, menuOpen }) => {
           DecisionHub
         </LogoText>
       </Flex>
-      <Search>
-        <Input placeholder="Search any rule..." />
-        <SearchRounded
-          style={{ marginRight: "14px", marginLeft: "14px" }}
-          sx={{ fontSize: "20px" }}
-        />
-      </Search>
+      <div
+        style={{
+          flex: 1,
+        }}
+      >
+        <Search>
+          <Input
+            placeholder="Search any rule..."
+            value={search}
+            onChange={(e) => hadelSearch(e.target.value)}
+          />
+          <SearchRounded
+            style={{ marginRight: "14px", marginLeft: "14px" }}
+            sx={{ fontSize: "20px" }}
+          />
+        </Search>
+        {openSearch && (
+          <Searched>
+            {loading ? (
+              <div style={{ padding: "20px" }}>
+                <CircularProgress style={{ width: "30px", height: "30px" }} />
+              </div>
+            ) : (
+              <>
+                {searchResult.length > 0 ? (
+                  searchResult.map((item) => (
+                    <SearchItemCard
+                      key={item.id}
+                      item={item}
+                      setOpenSearch={setOpenSearch}
+                      setSearch={setSearch}
+                    />
+                  ))
+                ) : (
+                  <div style={{ padding: "20px" }}>No results found</div>
+                )}
+              </>
+            )}
+          </Searched>
+        )}
+      </div>
       <User aria-describedby={id} onClick={handleClick}>
         <Avatar
           src={currentUser?.img}
@@ -193,16 +271,7 @@ const Navbar = ({ setMenuOpen, menuOpen }) => {
         >
           {currentUser?.name[0]}
         </Avatar>
-        <DropdownIcon />
       </User>
-      {/* {currentUser && (
-        <UserProfile
-          open={open}
-          anchorEl={anchorEl}
-          id={id}
-          handleClose={handleClose}
-        />
-      )} */}
     </Container>
   );
 };
