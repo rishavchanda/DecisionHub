@@ -5,7 +5,6 @@ import authRoutes from "./routes/Auth.js";
 import ruleRoutes from "./routes/Rule.js";
 import cors from "cors";
 import morgan from "morgan";
-import db from "./models/index.js";
 dotenv.config();
 
 const app = express();
