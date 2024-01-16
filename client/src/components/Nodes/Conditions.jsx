@@ -29,6 +29,11 @@ const Condition = styled.div`
   border-radius: 8px;
   background: transparent;
   border: 1px solid ${({ theme }) => theme.text_secondary + 50};
+  ${({ result, color }) =>
+    result &&
+    `
+  border: 1px solid ${color ? "#02ab40" : "#FF0072"};
+  `}
 `;
 
 const Move = styled.div`
@@ -131,9 +136,12 @@ const Conditions = ({
   inputAttribute,
   deleteCondition,
   addBooleanCondition,
+  result,
+  index,
 }) => {
   const theme = useTheme();
   const reactFlow = useReactFlow();
+  const test = result ? result[index] : null;
 
   // update the expression
   const handleSelectChange = (field, expressionIndex, event) => {
@@ -341,7 +349,7 @@ const Conditions = ({
 
   return (
     <Wrapper>
-      <Condition>
+      <Condition result={result} color={test}>
         <div
           style={{
             display: "flex",

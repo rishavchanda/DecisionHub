@@ -859,7 +859,7 @@ function ConditionalNode({ id, data }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [reactFlow, updated]
   );
-
+  console.log(data);
   return (
     <Wrapper>
       <FlexRight>
@@ -914,6 +914,8 @@ function ConditionalNode({ id, data }) {
                   booleanDisabled={index === data.conditions.length - 1}
                   deleteCondition={deleteCondition}
                   addBooleanCondition={addBooleanCondition}
+                  result={data?.result}
+                  index={index}
                 />
                 {condition.boolean && (
                   <BooleanCondition>
