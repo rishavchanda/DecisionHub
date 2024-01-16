@@ -1,11 +1,13 @@
 import React, { useEffect, useState } from "react";
 import "reactflow/dist/style.css";
 import styled, { useTheme } from "styled-components";
-import { useDispatch, useSelector } from "react-redux";
+import { useDispatch } from "react-redux";
 import { getRules } from "../api";
 import { openSnackbar } from "../redux/reducers/snackbarSlice";
 import RulesCard from "../components/cards/RulesCard";
 import Loader from "../components/Loader";
+import { AddRounded } from "@mui/icons-material";
+import { MenuItem, Select } from "@mui/material";
 
 const Container = styled.div`
   padding: 20px 30px;
@@ -34,19 +36,15 @@ const TopSection = styled.div`
 const Flex = styled.div`
   display: flex;
   align-items: center;
+  justify-content: space-between;
   gap: 12px;
-  @media (max-width: 768px) {
-    flex-direction: column;
-  }
 `;
 
 const Button = styled.div`
-  width: 200px;
-  padding: 14px;
   border-radius: 10px;
   background: ${({ theme }) => theme.primary};
   color: white;
-  font-size: 16px;
+  font-size: 14px;
   font-weight: 600;
   cursor: pointer;
   transition: all 0.3s ease;
@@ -54,6 +52,7 @@ const Button = styled.div`
   align-items: center;
   justify-content: center;
   gap: 4px;
+  padding: 10px 24px;
 `;
 
 const ItemTitle = styled.div`
@@ -73,18 +72,18 @@ const CardWrapper = styled.div`
   margin-bottom: 20px;
 `;
 
-
-const Rules = () => {
+const Rules = ({ setOpenNewRule }) => {
   // Hooks
+  const theme = useTheme();
   const dispath = useDispatch();
-  const { currentUser } = useSelector((state) => state.user);
+  const [filter, setFilter] = useState("updatedAt");
   const [recentRules, setRecentRules] = useState([]);
   const [loading, setLoading] = useState(false);
 
   const getRecentRules = async () => {
     setLoading(true);
     const token = localStorage.getItem("decisionhub-token-auth-x4");
-    await getRules(token)
+    await getRules(filter, token)
       .then((res) => {
         setRecentRules(res.data);
         setLoading(false);
@@ -102,7 +101,7 @@ const Rules = () => {
 
   useEffect(() => {
     getRecentRules();
-  }, []);
+  }, [filter]);
 
   return (
     <Container>
@@ -110,7 +109,35 @@ const Rules = () => {
         <Loader />
       ) : (
         <>
-          <ItemTitle>All Rules</ItemTitle>
+          <Flex>
+            <ItemTitle>All Rules</ItemTitle>
+            <TopSection>
+              <Select
+                value={filter}
+                onChange={(e) => setFilter(e.target.value)}
+                autoWidth
+                displayEmpty
+                size="small"
+                sx={{
+                  color: theme.text_primary,
+                  border: `1px solid ${theme.text_secondary + 90}`,
+                  borderRadius: "8px",
+                  padding: "4px",
+                  fontSize: "12px",
+                  ".MuiSvgIcon-root ": {
+                    fill: `${theme.text_secondary} !important`,
+                  },
+                }}
+              >
+                <MenuItem value="updatedAt">Sort: Recent Updated</MenuItem>
+                <MenuItem value="createdAt">Sort: Recent Created</MenuItem>
+              </Select>
+              <Button onClick={() => setOpenNewRule(true)}>
+                <AddRounded sx={{ fontSize: "22px" }} />
+                Create New Rule
+              </Button>
+            </TopSection>
+          </Flex>
           <CardWrapper>
             {recentRules.length === 0 && (
               <ItemTitle fontSize="18px" smallfontSize="14px">

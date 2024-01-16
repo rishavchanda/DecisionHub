@@ -90,7 +90,6 @@ const TestDetails = () => {
   const dispath = useDispatch();
 
   const [inputAttributes, setInputAttributes] = useState([]);
-  const [outputAttributes, setOutputAttributes] = useState([]);
   const [nodes, setNodes, onNodesChange] = useNodesState();
   const [edges, setEdges, onEdgesChange] = useEdgesState();
   const [rule, setRule] = useState();
@@ -110,7 +109,6 @@ const TestDetails = () => {
       .then(async (res) => {
         setRule(res.data?.rule);
         setInputAttributes(res.data?.rule?.inputAttributes);
-        setOutputAttributes(res.data?.rule?.outputAttributes);
         setVersions(res.data?.versions);
         await createFlow(res.data?.rule);
         console.log(res.data?.rule);
@@ -153,7 +151,6 @@ const TestDetails = () => {
       .then(async (res) => {
         await setRule(res.data?.rule);
         await setInputAttributes(res.data?.rule?.inputAttributes);
-        await setOutputAttributes(res.data?.rule?.outputAttributes);
         await createFlow(res.data?.rule);
         setSubmitLoading(false);
       })

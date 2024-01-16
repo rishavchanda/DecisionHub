@@ -1,6 +1,6 @@
 import { AddRounded, RuleRounded } from "@mui/icons-material";
 import React, { useEffect, useState } from "react";
-import { useDispatch, useSelector } from "react-redux";
+import { useDispatch } from "react-redux";
 import styled from "styled-components";
 import RulesCard from "../components/cards/RulesCard";
 import { getRecentActivity } from "../api";
@@ -91,7 +91,6 @@ const Dashboard = ({ setOpenNewRule }) => {
   // Hooks
   const dispath = useDispatch();
   const navigate = useNavigate();
-  const { currentUser } = useSelector((state) => state.user);
   const [recentRules, setRecentRules] = useState([]);
   const [loading, setLoading] = useState(false);
 

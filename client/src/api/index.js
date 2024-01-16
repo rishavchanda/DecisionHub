@@ -30,6 +30,11 @@ export const getRecentActivity = async (token) =>
     headers: { Authorization: `Bearer ${token}` },
   });
 
+export const getRules = async (filter, token) =>
+  await API.get(`/user/getUserRules?f=${filter}`, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+
 // Rules
 export const createRule = async (data, token) =>
   await API.post(
@@ -45,11 +50,6 @@ export const searchRule = async (title, token) =>
     { headers: { Authorization: `Bearer ${token}` } },
     { withCredentials: true }
   );
-
-export const getRules = async (token) =>
-  await API.get("/rule", {
-    headers: { Authorization: `Bearer ${token}` },
-  });
 
 export const getRuleById = async (id, token, version) =>
   await API.post(
