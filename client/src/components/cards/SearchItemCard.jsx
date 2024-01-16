@@ -4,10 +4,9 @@ import { useNavigate } from "react-router-dom";
 import styled from "styled-components";
 
 const Card = styled.div`
-  width: 100%;
+  width: 90%;
   display: flex;
   align-items: center;
-  background-color: ${({ theme }) => theme.card};
   padding: 8px 16px;
   gap: 3px;
   cursor: pointer;
@@ -46,14 +45,15 @@ const Open = styled.div`
   display: flex;
   align-items: center;
   justify-content: center;
-  background-color: ${({ theme }) => theme.green + 10};
+  background: ${({ theme }) => theme.green + 20};
+  color: ${({ theme }) => theme.text_secondary};
   border-radius: 50%;
   width: 26px;
   height: 26px;
   cursor: pointer;
   transition: all 0.3s ease;
   &:hover {
-    background-color: ${({ theme }) => theme.green};
+    background: ${({ theme }) => theme.green};
   }
 `;
 
@@ -72,7 +72,7 @@ const SearchItemCard = ({ item, setOpenSearch, setSearch }) => {
           setOpenSearch(false);
         }}
       >
-        <OpenInNewRounded style={{ fontSize: "14px" }} />
+        <OpenInNewRounded style={{ fontSize: "14px", color: "inherit" }} />
       </Open>
     </Card>
   );

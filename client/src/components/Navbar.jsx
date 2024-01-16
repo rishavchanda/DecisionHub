@@ -107,21 +107,24 @@ const Searched = styled.div`
   position: absolute;
   flex: 1;
   z-index: 1000;
-  width: 30%;
+  width: 32%;
   min-width: 250px;
   margin-top: 4px;
-  margin-left: 18px;
   display: flex;
   flex-direction: column;
   align-items: center;
   border-radius: 6px;
-  gap: 1px;
   background: ${({ theme }) => theme.bg};
-  box-shadow: 1px 1px 10px 2px ${({ theme }) => theme.black + 50};
+  box-shadow: 1px 1px 10px 2px ${({ theme }) => theme.black + 20};
   transition: all 0.3s ease;
   @media (max-width: 400px) {
     min-width: 200px;
   }
+`;
+const Hr = styled.div`
+  height: 1px;
+  width: 100%;
+  background: ${({ theme }) => theme.text_secondary + 10};
 `;
 
 const User = styled.div`
@@ -246,12 +249,16 @@ const Navbar = ({ setMenuOpen, menuOpen }) => {
               <>
                 {searchResult.length > 0 ? (
                   searchResult.map((item) => (
-                    <SearchItemCard
-                      key={item.id}
-                      item={item}
-                      setOpenSearch={setOpenSearch}
-                      setSearch={setSearch}
-                    />
+                    <>
+                      <SearchItemCard
+                        key={item.id}
+                        item={item}
+                        setOpenSearch={setOpenSearch}
+                        setSearch={setSearch}
+                      />
+                      {searchResult.indexOf(item) !==
+                        searchResult.length - 1 && <Hr />}
+                    </>
                   ))
                 ) : (
                   <div style={{ padding: "20px" }}>No results found</div>

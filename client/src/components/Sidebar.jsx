@@ -188,9 +188,7 @@ const Span = styled.span`
 `;
 
 const Sidebar = ({
-  setMenuOpen,
-  setOpenEmployeeRegister,
-  setOpenCreateTask,
+  setMenuOpen
 }) => {
   // Hooks
   const { darkMode } = useSelector((state) => state.user);
