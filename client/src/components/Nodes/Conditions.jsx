@@ -404,6 +404,9 @@ const Conditions = ({
                       handleSelectChange("inputAttribute", index, e)
                     }
                   >
+                    <option selected hidden>
+                      Select
+                    </option>
                     {inputAttribute?.map((item, index) => (
                       <option key={index} value={item}>
                         {item}

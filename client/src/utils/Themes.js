@@ -25,9 +25,11 @@ export const darkTheme = {
   green: "#12ff75",
   yellow: "#ffcc00",
   red: "#ef5350",
+  orange: "#F7AD63",
   popup: "#fff",
   popup_text_primary: "#404040",
   popup_text_secondary: "#4d4c4c",
+  output_node: "#49516b",
 };
 
 export const lightTheme = {
@@ -55,7 +57,9 @@ export const lightTheme = {
   green: "#00ff6a",
   yellow: "#e8ba00",
   red: "#ef5350",
+  orange: "#F7AD63",
   popup: "#242B3F",
   popup_text_primary: "#F2F3F4",
   popup_text_secondary: "#b1b2b3",
+  output_node: "#49516b",
 };

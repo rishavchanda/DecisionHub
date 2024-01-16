@@ -916,158 +916,340 @@ const specialFunctions = ["date_diff", "time_diff"];
 const specialArrtibutes = ["current_date", "current_time"];
 
 const setEdgeColor = (condition, node, traversalNodes, color, result) => {
-  const targetEdge = condition.edges.filter(
-    (edge) => edge.source === node.id && edge.sourceHandle === result
+  const targetEdges = condition.edges.filter(
+    (edge) =>
+      edge.source === node.id &&
+      edge.sourceHandle &&
+      edge.sourceHandle === result
   );
-  targetEdge.map((edge, index) => {
-    const targetNode = condition.nodes.find((node) => node.id === edge.target);
+
+  targetEdges.forEach((edge, index) => {
+    const targetNode = condition.nodes.find((n) => n.id === edge.target);
     if (targetNode) {
       traversalNodes.push(targetNode);
     }
-    // Rule ta ke update korte hobe json parse kore tai error asche
-    targetEdge[index] = {
-      ...edge,
-      animated: true,
-      markerEnd: {
-        type: "arrowclosed",
-        width: 12,
-        height: 12,
-        color: color,
-      },
-      style: {
-        strokeWidth: 2,
-        stroke: color,
-      },
-    };
-    condition.edges = condition.edges.map((edge) =>
-      edge.id === targetEdge[index].id ? targetEdge[index] : edge
+
+    condition.edges = condition.edges.map((e) =>
+      e.id === targetEdges[index].id
+        ? {
+            ...e,
+            animated: true,
+            markerEnd: {
+              type: "arrowclosed",
+              width: 12,
+              height: 12,
+              color: color,
+            },
+            style: {
+              strokeWidth: 5,
+              stroke: color,
+            },
+          }
+        : e
     );
   });
-  return condition;
 
+  return condition;
 };
+
+const setNodeColor = (
+  condition,
+  node,
+  traversalNodes,
+  color,
+  computed,
+  result
+) => {
+  const targetNode = condition.nodes.find((n) => n.id === node.id);
+
+  traversalNodes.forEach((n) => {
+    if (n.id === targetNode.id) {
+      n.data.computed = computed;
+      n.data.color = color;
+      n.data.result = result;
+    }
+  });
+
+  condition.nodes = condition.nodes.map((n) =>
+    n.id === targetNode.id
+      ? {
+          ...n,
+          data: {
+            ...n.data,
+            computed: computed,
+            color: color,
+            result: result,
+          },
+        }
+      : n
+  );
+
+  return condition;
+};
+
 const evaluateNodes = async (
   node,
   condition,
   rule,
   traversalNodes,
-  inputAttributes
+  inputAttributes,
+  testedRule
 ) => {
-  //evaluate condition function
   const result = evaluateConditions(
     node.data.conditions,
     node.data.rule,
     inputAttributes
   );
+  console.log(node.id, result[0]);
   if (result[0]) {
-    setEdgeColor(condition, node, traversalNodes, "green", "yes");
+    let updatedCondition = setEdgeColor(
+      condition,
+      node,
+      traversalNodes,
+      "#02ab40",
+      "yes"
+    );
+    updatedCondition = setNodeColor(
+      updatedCondition,
+      node,
+      traversalNodes,
+      "#02ab40",
+      "yes",
+      result
+    );
+    condition = updatedCondition;
+    testedRule.condition = JSON.stringify(updatedCondition);
   } else {
-    setEdgeColor(condition, node, traversalNodes, "green", "no");
-  }
-  if (traversalNodes.length === 0) {
-    node = { ...node, error: true };
-    return;
+    let updatedCondition = setEdgeColor(
+      condition,
+      node,
+      traversalNodes,
+      "#02ab40",
+      "no"
+    );
+    updatedCondition = setNodeColor(
+      updatedCondition,
+      node,
+      traversalNodes,
+      "#02ab40",
+      "no",
+      result
+    );
+    condition = updatedCondition;
+    testedRule.condition = JSON.stringify(updatedCondition);
   }
 
   let nextNode;
-  if (traversalNodes.length > 0) {
-    //check if else if
-    //set nextNode as node with yes output remove rest
+
+  if (traversalNodes.length === 1) {
+    if (traversalNodes[0].type === "outputNode") {
+      // change and add the color of output node
+      let updatedCondition = setNodeColor(
+        condition,
+        traversalNodes[0],
+        traversalNodes,
+        "#02ab40",
+        [true]
+      );
+      condition = updatedCondition;
+      testedRule.condition = JSON.stringify(updatedCondition);
+
+      return testedRule;
+    }
+    nextNode = traversalNodes[0];
+    // set the traversalNodes to empty array
+    traversalNodes = [];
+  } else if (traversalNodes.length > 1) {
     let nestedResult;
     for (let i = 0; i < traversalNodes.length; i++) {
-      if (traversalNodes[i].type === "outputNode") {
-        console.log(traversalNodes[i])
-        return rule;
+      nestedResult = evaluateConditions(
+        traversalNodes[i].data.conditions,
+        traversalNodes[i].data.rule,
+        inputAttributes
+      );
+      if (nestedResult[0] === true) {
+        nextNode = traversalNodes[i];
       } else {
-        nestedResult = evaluateConditions(
-          traversalNodes[i].data.conditions,
-          traversalNodes[i].data.rule,
-          inputAttributes
+        let updatedCondition = setNodeColor(
+          condition,
+          traversalNodes[i],
+          traversalNodes,
+          "#FF0072",
+          [false]
         );
-      }
-      if (nestedResult) nextNode = traversalNodes[0];
-      else {
-        // condition.edges.forEach((edge, index) => {
-        //   if (edge.source === node && edge.sourceHandle === "no") {
-        //     condition.edges[index] = {
-        //       ...edge,
-        //       animated: true,
-        //       markerEnd: {
-        //         type: "arrowclosed",
-        //         width: 12,
-        //         height: 12,
-        //         color: "red",
-        //       },
-        //       style: {
-        //         strokeWidth: 2,
-        //         stroke: "#FF0072",
-        //       },
-        //     };
-        //   }
-        // });
+        condition = updatedCondition;
+        // sethe edge color to red which target is this node and source is the previous node
+        const targetEdges = condition.edges.filter(
+          (edge) => edge.target === traversalNodes[i].id
+        );
+
+        targetEdges.forEach((edge, index) => {
+          condition.edges = condition.edges.map((e) =>
+            e.id === targetEdges[index].id
+              ? {
+                  ...e,
+                  animated: true,
+                  markerEnd: {
+                    type: "arrowclosed",
+                    width: 12,
+                    height: 12,
+                    color: "#02ab40",
+                  },
+                  style: {
+                    strokeWidth: 5,
+                    stroke: "#02ab40",
+                  },
+                }
+              : e
+          );
+        });
+        testedRule.condition = JSON.stringify(updatedCondition);
       }
     }
+
     traversalNodes = [];
-  } else {
-    nextNode = condition.nodes.find((node) => node.id == traversalNodes[0]);
-    traversalNodes.shift();
   }
-  console.log(nextNode)
+
+  if (!nextNode) {
+    return testedRule;
+  }
+
   if (nextNode.type === "outputNode") {
-    console.log(nextNode)
-    return rule;
+    let updatedCondition = setNodeColor(
+      condition,
+      traversalNodes[0],
+      traversalNodes,
+      "#02ab40",
+      [true]
+    );
+    condition = updatedCondition;
+    testedRule.condition = JSON.stringify(updatedCondition);
+    return testedRule;
   } else {
-    evaluateNodes(nextNode, condition, rule, traversalNodes, inputAttributes);
+    return evaluateNodes(
+      nextNode,
+      condition,
+      rule,
+      traversalNodes,
+      inputAttributes,
+      testedRule
+    );
   }
+  return testedRule;
 };
+
 export const testing = async (req, res, next) => {
   const inputAttributes = req.body;
   const { id, version } = req.params;
   const userId = req.user.id;
+
   try {
     const user = await User.findOne({ where: { id: userId } });
     if (!user) {
       return next(createError(404, "User not found"));
     }
-    const rule = await Rule.findOne({ where: { id: id } });
+
+    let rule = await Rule.findOne({ where: { id: id } });
     if (!rule) {
       return next(createError(404, "No rule with that id"));
     }
-    //check if user is owner of this rule
+
     const userRules = await user.getRules();
-    const ruleIds = userRules.map((rule) => rule.id);
+    const ruleIds = userRules.map((r) => r.id);
     if (!ruleIds.includes(id)) {
       return next(createError(403, "You are not owner of this rule"));
     }
+
     const testRule = await Version.findOne({
       where: {
         ruleId: id,
         version: version,
       },
     });
+
     if (!testRule) {
       return next(createError(404, "Version not found"));
     }
+
+    const versions = await rule.getVersions();
+    let versionValues = [];
+
+    versions
+      .sort((a, b) => a.version - b.version)
+      .forEach((v) => {
+        versionValues.push(v.version);
+      });
+
     const condition = JSON.parse(testRule.condition);
-    console.log(condition);
     let testedRule;
+    const attributeNode = condition.nodes.find(
+      (node) => node.type === "attributeNode"
+    );
+
     const firstConditionalNodeId = condition.edges.find(
       (edge) => edge.source === "1"
     ).target;
+
     if (firstConditionalNodeId) {
       const firstConditionalNode = condition.nodes.find(
         (node) => node.id === firstConditionalNodeId
       );
-      let traversalNodes = [];
-      testedRule = await evaluateNodes(
-        firstConditionalNode,
-        condition,
-        rule,
-        traversalNodes,
-        inputAttributes
-      );
+
+      if (firstConditionalNode) {
+        // sets the attribute Node color
+        condition.nodes.forEach((node, index) => {
+          if (node.type === "attributeNode") {
+            condition.nodes[index] = {
+              ...node,
+              data: {
+                ...node.data,
+                computed: "yes",
+                color: "#02ab40",
+                result: true,
+              },
+            };
+          }
+        });
+
+        condition.edges.forEach((edge, index) => {
+          if (
+            edge.source === attributeNode.id &&
+            edge.target === firstConditionalNode.id
+          ) {
+            condition.edges[index] = {
+              ...edge,
+              animated: true,
+              markerEnd: {
+                type: "arrowclosed",
+                width: 12,
+                height: 12,
+                color: "#02ab40",
+              },
+              style: {
+                strokeWidth: 5,
+                stroke: "#02ab40",
+              },
+            };
+          }
+        });
+        let traversalNodes = [];
+        testedRule = await evaluateNodes(
+          firstConditionalNode,
+          condition,
+          rule,
+          traversalNodes,
+          inputAttributes,
+          { condition: JSON.stringify(condition) }
+        );
+
+        rule.condition = testedRule.condition;
+      }
     }
-    return res.json(testedRule);
+
+    return res.json({
+      rule: rule,
+      versions: versionValues,
+    });
   } catch (error) {
     return next(createError(error.status, error.message));
   }
@@ -1231,11 +1413,10 @@ function evaluateConditions(conditions, rule, inputAttributes) {
   }
 
   if (rule === "Any") {
-    if (result.includes(true)) return true;
+    if (result.includes(true)) return [true];
   } else if (rule === "All") {
-    if (result.includes(false)) return false;
+    if (result.includes(false)) return [false];
   }
-  console.log(result);
 
   return result;
 }
@@ -1306,5 +1487,3 @@ const inputData = {
   annual_income: "1200000",
   credit_score: "800",
 };
-
-console.log(evaluateConditions(conditions, rule, inputData));

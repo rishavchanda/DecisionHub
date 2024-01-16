@@ -67,3 +67,9 @@ export const deleteRule = async (id, version, token) =>
   await API.delete(`/rule/${id}/${version}`, {
     headers: { Authorization: `Bearer ${token}` },
   });
+
+// Testing
+export const testRule = async (id, version, testData, token) =>
+  await API.post(`/rule/testing/${id}/${version}`, testData, {
+    headers: { Authorization: `Bearer ${token}` },
+  });

@@ -16,7 +16,7 @@ import styled, { useTheme } from "styled-components";
 import { CircularProgress, MenuItem, Select } from "@mui/material";
 import { ArrowBackRounded, EditRounded } from "@mui/icons-material";
 import { useNavigate, useParams, useLocation } from "react-router-dom";
-import { getRuleById } from "../api";
+import { getRuleById, testRule } from "../api";
 import { useDispatch, useSelector } from "react-redux";
 import { openSnackbar } from "../redux/reducers/snackbarSlice";
 import { ruleReload } from "../redux/reducers/rulesSlice";
@@ -27,26 +27,6 @@ const FlexDisplay = styled.div`
   flex-direction: row;
   gap: 12px;
   align-items: center;
-`;
-
-const DeleteButton = styled.div`
-  border: 2px solid ${({ theme }) => theme.red + 90};
-  border-radius: 8px;
-  padding: 8px 12px;
-  font-size: 12px;
-  color: ${({ theme }) => theme.red};
-  display: flex;
-  flex-direction: row;
-  justify-content: center;
-  align-items: center;
-  gap: 4px;
-  cursor: pointer;
-  span {
-    font-weight: 500;
-  }
-  &:hover {
-    background-color: ${({ theme }) => theme.red + 10};
-  }
 `;
 
 const TextButton = styled.div`
@@ -139,7 +119,7 @@ const TestDetails = () => {
       .catch((err) => {
         dispath(
           openSnackbar({
-            message: err.response.data.message,
+            message: err.response?.data.message,
             severity: "error",
           })
         );
@@ -157,7 +137,6 @@ const TestDetails = () => {
     await nodes.forEach((node) => {
       if (node.type === "attributeNode") {
         node.data.label = rule.title;
-        node.data.descryption = rule.descryption;
       }
       node.data.inputAttributes = rule?.inputAttributes;
       node.data.outputAttributes = rule?.outputAttributes;
@@ -167,15 +146,35 @@ const TestDetails = () => {
     setLoading(false);
   };
 
-  useEffect(() => {
-    setViewport({ x: 200, y: 0, zoom: 1 }, { duration: 800 });
-  }, [reload, setViewport, getRule]);
+  const getTestedRule = async (testData) => {
+    setSubmitLoading(true);
+    const token = localStorage.getItem("decisionhub-token-auth-x4");
+    await testRule(id, rule?.version, testData, token)
+      .then(async (res) => {
+        await setRule(res.data?.rule);
+        await setInputAttributes(res.data?.rule?.inputAttributes);
+        await setOutputAttributes(res.data?.rule?.outputAttributes);
+        await createFlow(res.data?.rule);
+        setSubmitLoading(false);
+      })
+      .catch((err) => {
+        dispath(
+          openSnackbar({
+            message: err.response.data.message,
+            severity: "error",
+          })
+        );
+        setSubmitLoading(false);
+      });
+  };
 
   const handelSubmitTestData = (testData) => {
-    setSubmitLoading(true);
-    console.log(testData);
-    // setLoading(false);
+    getTestedRule(testData);
   };
+
+  useEffect(() => {
+    setViewport({ x: 200, y: 0, zoom: 1 }, { duration: 800 });
+  }, [reload, setViewport, getRule, getTestedRule]);
 
   return (
     <div style={{ height: "100%" }}>
