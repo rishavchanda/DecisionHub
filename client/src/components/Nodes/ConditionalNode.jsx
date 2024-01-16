@@ -54,7 +54,7 @@ const Node = styled.div`
     color &&
     `
         border: 2px dashed ${color};
-        border-left: 4px solid ${color};
+        border-left: 6px solid ${color};
         box-shadow: 1px 2px 30px 1px ${color + 20};
   `}
 `;
@@ -78,7 +78,7 @@ const NodeTitle = styled.input`
 `;
 
 const NodeBody = styled.div`
-  padding: 0px 20px;
+  padding: 6px 20px;
   display: flex;
   flex-direction: column;
   justify-content: center;
@@ -846,13 +846,6 @@ function ConditionalNode({ id, data }) {
         [reactFlow.getNode(id, data)],
         reactFlow.getEdges()
       );
-      // const updatedEdges = reactFlow.getEdges().filter((edge) => {
-      //   return !connectedEdges.some(
-      //     (connectedEdge) =>
-      //       connectedEdge.source === edge.source && edge.sourceHandle === "no"
-      //   );
-      // });
-      // reactFlow.setEdges(updatedEdges);
       dispatch(ruleUpdated());
     }
 

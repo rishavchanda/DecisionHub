@@ -160,7 +160,7 @@ const TestDetails = () => {
       .catch((err) => {
         dispath(
           openSnackbar({
-            message: "err.message",
+            message: err.response.data.message,
             severity: "error",
           })
         );

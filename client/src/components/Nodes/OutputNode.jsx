@@ -19,6 +19,12 @@ const Node = styled.div`
   display: flex;
   flex-direction: column;
   gap: 12px;
+  ${({ computed, color }) =>
+    computed &&
+    color &&
+    `border: 2px dashed ${color};
+        box-shadow: 1px 2px 30px 1px ${color + 20};
+  `}
 `;
 
 const NodeHeader = styled.div`
@@ -27,9 +33,15 @@ const NodeHeader = styled.div`
   justify-content: center;
   align-items: center;
   padding: 10px 16px;
-  background: ${({ theme }) => theme.primary};
+  background: ${({ theme }) => theme.output_node};
   gap: 16px;
   border-radius: 8px 8px 0px 0px;
+  ${({ computed, color }) =>
+    computed &&
+    color &&
+    `
+        background: ${color};
+  `}
 `;
 
 const NodeTitle = styled.input`
@@ -235,8 +247,8 @@ const OutputNode = ({ id, data, outputAttributes }) => {
   };
 
   return (
-    <Node>
-      <NodeHeader>
+    <Node color={data?.color} computed={data?.computed}>
+      <NodeHeader color={data?.color} computed={data?.computed}>
         <NodeTitle
           value={data.label}
           onChange={(e) => handelLabelChange(e)}

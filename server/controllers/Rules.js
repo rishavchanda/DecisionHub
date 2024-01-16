@@ -972,14 +972,14 @@ const evaluateNodes = async (
       condition,
       node,
       traversalNodes,
-      "#00b87a",
+      "#02ab40",
       "yes"
     );
     updatedCondition = setNodeColor(
       updatedCondition,
       node,
       traversalNodes,
-      "#00b87a",
+      "#02ab40",
       "yes",
       result
     );
@@ -990,14 +990,14 @@ const evaluateNodes = async (
       condition,
       node,
       traversalNodes,
-      "#00b87a",
+      "#02ab40",
       "no"
     );
     updatedCondition = setNodeColor(
       updatedCondition,
       node,
       traversalNodes,
-      "#00b87a",
+      "#02ab40",
       "no",
       result
     );
@@ -1009,14 +1009,23 @@ const evaluateNodes = async (
 
   if (traversalNodes.length === 1) {
     if (traversalNodes[0].type === "outputNode") {
-      console.log(traversalNodes[0]);
+      // change and add the color of output node
+      let updatedCondition = setNodeColor(
+        condition,
+        traversalNodes[0],
+        traversalNodes,
+        "#02ab40",
+        [true]
+      );
+      condition = updatedCondition;
+      testedRule.condition = JSON.stringify(updatedCondition);
+
       return testedRule;
     }
     nextNode = traversalNodes[0];
     // set the traversalNodes to empty array
     traversalNodes = [];
   } else if (traversalNodes.length > 1) {
-    console.log("Came");
     let nestedResult;
     for (let i = 0; i < traversalNodes.length; i++) {
       nestedResult = evaluateConditions(
@@ -1050,21 +1059,16 @@ const evaluateNodes = async (
                     type: "arrowclosed",
                     width: 12,
                     height: 12,
-                    color: "#FF0072",
+                    color: "#02ab40",
                   },
                   style: {
-
                     strokeWidth: 5,
-                    stroke: "#FF0072",
+                    stroke: "#02ab40",
                   },
                 }
               : e
           );
         });
-        testedRule.condition = JSON.stringify(updatedCondition);
-
-        console.log(targetEdges);
-
         testedRule.condition = JSON.stringify(updatedCondition);
       }
     }
@@ -1077,7 +1081,15 @@ const evaluateNodes = async (
   }
 
   if (nextNode.type === "outputNode") {
-    console.log(nextNode);
+    let updatedCondition = setNodeColor(
+      condition,
+      traversalNodes[0],
+      traversalNodes,
+      "#02ab40",
+      [true]
+    );
+    condition = updatedCondition;
+    testedRule.condition = JSON.stringify(updatedCondition);
     return testedRule;
   } else {
     return evaluateNodes(
@@ -1150,6 +1162,21 @@ export const testing = async (req, res, next) => {
       );
 
       if (firstConditionalNode) {
+        // sets the attribute Node color
+        condition.nodes.forEach((node, index) => {
+          if (node.type === "attributeNode") {
+            condition.nodes[index] = {
+              ...node,
+              data: {
+                ...node.data,
+                computed: "yes",
+                color: "#02ab40",
+                result: true,
+              },
+            };
+          }
+        });
+
         condition.edges.forEach((edge, index) => {
           if (
             edge.source === attributeNode.id &&
@@ -1162,11 +1189,11 @@ export const testing = async (req, res, next) => {
                 type: "arrowclosed",
                 width: 12,
                 height: 12,
-                color: "#00b87a",
+                color: "#02ab40",
               },
               style: {
                 strokeWidth: 5,
-                stroke: "#00b87a",
+                stroke: "#02ab40",
               },
             };
           }

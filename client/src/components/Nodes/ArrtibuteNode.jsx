@@ -28,6 +28,12 @@ const Node = styled.div`
   display: flex;
   flex-direction: column;
   gap: 8px;
+  ${({ computed, color }) =>
+    computed &&
+    color &&
+    `border: 2px dashed ${color};
+        box-shadow: 1px 2px 30px 1px ${color + 20};
+  `}
 `;
 
 const NodeHeader = styled.div`
@@ -207,8 +213,8 @@ const AttributeNode = ({ id, data }) => {
 
   return (
     <Wrapper>
-      <Node>
-        <NodeHeader>
+      <Node color={data?.color} computed={data?.computed}>
+        <NodeHeader color={data?.color} computed={data?.computed}>
           <NodeTitle>{data.label}</NodeTitle>
           <EditOutlined
             sx={{ fontSize: "16px", color: theme.white, cursor: "pointer" }}
