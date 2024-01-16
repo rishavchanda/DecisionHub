@@ -765,11 +765,11 @@ function ConditionalNode({ id, data }) {
   const getNoOfEdgesParent = () => {
     const mySourceHandel = reactFlow
       .getEdges()
-      .find((edge) => edge.target === id).sourceHandle;
+      .find((edge) => edge.target === id)?.sourceHandle;
     const parentEdges = reactFlow
       .getEdges()
       .filter(
-        (edge) => edge.target === id && edge.sourceHandle === mySourceHandel
+        (edge) => edge?.target === id && edge?.sourceHandle === mySourceHandel
       );
 
     if (parentEdges.length === 0) {
