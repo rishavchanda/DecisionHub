@@ -10,10 +10,10 @@ import {
   RuleRounded,
 } from "@mui/icons-material";
 import { useDispatch, useSelector } from "react-redux";
-import { NavLink, Link, useNavigate } from "react-router-dom";
+import { NavLink, Link, useNavigate, useLocation } from "react-router-dom";
 import styled, { useTheme } from "styled-components";
 import { Avatar } from "@mui/material";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { logout, setDarkMode } from "../redux/reducers/userSlice";
 // import Logo from "../Images/Logo.svg";
 
@@ -187,9 +187,7 @@ const Span = styled.span`
   color: ${({ theme }) => theme.menu_secondary_text};
 `;
 
-const Sidebar = ({
-  setMenuOpen
-}) => {
+const Sidebar = ({ setMenuOpen }) => {
   // Hooks
   const { darkMode } = useSelector((state) => state.user);
   const { currentUser } = useSelector((state) => state.user);
@@ -221,6 +219,12 @@ const Sidebar = ({
     return `hsl(${hue}, ${saturation}%, ${lightness}%)`;
   };
 
+  useEffect(() => {
+    if (window.innerWidth < 1100) {
+      setCollapsed(true);
+    }
+  }, []);
+
   return (
     <Container setMenuOpen={setMenuOpen} collapsed={collapsed}>
       <FlexTopDown>
@@ -229,7 +233,12 @@ const Sidebar = ({
             <LogoText to="/">
               {/* <LogoImg src={Logo} /> */}
               {!collapsed && "DecisionHub"}
-              <Colapse onClick={() => setCollapsed(!collapsed)}>
+              <Colapse
+                onClick={(e) => {
+                  e.preventDefault();
+                  setCollapsed(!collapsed);
+                }}
+              >
                 {collapsed ? (
                   <NavigateNextRounded sx={{ fontSize: "16px" }} />
                 ) : (
@@ -241,148 +250,84 @@ const Sidebar = ({
               <CloseRounded onClick={() => setMenuOpen(false)} />
             </Close>
           </Flex>
-          {collapsed ? (
-            <ContainerWrapper>
-              <NavLinkItem
-                to="/"
-                index
-                exact
-                style={{ textDecoration: "none", color: "inherit" }}
-              >
-                <DashboardRounded sx={{ fontSize: "22px" }} />
-              </NavLinkItem>
-              <NavLinkItem
-                to="/rules"
-                index
-                exact
-                style={{ textDecoration: "none", color: "inherit" }}
-              >
-                <AccountTreeRounded sx={{ fontSize: "22px" }} />
-              </NavLinkItem>
-              <NavLinkItem
-                to="/test"
-                index
-                exact
-                style={{ textDecoration: "none", color: "inherit" }}
-              >
-                <RuleRounded sx={{ fontSize: "22px" }} />
-              </NavLinkItem>
-              <Hr />
-              <Item onClick={() => dispatch(setDarkMode(!darkMode))}>
-                {darkMode ? (
-                  <LightModeRounded sx={{ fontSize: "22px" }} />
-                ) : (
-                  <DarkModeRounded sx={{ fontSize: "22px" }} />
-                )}
-              </Item>
-              <Item onClick={() => logoutUser()}>
-                <LogoutRounded sx={{ fontSize: "22px" }} />
-              </Item>
-            </ContainerWrapper>
-          ) : (
-            <ContainerWrapper>
-              <NavLinkItem
-                to="/"
-                index
-                exact
-                style={{ textDecoration: "none", color: "inherit" }}
-              >
-                <DashboardRounded sx={{ fontSize: "22px" }} />
-                Dashboard
-              </NavLinkItem>
-              <NavLinkItem
-                to="/rules"
-                index
-                exact
-                style={{ textDecoration: "none", color: "inherit" }}
-              >
-                <AccountTreeRounded sx={{ fontSize: "22px" }} />
-                Rules
-              </NavLinkItem>
-              <NavLinkItem
-                to="/test"
-                index
-                exact
-                style={{ textDecoration: "none", color: "inherit" }}
-              >
-                <RuleRounded sx={{ fontSize: "22px" }} />
-                Debug / Test Rules
-              </NavLinkItem>
-              <Hr />
-              <Title>Settings</Title>
-              <Item onClick={() => dispatch(setDarkMode(!darkMode))}>
-                {darkMode ? (
-                  <LightModeRounded sx={{ fontSize: "22px" }} />
-                ) : (
-                  <DarkModeRounded sx={{ fontSize: "22px" }} />
-                )}
-                {darkMode ? "Light" : "Dark"} Mode
-              </Item>
-              <Item onClick={() => logoutUser()}>
-                <LogoutRounded sx={{ fontSize: "22px" }} />
-                Logout
-              </Item>
-            </ContainerWrapper>
-          )}
+          <ContainerWrapper>
+            <NavLinkItem
+              to="/"
+              index
+              exact
+              style={{ textDecoration: "none", color: "inherit" }}
+            >
+              <DashboardRounded sx={{ fontSize: "22px" }} />
+              {!collapsed && "Dashboard"}
+            </NavLinkItem>
+            <NavLinkItem
+              to="/rules"
+              index
+              exact
+              style={{ textDecoration: "none", color: "inherit" }}
+            >
+              <AccountTreeRounded sx={{ fontSize: "22px" }} />
+              {!collapsed && "Rules"}
+            </NavLinkItem>
+            <NavLinkItem
+              to="/test"
+              index
+              exact
+              style={{ textDecoration: "none", color: "inherit" }}
+            >
+              <RuleRounded sx={{ fontSize: "22px" }} />
+              {!collapsed && "Debug / Test Rules"}
+            </NavLinkItem>
+            <Hr />
+            {!collapsed && <Title>Settings</Title>}
+            <Item onClick={() => dispatch(setDarkMode(!darkMode))}>
+              {darkMode ? (
+                <LightModeRounded sx={{ fontSize: "22px" }} />
+              ) : (
+                <DarkModeRounded sx={{ fontSize: "22px" }} />
+              )}
+              {!collapsed && <>{darkMode ? "Light" : "Dark"} Mode</>}
+            </Item>
+            <Item onClick={() => logoutUser()}>
+              <LogoutRounded sx={{ fontSize: "22px" }} />
+              {!collapsed && <>Logout</>}
+            </Item>
+          </ContainerWrapper>
         </div>
-        {collapsed ? (
-          <NavLinkItem
-            to="/profile"
-            exact
+        <NavLinkItem
+          to="/profile"
+          exact
+          style={{
+            textDecoration: "none",
+            color: "inherit",
+            borderRadius: "0px",
+            margin: "15px 0px 0px 0px",
+            background: theme.menu_secondary_text + 20,
+            height: "48px",
+          }}
+        >
+          <Avatar
             style={{
-              textDecoration: "none",
-              color: "inherit",
-              borderRadius: "0px",
-              margin: "15px 0px 0px 0px",
-              background: theme.menu_secondary_text + 20,
-              height: "48px",
+              height: "32px",
+              width: "32px",
+              fontSize: "12px",
+              borderRadius: "6px",
+              background: generateColor(currentUser?.name),
             }}
+            src={currentUser?.img}
           >
-            <Avatar
-              style={{
-                height: "32px",
-                width: "32px",
-                fontSize: "10px",
-                borderRadius: "6px",
-                background: generateColor(currentUser?.name),
-              }}
-              src={currentUser?.img}
-            >
-              {currentUser && currentUser?.name[0]}
-            </Avatar>
-          </NavLinkItem>
-        ) : (
-          <NavLinkItem
-            to="/profile"
-            exact
-            style={{
-              textDecoration: "none",
-              color: "inherit",
-              borderRadius: "0px",
-              margin: "15px 0px 0px 0px",
-              background: theme.menu_secondary_text + 20,
-              height: "48px",
-            }}
-          >
-            <Avatar
-              style={{
-                height: "32px",
-                width: "32px",
-                fontSize: "12px",
-                borderRadius: "6px",
-                background: generateColor(currentUser?.name),
-              }}
-              src={currentUser?.img}
-            >
-              {currentUser && currentUser?.name[0]}
-            </Avatar>
-            <ProfileDetails>
-              {currentUser?.name}
-              <Span>{currentUser?.email}</Span>
-            </ProfileDetails>
-            <NavigateNextRounded style={{ width: "20px", height: "20px" }} />
-          </NavLinkItem>
-        )}
+            {currentUser && currentUser?.name[0]}
+          </Avatar>
+          {!collapsed && (
+            <>
+              <ProfileDetails>
+                {currentUser?.name}
+                <Span>{currentUser?.email}</Span>
+              </ProfileDetails>
+              <NavigateNextRounded style={{ width: "20px", height: "20px" }} />
+            </>
+          )}
+        </NavLinkItem>
       </FlexTopDown>
     </Container>
   );

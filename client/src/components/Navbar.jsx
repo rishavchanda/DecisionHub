@@ -3,7 +3,6 @@ import styled, { useTheme } from "styled-components";
 import { Avatar, CircularProgress, IconButton } from "@mui/material";
 import { Link, useLocation } from "react-router-dom";
 import { CloseRounded, MenuRounded, SearchRounded } from "@mui/icons-material";
-import DropdownIcon from "@mui/icons-material/ArrowDropDown";
 import { useSelector } from "react-redux";
 import SearchItemCard from "./cards/SearchItemCard";
 import { searchRule } from "../api";
@@ -58,15 +57,6 @@ const LogoText = styled(Link)`
   background-clip: text;
   text-fill-color: transparent;
   font-size: 24px;
-`;
-
-const LogoImg = styled.img`
-  display: none;
-  height: 22px;
-  margin-right: 10px;
-  @media (max-width: 1100px) {
-    display: block;
-  }
 `;
 
 const Path = styled.div`
@@ -147,20 +137,6 @@ const Navbar = ({ setMenuOpen, menuOpen }) => {
   const [search, setSearch] = useState("");
   const [searchResult, setSearchResult] = useState([]);
   const location = useLocation();
-
-  // Open the account dialog
-  const [anchorEl, setAnchorEl] = useState(null);
-  const open = Boolean(anchorEl);
-  const id = open ? "simple-popover" : undefined;
-
-  // Functions
-  const handleClick = (event) => {
-    setAnchorEl(event.currentTarget);
-  };
-
-  const handleClose = () => {
-    setAnchorEl(null);
-  };
 
   // create a color code based on user name
   const generateColor = (name) => {
@@ -292,7 +268,7 @@ const Navbar = ({ setMenuOpen, menuOpen }) => {
           </Searched>
         )}
       </div>
-      <User aria-describedby={id} onClick={handleClick}>
+      <User>
         <Avatar
           src={currentUser?.img}
           style={{
