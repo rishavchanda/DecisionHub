@@ -1246,7 +1246,14 @@ export const testing = async (req, res, next) => {
         rule.condition = testedRule.condition;
       }
     }
-
+    await Rule.update(
+      { ...rule, tested: true },
+      {
+        where: {
+          id: id,
+        },
+      }
+    )
     return res.json({
       rule: rule,
       versions: versionValues,
