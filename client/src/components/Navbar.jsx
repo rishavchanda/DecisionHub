@@ -1,8 +1,8 @@
 import { useEffect, useState } from "react";
-import styled from "styled-components";
+import styled, { useTheme } from "styled-components";
 import { Avatar, CircularProgress, IconButton } from "@mui/material";
 import { Link, useLocation } from "react-router-dom";
-import { MenuRounded, SearchRounded } from "@mui/icons-material";
+import { CloseRounded, MenuRounded, SearchRounded } from "@mui/icons-material";
 import DropdownIcon from "@mui/icons-material/ArrowDropDown";
 import { useSelector } from "react-redux";
 import SearchItemCard from "./cards/SearchItemCard";
@@ -140,6 +140,7 @@ const User = styled.div`
 
 const Navbar = ({ setMenuOpen, menuOpen }) => {
   // Hooks
+  const theme = useTheme();
   const { currentUser } = useSelector((state) => state.user);
   const [openSearch, setOpenSearch] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -234,10 +235,33 @@ const Navbar = ({ setMenuOpen, menuOpen }) => {
             value={search}
             onChange={(e) => hadelSearch(e.target.value)}
           />
-          <SearchRounded
-            style={{ marginRight: "14px", marginLeft: "14px" }}
-            sx={{ fontSize: "20px" }}
-          />
+          <div
+            style={{
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              gap: "0px",
+            }}
+          >
+            {search.length > 0 && (
+              <CloseRounded
+                onClick={() => setSearch("")}
+                style={{
+                  cursor: "pointer",
+                  padding: "5px",
+                  borderRadius: "50%",
+                  background: theme.navbar,
+                  color: theme.menu_primary_text,
+                  width: "12px",
+                  height: "12px",
+                }}
+              />
+            )}
+            <SearchRounded
+              style={{ marginRight: "14px", marginLeft: "14px" }}
+              sx={{ fontSize: "20px" }}
+            />
+          </div>
         </Search>
         {openSearch && (
           <Searched>
