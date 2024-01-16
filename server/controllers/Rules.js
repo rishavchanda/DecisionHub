@@ -401,6 +401,29 @@ export const createRuleWithText = () => async(req, res, next) => {
   }
 } 
 
+export const getAnalytics = async (req, res) => {
+  const userId = req.user.id;
+  try {
+    const user = await User.findOne({ where: { id: userId } });
+    if (!user) {
+      return res.status(404).json({ error: "User not found" });
+    }
+    
+    const userRules = await user.getRules();
+
+    const totalRules = userRules.length;
+    const testedRules = userRules.filter(rule => rule.tested === true).length;
+
+    // Send the response
+    res.json({
+      totalRules: totalRules,
+      testedRules: testedRules
+    });
+  }catch(error){
+    return next(createError(error.status, error.message));
+  }
+}
+
 /*"condition": {
         "nodes": [
             {
