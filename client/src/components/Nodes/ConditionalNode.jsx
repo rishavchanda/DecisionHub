@@ -842,11 +842,12 @@ function ConditionalNode({ id, data }) {
 
     if (parentNodeEdges >= 2) {
       // delete all edges connected to source handel no of this node
-      const connectedEdges = getConnectedEdges(
-        [reactFlow.getNode(id, data)],
-        reactFlow.getEdges()
-      );
-      dispatch(ruleUpdated());
+      const connectedEdges = reactFlow
+        .getEdges()
+        .filter(
+          (edge) => edge.source === id && edge.sourceHandle === mySourceHandel
+        );
+      console.log(id);
     }
 
     return parentNodeEdges;
@@ -859,7 +860,6 @@ function ConditionalNode({ id, data }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [reactFlow, updated]
   );
-  console.log(data);
   return (
     <Wrapper>
       <FlexRight>

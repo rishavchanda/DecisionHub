@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 import ReactFlow, {
   Controls,
   Background,
@@ -130,8 +130,6 @@ const RulesDetails = () => {
   const navigate = useNavigate();
   const dispath = useDispatch();
 
-  const [inputAttributes, setInputAttributes] = useState([]);
-  const [outputAttributes, setOutputAttributes] = useState([]);
   const [nodes, setNodes, onNodesChange] = useNodesState();
   const [edges, setEdges, onEdgesChange] = useEdgesState();
   const [rule, setRule] = useState();
@@ -152,8 +150,6 @@ const RulesDetails = () => {
     await getRuleById(id, token, version)
       .then(async (res) => {
         setRule(res.data?.rule);
-        setInputAttributes(res.data?.rule?.inputAttributes);
-        setOutputAttributes(res.data?.rule?.outputAttributes);
         setVersions(res.data?.versions);
         await createFlow(res.data?.rule);
         console.log(res.data?.rule);
@@ -172,7 +168,7 @@ const RulesDetails = () => {
 
   useEffect(() => {
     getRule();
-  }, [reload, version]);
+  }, [reload, version, id]);
 
   const createFlow = async (rule) => {
     setLoading(true);
@@ -206,8 +202,6 @@ const RulesDetails = () => {
       .then(async (res) => {
         await setRule(res.data?.rule);
         await setVersions(res.data?.versions);
-        await setInputAttributes(res.data?.rule?.inputAttributes);
-        await setOutputAttributes(res.data?.rule?.outputAttributes);
         await createFlow(res.data?.rule);
         // dispath(ruleReload());
         dispath(
@@ -241,8 +235,6 @@ const RulesDetails = () => {
       .then(async (res) => {
         await setRule(res.data?.rule);
         await setVersions(res.data?.versions);
-        await setInputAttributes(res.data?.rule?.inputAttributes);
-        await setOutputAttributes(res.data?.rule?.outputAttributes);
         await createFlow(res.data?.rule);
         // dispath(ruleReload());
         dispath(
@@ -281,8 +273,6 @@ const RulesDetails = () => {
         } else {
           await setRule(res.data?.rule);
           await setVersions(res.data?.versions);
-          await setInputAttributes(res.data?.rule?.inputAttributes);
-          await setOutputAttributes(res.data?.rule?.outputAttributes);
           await createFlow(res.data?.rule);
           setLoading(false);
           dispath(

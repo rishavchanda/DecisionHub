@@ -2,7 +2,7 @@ import db from "../models/index.js";
 import { createError } from "../error.js";
 import { Op } from "sequelize";
 import OpenAI from "openai";
-import {createRuleRequest} from "../utils/prompt.js";
+import { createRuleRequest } from "../utils/prompt.js";
 import * as dotenv from "dotenv";
 dotenv.config();
 
@@ -16,8 +16,8 @@ const Version = db.version;
 export const createRule = async (req, res, next) => {
   const { title, description, inputAttributes, outputAttributes, condition } =
     req.body;
-    const test = (JSON.parse(req.body.condition))
-    console.log(test.nodes)
+  const test = JSON.parse(req.body.condition);
+  console.log(test.nodes);
   const userId = req.user.id;
   try {
     const user = await User.findOne({ where: { id: userId } });
@@ -115,11 +115,11 @@ export const searchRule = async (req, res) => {
     if (!user) {
       return res.status(404).json({ error: "User not found" });
     }
-    
+
     const userRules = await user.getRules();
-    
+
     const rules = await Rule.findAll({
-      attributes: ['id', 'title', 'description'], // Select only the required attributes
+      attributes: ["id", "title", "description"], // Select only the required attributes
       where: {
         id: {
           [Op.in]: userRules.map((rule) => rule.id),
@@ -130,14 +130,13 @@ export const searchRule = async (req, res) => {
       },
       limit: 40,
     });
-    
+
     res.status(200).json(rules);
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: "Internal Server Error" });
   }
 };
-
 
 export const updateRule = async (req, res, next) => {
   const userId = req.user.id;
@@ -192,7 +191,7 @@ export const updateRule = async (req, res, next) => {
           },
         }
       );
-      
+
       const versions = await rule.getVersions();
       let versionValues = [];
       await versions.map((version) => {
@@ -382,24 +381,25 @@ export const deleteRule = async (req, res, next) => {
   }
 };
 
-export const createRuleWithText = () => async(req, res, next) => {
+export const createRuleWithText = async (req, res, next) => {
   // const userId = req.user.id;
-  try{
+  try {
     // const user = await User.findOne({ where: { id: userId } });
     // if (!user) {
     //   return next(createError(404, "User not found"));
     // }
+    console.log("start");
     const completion = await openai.chat.completions.create({
-      messages: [{ role: "user", content: "You are a helpful assistant." }],
+      messages: [{ role: "user", content: createRuleRequest() }],
       model: "gpt-3.5-turbo",
     });
-  
-    console.log("here"); 
-    return completion;
-  }catch(error){
+
+    console.log(completion.choices[0].message.content);
+    return res.status(200).json(completion.choices[0].message.content);
+  } catch (error) {
     return next(createError(error.status, error.message));
   }
-} 
+};
 
 export const getAnalytics = async (req, res) => {
   const userId = req.user.id;
