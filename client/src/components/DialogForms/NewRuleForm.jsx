@@ -1,9 +1,15 @@
 import { CloseRounded } from "@mui/icons-material";
-import { CircularProgress, Modal } from "@mui/material";
+import {
+  Checkbox,
+  CircularProgress,
+  MenuItem,
+  Modal,
+  Select,
+} from "@mui/material";
 import React, { useEffect, useState } from "react";
-import styled from "styled-components";
+import styled, { useTheme } from "styled-components";
 import TextInput from "../Inputs/TextInput";
-import { createRule, updateRule } from "../../api";
+import { createRule, getTableNames, updateRule } from "../../api";
 import { useLocation, useNavigate } from "react-router";
 import { useDispatch } from "react-redux";
 import { openSnackbar } from "../../redux/reducers/snackbarSlice";
@@ -26,6 +32,7 @@ const Body = styled.div`
 const Container = styled.div`
   max-width: 500px;
   width: 100%;
+  max-height: 90vh;
   border-radius: 8px;
   margin: 50px 20px;
   padding: 22px 28px 30px 28px;
@@ -34,8 +41,13 @@ const Container = styled.div`
   display: flex;
   flex-direction: column;
   gap: 10px;
+  overflow-y: scroll;
+  -ms-overflow-style: none;
   position: relative;
   outline: none;
+  ::-webkit-scrollbar {
+    display: none;
+  }
   @media (max-width: 600px) {
     padding: 22px 20px 30px 20px;
   }
@@ -67,6 +79,28 @@ const Form = styled.form`
   gap: 14px;
 `;
 
+const Label = styled.label`
+  font-size: 12px;
+  color: ${({ theme }) => theme.text_secondary};
+  padding: 0px 4px;
+  text-transform: uppercase;
+  ${({ error, theme }) =>
+    error &&
+    `
+    color: ${theme.red};
+  `}
+  ${({ small }) =>
+    small &&
+    `
+    font-size: 8px;
+  `}
+  ${({ popup, theme }) =>
+    popup &&
+    `
+  color: ${theme.popup_text_secondary};
+  `}
+`;
+
 const Button = styled.button`
   width: 100%;
   border: none;
@@ -92,6 +126,7 @@ const NewRuleForm = ({ setOpenNewRule, updateForm }) => {
   const navigate = useNavigate();
   const location = useLocation();
   const dispath = useDispatch();
+  const theme = useTheme();
   let path = location.pathname.split("/");
   const getFlowData = (label, description) => {
     return {
@@ -109,12 +144,14 @@ const NewRuleForm = ({ setOpenNewRule, updateForm }) => {
       edges: [],
     };
   };
+  const [tables, setTables] = useState([]);
   const [ruleData, setRuleData] = useState(
     updateForm.update
       ? updateForm.data
       : {
           title: "",
           description: "",
+          tables: [],
           inputAttributes: [],
           outputAttributes: [],
           condition: JSON.stringify(getFlowData("", "")),
@@ -122,6 +159,50 @@ const NewRuleForm = ({ setOpenNewRule, updateForm }) => {
   );
   const [buttonDisabled, setButtonDisabled] = useState(true);
   const [loading, setLoading] = useState(false);
+
+  const tablesList = async () => {
+    const token = localStorage.getItem("decisionhub-token-auth-x4");
+    await getTableNames(token)
+      .then((res) => {
+        setTables(res.data);
+      })
+      .catch((err) => {
+        dispath(
+          openSnackbar({
+            message: err.response.data.message,
+            severity: "error",
+          })
+        );
+      });
+  };
+
+  useEffect(() => {
+    tablesList();
+  }, []);
+
+  useEffect(() => {
+    // Clear inputAttributes when tables are unselected
+    if (ruleData?.tables?.length === 0) {
+      setRuleData({ ...ruleData, inputAttributes: [] });
+      return;
+    }
+
+    // Collect inputAttributes from selected tables
+    const selectedInputAttributes = ruleData?.tables.reduce(
+      (acc, selectedTable) => {
+        const tableData = tables.find(
+          (table) => table?.table === selectedTable
+        );
+        if (tableData) {
+          acc.push(...tableData.columns);
+        }
+        return acc;
+      },
+      []
+    );
+
+    setRuleData({ ...ruleData, inputAttributes: selectedInputAttributes });
+  }, [ruleData?.tables, tables]);
 
   const handelInputs = (e) => {
     const { name, value } = e.target;
@@ -151,7 +232,8 @@ const NewRuleForm = ({ setOpenNewRule, updateForm }) => {
       ruleData?.title !== "" &&
       ruleData?.description !== "" &&
       ruleData?.inputAttributes?.length !== 0 &&
-      ruleData?.outputAttributes?.length !== 0
+      ruleData?.outputAttributes?.length !== 0 &&
+      ruleData?.tables?.length !== 0
     ) {
       setButtonDisabled(false);
     } else {
@@ -252,6 +334,45 @@ const NewRuleForm = ({ setOpenNewRule, updateForm }) => {
               value={ruleData.description}
               handelChange={handelInputs}
             />
+            <div
+              style={{ display: "flex", flexDirection: "column", gap: "3px" }}
+            >
+              <Label>Select Table</Label>
+              <Select
+                multiple
+                displayEmpty
+                value={ruleData?.tables}
+                onChange={(e) => {
+                  let selectedTables = e.target.value;
+                  setRuleData({
+                    ...ruleData,
+                    tables: selectedTables,
+                  });
+                }}
+                autoWidth
+                sx={{
+                  color: theme.text_primary,
+                  border: `1px solid ${theme.text_secondary + 90}`,
+                  borderRadius: "8px",
+                  padding: "0px",
+                  fontSize: "12px",
+                  ".MuiSvgIcon-root ": {
+                    fill: `${theme.text_secondary} !important`,
+                  },
+                }}
+              >
+                <MenuItem disabled>Select database Table</MenuItem>
+                {tables.map((table) => (
+                  <MenuItem key={table?.table} value={table?.table}>
+                    <Checkbox
+                      checked={ruleData?.tables.includes(table?.table)}
+                      sx={{ padding: "0px", marginRight: "4px" }}
+                    />
+                    {`Table Name: ${table?.table}`}
+                  </MenuItem>
+                ))}
+              </Select>
+            </div>
             <TextInput
               label="Input Attributes"
               placeholder="Enter input attributes"
