@@ -30,7 +30,10 @@ export const getRecentActivity = async (req, res, next) => {
       order: [["updatedAt", "DESC"]],
       limit: 10,
     });
-    return res.status(200).json(rules);
+    const totalRules = rules.length;
+    const testedRules = rules.filter(rule => rule.tested === true).length;
+
+    return res.status(200).json({rules: rules, total: totalRules, tested: testedRules});
   } catch (error) {
     return next(createError(error.status, error.message));
   }

@@ -3,7 +3,6 @@ import {
   createRule,
   createRuleWithText,
   deleteRule,
-  getAnalytics,
   getRuleByIdAndVersion,
   getRules,
   searchRule,
@@ -20,8 +19,8 @@ router.post("/", verifyToken, createRule);
 router.get("/", verifyToken, getRules);
 router.post("/testing/:id/:version", verifyToken, testing);
 router.post("/:id", verifyToken, getRuleByIdAndVersion);
+router.patch("/ruleWithText/:id", verifyToken, createRuleWithText);
 router.get("/searchRule", verifyToken, searchRule);
-router.get("/getAnalytics", verifyToken, getAnalytics);
 router.patch("/:id", verifyToken, updateRule);
 router.patch("/updateRuleVersion/:id", verifyToken, updateRuleWithVersion);
 router.delete("/:id/:versionId", verifyToken, deleteRule);
