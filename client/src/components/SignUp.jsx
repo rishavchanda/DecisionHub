@@ -27,8 +27,9 @@ const Container = styled.div`
   flex-direction: column;
   gap: 10px;
   transition: all 0.3s ease;
-  @media (max-width: 600px) {
-    padding: 22px 22px 40px 22px;
+  @media (max-width: 400px) {
+    max-width: 320px;
+    padding: 16px 16px 20px 16px;
   }
 `;
 
@@ -36,6 +37,9 @@ const Title = styled.h1`
   font-size: 28px;
   font-weight: 500;
   color: ${({ theme }) => theme.text_primary};
+  @media (max-width: 400px) {
+    font-size: 24px;
+  }
 `;
 
 const Form = styled.form`
@@ -43,6 +47,9 @@ const Form = styled.form`
   flex-direction: column;
   padding: 18px 0px 12px 0px;
   gap: 10px;
+  @media (max-width: 400px) {
+    padding: 18px 0px 12px 0px;
+  }
 `;
 
 const Hr = styled.div`
@@ -61,6 +68,9 @@ const Flex = styled.div`
   color: ${({ theme }) => theme.text_secondary};
   font-weight: 500;
   padding: 12px 14px;
+  @media (max-width: 400px) {
+    font-size: 14px;
+  }
 `;
 
 const OutlinedInput = styled.div`
@@ -76,6 +86,9 @@ const OutlinedInput = styled.div`
   &:focus-within {
     border-color: ${({ theme }) => theme.primary};
   }
+  @media (max-width: 400px) {
+    padding: 12px;
+  }
 `;
 
 const Input = styled.input`
@@ -88,11 +101,17 @@ const Input = styled.input`
   &:focus {
     outline: none;
   }
+  @media (max-width: 400px) {
+    font-size: 14px;
+  }
 `;
 
 const Error = styled.p`
   font-size: 12px;
   margin: 0px 4px;
+  @media (max-width: 400px) {
+    font-size: 10px;
+  }
 `;
 
 const Button = styled.button`
@@ -114,6 +133,9 @@ const Button = styled.button`
     color: #666666;
     cursor: not-allowed;
   `}
+  @media (max-width: 400px) {
+    font-size: 14px;
+  }s
 `;
 
 const GoogleButton = styled.button`
@@ -133,6 +155,9 @@ const GoogleButton = styled.button`
   align-items: center;
   gap: 10px;
   justify-content: center;
+  @media (max-width: 400px) {
+    font-size: 14px;
+  }
 `;
 
 const Text = styled.p`
@@ -140,6 +165,9 @@ const Text = styled.p`
   text-align: center;
   color: ${({ theme }) => theme.text_secondary};
   margin-top: 16px;
+  @media (max-width: 400px) {
+    font-size: 14px;
+  }
 `;
 
 const TextButton = styled.span`

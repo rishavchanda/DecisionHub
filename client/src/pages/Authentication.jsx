@@ -10,6 +10,7 @@ const Container = styled.div`
   padding-bottom: 50px;
   height: 100%;
   overflow-y: scroll;
+  overflow-x: hidden;
   display: flex;
   flex-direction: column;
   gap: 20px;

@@ -56,6 +56,36 @@ export const specialFunctions = [
   },
 ];
 
+export const dateUnits = [
+  {
+    name: "Days",
+    value: "days",
+  },
+  {
+    name: "Months",
+    value: "months",
+  },
+  {
+    name: "Years",
+    value: "years",
+  },
+];
+
+export const timeUnits = [
+  {
+    name: "Seconds",
+    value: "seconds",
+  },
+  {
+    name: "Minutes",
+    value: "minutes",
+  },
+  {
+    name: "Hours",
+    value: "hours",
+  },
+];
+
 export const specialAttributes = [
   {
     name: "Current_Date",

@@ -45,8 +45,8 @@ const Open = styled.div`
   display: flex;
   align-items: center;
   justify-content: center;
-  background: ${({ theme }) => theme.green + 20};
-  color: ${({ theme }) => theme.text_secondary};
+  background: ${({ theme }) => theme.primary + 20};
+  color: ${({ theme }) => theme.primary};
   border-radius: 50%;
   width: 26px;
   height: 26px;
