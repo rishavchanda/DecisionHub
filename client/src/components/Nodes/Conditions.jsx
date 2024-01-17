@@ -8,8 +8,10 @@ import React from "react";
 import styled, { useTheme } from "styled-components";
 import {
   arithmeticOperations,
+  dateUnits,
   specialAttributes,
   specialFunctions,
+  timeUnits,
 } from "../../utils/data";
 import { useReactFlow } from "reactflow";
 
@@ -505,17 +507,26 @@ const Conditions = ({
                           <option selected hidden>
                             Unit
                           </option>
-                          {specialAttributes
-                            ?.filter(
-                              (item) =>
-                                item.value ===
-                                getInputAttribute(item.inputAttribute, 0)
-                            )
-                            ?.units?.map((unit) => (
-                              <option key={unit.name} value={unit.value}>
-                                {unit.name}
-                              </option>
-                            ))}
+                          {getInputAttribute(item.inputAttribute, 0) ===
+                            "date_diff" && (
+                            <>
+                              {dateUnits?.map((item, index) => (
+                                <option key={index} value={item.value}>
+                                  {item.name}
+                                </option>
+                              ))}
+                            </>
+                          )}
+                          {getInputAttribute(item.inputAttribute, 0) ===
+                            "time_diff" && (
+                            <>
+                              {timeUnits?.map((item, index) => (
+                                <option key={index} value={item.value}>
+                                  {item.name}
+                                </option>
+                              ))}
+                            </>
+                          )}
                         </Select>
                         )
                       </>

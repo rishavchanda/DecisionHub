@@ -134,12 +134,12 @@ const Dashboard = ({ setOpenNewRule }) => {
           <ActivityCard
             rule
             title="Total Rules"
-            percentage={(total / 20) * 100}
+            percentage={((total / 20) * 100).toFixed(1)}
             total={total}
           />
           <ActivityCard
             title="Tested Rules"
-            percentage={tested / total}
+            percentage={((tested / total) * 100).toFixed(1)}
             total={tested}
           />
         </Flex>
