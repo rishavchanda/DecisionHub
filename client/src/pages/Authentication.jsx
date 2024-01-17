@@ -6,6 +6,12 @@ import BG from "../images/auth-bg.png";
 // import SignUp from "../components/SignUp";
 // import Logo from "../Images/Logo.svg";
 
+const OuterContainer = styled.div`
+  height: 100vh;
+  background: black;
+  overflow: hidden;
+`;
+
 const Container = styled.div`
   padding: 20px 150px;
   height: 100%;
@@ -15,6 +21,10 @@ const Container = styled.div`
   }
   // background: ${({ theme }) => theme.bg};
   background: url(${BG});
+  background-repeat: no-repeat;
+  background-size: contain;
+  background-position: center;
+  background-attachment: fixed;
 `;
 
 const Wrapper = styled.div`
@@ -66,24 +76,26 @@ const WelcomeText = styled.div`
 const Authentication = () => {
   const [openSignUp, setOpenSignUp] = useState(false);
   return (
-    <Container>
-      <Wrapper>
-        <Logotext>
-          {/* <LogoImg src={Logo} /> */}
-          DecisionHub
-        </Logotext>
-        <WelcomeText>
-          {openSignUp
-            ? "Welcome to DecisionHub!"
-            : "Welcome back to DecisionHub!"}
-        </WelcomeText>
-        {openSignUp ? (
-          <SignUp setOpenSignUp={setOpenSignUp} />
-        ) : (
-          <SignIn setOpenSignUp={setOpenSignUp} />
-        )}
-      </Wrapper>
-    </Container>
+    <OuterContainer>
+      <Container>
+        <Wrapper>
+          <Logotext>
+            {/* <LogoImg src={Logo} /> */}
+            DecisionHub
+          </Logotext>
+          <WelcomeText>
+            {openSignUp
+              ? "Welcome to DecisionHub!"
+              : "Welcome back to DecisionHub!"}
+          </WelcomeText>
+          {openSignUp ? (
+            <SignUp setOpenSignUp={setOpenSignUp} />
+          ) : (
+            <SignIn setOpenSignUp={setOpenSignUp} />
+          )}
+        </Wrapper>
+      </Container>
+    </OuterContainer>
   );
 };
 
