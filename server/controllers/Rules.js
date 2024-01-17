@@ -376,7 +376,23 @@ export const deleteRule = async (req, res, next) => {
 
 export const testingExcel = async (req, res, next) => {
   const storagePath = "FILES_STORAGE/";
+  const userId = req.user.id;
+  const {id, version} = req.params;
   try {
+    const user = await User.findOne({ where: { id: userId } });
+    if (!user) {
+      return next(createError(404, "User not found"));
+    }
+    const rule = await Rule.findOne({ where: { id: id } });
+    if (!rule) {
+      return next(createError(404, "No rule with that id"));
+    }
+    //check if user is owner of this rule
+    const userRules = await user.getRules();
+    const ruleIds = userRules.map((rule) => rule.id);
+    if (!ruleIds.includes(id)) {
+      return next(createError(403, "You are not owner of this rule"));
+    }
     const file = req.file;
 
     if (!file) {
@@ -428,10 +444,16 @@ export const testingExcel = async (req, res, next) => {
 
       // Write the new workbook to the specified path
       xlsx.writeFile(newWorkbook, outputFilePath);
-
-      // Send a success response
-      res.json({ success: true, message: 'File processed and saved successfully' });
     });
+    await Rule.update(
+      { ...rule, tested: true },
+      {
+        where: {
+          id: id,
+        },
+      }
+    );
+    res.json({ success: true, message: 'File processed and saved successfully' });
   } catch (error) {
     return next(createError(error.status, error.message));
   }
