@@ -10,6 +10,7 @@ import { useDispatch, useSelector } from "react-redux";
 import { ruleUpdated } from "../../redux/reducers/rulesSlice";
 import NewRuleForm from "../DialogForms/NewRuleForm";
 import { nanoid } from "nanoid";
+import GenerateWithAIForm from "../DialogForms/GenerateWithAIForm";
 
 const Wrapper = styled.div`
   display: flex;
@@ -251,6 +252,7 @@ const AttributeNode = ({ id, data }) => {
             <AddNoNode>
               <AddRounded sx={{ fontSize: "14px" }} />
             </AddNoNode>
+            <GenerateWithAIForm />
             <OutlineWrapper
               style={{
                 display: "flex",

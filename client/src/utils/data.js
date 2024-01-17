@@ -118,3 +118,11 @@ export const checkConditionType = [
     value: "All",
   },
 ];
+
+export const dummyPrompt = `
+Example prompt:\n
+-If the CIBIL score is over 750: 
+  -If the loan duration is less than 5, lend at 13% interest. 
+  -If the duration is between 5 and 10, lend at 11% interest Otherwise, lend at 9% interest. 
+  -If the CIBIL score is below 750, follow other rules.
+`;

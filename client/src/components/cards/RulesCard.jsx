@@ -49,8 +49,8 @@ const Tag = styled.div`
   ${({ green, theme }) =>
     green &&
     `
-  background: ${({ theme }) => theme.green + 10};
-  color: ${({ theme }) => theme.green};
+  background: ${theme.green + 10};
+  color: ${theme.green};
   `}
 `;
 
