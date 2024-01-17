@@ -846,12 +846,27 @@ export const testing = async (req, res, next) => {
 
 function evaluateExpression(result, expression, inputData) {
   let { inputAttribute, operator, value } = expression;
-  const inputValue = inputData[value]
-    ? parseInt(inputData[value])
-    : parseInt(value);
+  let inputValue;
+  if (operator === "==" || operator === "!=") {
+    console.log("Here");
+    inputValue = inputData[value]
+      ? String(inputData[value]).toLowerCase()
+      : String(inputData).toLowerCase();
+  } else {
+    inputValue = inputData[value]
+      ? parseInt(inputData[value])
+      : parseInt(value);
+  }
 
-  const getComparisonValue = (attribute) =>
-    attribute === null ? result : inputData[attribute];
+  const getComparisonValue = (attribute) => {
+    if (operator === "==" || operator === "!=") {
+      return attribute === null
+        ? String(result).toLowerCase()
+        : String(inputData[attribute]).toLowerCase();
+    } else {
+      return attribute === null ? result : inputData[attribute];
+    }
+  };
 
   const performComparison = (attribute) => {
     let attributeValue = 0;
@@ -860,13 +875,14 @@ function evaluateExpression(result, expression, inputData) {
     } else {
       attributeValue = getComparisonValue(attribute);
     }
+    console.log(attributeValue, inputData);
     switch (operator) {
       case ">":
         return attributeValue > inputValue;
       case "<":
         return attributeValue < inputValue;
       case "==":
-        return attributeValue === inputValue;
+        return attributeValue == inputValue;
       case "!=":
         return attributeValue !== inputValue;
       case ">=":
