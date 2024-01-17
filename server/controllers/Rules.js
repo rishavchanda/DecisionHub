@@ -17,7 +17,6 @@ export const createRule = async (req, res, next) => {
   const { title, description, inputAttributes, outputAttributes, condition } =
     req.body;
   const test = JSON.parse(req.body.condition);
-  console.log(test.nodes);
   const userId = req.user.id;
   try {
     const user = await User.findOne({ where: { id: userId } });
@@ -382,13 +381,12 @@ export const deleteRule = async (req, res, next) => {
 };
 
 export const createRuleWithText = async (req, res, next) => {
-  // const userId = req.user.id;
+  const userId = req.user.id;
   try {
-    // const user = await User.findOne({ where: { id: userId } });
-    // if (!user) {
-    //   return next(createError(404, "User not found"));
-    // }
-    console.log("start");
+    const user = await User.findOne({ where: { id: userId } });
+    if (!user) {
+      return next(createError(404, "User not found"));
+    }
     const completion = await openai.chat.completions.create({
       messages: [{ role: "user", content: createRuleRequest() }],
       model: "gpt-3.5-turbo",
@@ -1246,7 +1244,14 @@ export const testing = async (req, res, next) => {
         rule.condition = testedRule.condition;
       }
     }
-
+    await Rule.update(
+      { ...rule, tested: true },
+      {
+        where: {
+          id: id,
+        },
+      }
+    )
     return res.json({
       rule: rule,
       versions: versionValues,

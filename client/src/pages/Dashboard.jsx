@@ -98,6 +98,8 @@ const Dashboard = ({ setOpenNewRule }) => {
   const dispath = useDispatch();
   const navigate = useNavigate();
   const [recentRules, setRecentRules] = useState([]);
+  const [total, setTotal] = useState(0);
+  const [tested, setTested] = useState(0);
   const [loading, setLoading] = useState(false);
 
   const getReentRules = async () => {
@@ -105,7 +107,9 @@ const Dashboard = ({ setOpenNewRule }) => {
     const token = localStorage.getItem("decisionhub-token-auth-x4");
     await getRecentActivity(token)
       .then((res) => {
-        setRecentRules(res.data);
+        setRecentRules(res?.data?.rules);
+        setTotal(res?.data?.total);
+        setTested(res?.data?.tested);
         setLoading(false);
       })
       .catch((err) => {
@@ -127,8 +131,17 @@ const Dashboard = ({ setOpenNewRule }) => {
     <Container>
       <TopSection>
         <Flex>
-          <ActivityCard rule title="Total Rules" percentage={30} />
-          <ActivityCard title="Tested Rules" percentage={40} />
+          <ActivityCard
+            rule
+            title="Total Rules"
+            percentage={(total / 20) * 100}
+            total={total}
+          />
+          <ActivityCard
+            title="Tested Rules"
+            percentage={tested / total}
+            total={tested}
+          />
         </Flex>
         <Flex>
           <Button onClick={() => setOpenNewRule(true)}>

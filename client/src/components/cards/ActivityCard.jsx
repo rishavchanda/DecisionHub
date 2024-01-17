@@ -39,7 +39,7 @@ const Main = styled.div`
   }
 `;
 
-const ActivityCard = ({ rule, title, percentage }) => {
+const ActivityCard = ({ rule, title, percentage, total }) => {
   const theme = useTheme();
   return (
     <Card>
@@ -67,7 +67,7 @@ const ActivityCard = ({ rule, title, percentage }) => {
         )}
         <Flex>
           <Title>{title}</Title>
-          <Main>5</Main>
+          <Main>{total}</Main>
         </Flex>
       </Flex>
       <div style={{ width: "50px", height: "50px", padding: "2px" }}>
