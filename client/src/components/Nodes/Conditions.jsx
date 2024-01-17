@@ -367,6 +367,39 @@ const Conditions = ({
     reactFlow.setNodes(updatedNodes);
   };
 
+  // generate the rule string
+  function generateRuleString(expression) {
+    let ruleString = "";
+    let result = "";
+
+    if (!Array.isArray(expression) || expression.length === 0) {
+      return ruleString;
+    }
+
+    expression.forEach((expr, index) => {
+      if (index > 0) {
+        // Add logical operator (e.g., AND, OR) based on your requirements
+        //   ruleString += " AND ";
+      }
+
+      if (expr.inputAttribute === null) {
+        // If inputAttribute is null, use the result of the previous expression
+        ruleString = `(${result} ${expr.operator} ${expr.value})`;
+      } else {
+        // If inputAttribute is not null, use the provided inputAttribute
+        ruleString = `(${expr.inputAttribute} ${expr.operator} ${expr.value})`;
+      }
+
+      // Update the result for the next iteration
+      result =
+        expr.inputAttribute !== null
+          ? `(${expr.inputAttribute} ${expr.operator} ${expr.value})`
+          : `(${result} ${expr.operator} ${expr.value})`;
+    });
+
+    return ruleString;
+  }
+
   return (
     <Wrapper>
       <Condition result={result} color={test}>
@@ -452,7 +485,6 @@ const Conditions = ({
                       </option>
                     ))}
                   </Select>
-                  {/* When a special function is selected i have to show two more selectable options and make a final string and set that as the value */}
                   {
                     // if the selected input attribute is a special function
                     specialFunctions?.find(
