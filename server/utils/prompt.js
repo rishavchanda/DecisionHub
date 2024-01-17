@@ -1,4 +1,4 @@
-export const createRuleRequest = (conditions, rule) => {
+export const createRuleRequest = (condition, rule) => {
     const prompt = `HOW TO BUILD THE RULE:
     you will have to generate a rule using this information about input attributes and output attributes and a text input where the conditions will be specified. the rule you will generate will be of this format
     {
@@ -158,9 +158,12 @@ export const createRuleRequest = (conditions, rule) => {
     
     INPUT PROMPT:
     
-    ${conditions}
+    ${condition}
     
+    INITIAL RULE:
+
     ${rule}
+    
     This is the initial rule with input and output attributes
     Generate the corresponding complete rule with all conditional nodes and output nodes for the same`
 
