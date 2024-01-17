@@ -382,18 +382,474 @@ export const deleteRule = async (req, res, next) => {
 
 export const createRuleWithText = async (req, res, next) => {
   const userId = req.user.id;
+  const ruleId = req.params.id;
+  const { version, conditions } = req.body;
   try {
     const user = await User.findOne({ where: { id: userId } });
     if (!user) {
       return next(createError(404, "User not found"));
     }
-    const completion = await openai.chat.completions.create({
-      messages: [{ role: "user", content: createRuleRequest() }],
-      model: "gpt-3.5-turbo",
-    });
+    const rule = await Rule.findOne({ where: { id: ruleId } });
+    if (!rule) {
+      return next(createError(404, "No rule with that id"));
+    }
+    //check if user is owner of this rule
+    const userRules = await user.getRules();
+    const ruleIds = userRules.map((rule) => rule.id);
+    if (!ruleIds.includes(ruleId)) {
+      return next(createError(403, "You are not owner of this rule"));
+    }
+    const parsedRule = {
+      title: rule.dataValues.title,
+      description: rule.dataValues.description,
+      inputAttributes: rule.dataValues.inputAttributes,
+      outputAttributes: rule.dataValues.outputAttributes,
+      condition: JSON.parse(rule.dataValues.condition)
+    }
+    // return res.json(rule);
+    const prompt = createRuleRequest(conditions, JSON.stringify(parsedRule));
+    // const completion = await openai.chat.completions.create({
+    //   messages: [{ role: "user", content: prompt }],
+    //   model: "gpt-3.5-turbo",
+    // });
+    const resp = {
+      "title": "New text rule",
+      "description": "Calculates the interest rate",
+      "inputAttributes": ["cibil_score", "loan_duration"],
+      "outputAttributes": ["interest_rate"],
+      "condition": {
+        "nodes": [
+          {
+            "width": 500,
+            "height": 276,
+            "id": "1",
+            "type": "attributeNode",
+            "data": {
+              "label": "CIBIL score over 750",
+              "description": "If the CIBIL score is over 750"
+            },
+            "position": {
+              "x": 234,
+              "y": 50
+            },
+            "selected": false,
+            "dragging": false,
+            "positionAbsolute": {
+              "x": 234,
+              "y": 50
+            }
+          },
+          {
+            "width": 1069,
+            "height": 382,
+            "id": "2",
+            "type": "conditionalNode",
+            "data": {
+              "label": "Duration less than 5",
+              "inputAttributes": ["cibil_score", "loan_duration"],
+              "outputAttributes": ["interest_rate"],
+              "rule": "ALL",
+              "conditions": [
+                {
+                  "multiple": false,
+                  "expression": [
+                    {
+                      "inputAttribute": "loan_duration",
+                      "operator": "<",
+                      "value": "5"
+                    }
+                  ]
+                }
+              ]
+            },
+            "position": {
+              "x": 623,
+              "y": 549
+            },
+            "selected": false,
+            "positionAbsolute": {
+              "x": 623,
+              "y": 549
+            },
+            "dragging": false
+          },
+          {
+            "width": 1069,
+            "height": 382,
+            "id": "3",
+            "type": "conditionalNode",
+            "data": {
+              "label": "Duration between 5 and 10",
+              "inputAttributes": ["cibil_score", "loan_duration"],
+              "outputAttributes": ["interest_rate"],
+              "rule": "ALL",
+              "conditions": [
+                {
+                  "multiple": true,
+                  "conjunction": "AND",
+                  "expressions": [
+                    {
+                      "inputAttribute": "loan_duration",
+                      "operator": ">=",
+                      "value": "5"
+                    },
+                    {
+                      "inputAttribute": "loan_duration",
+                      "operator": "<=",
+                      "value": "10"
+                    }
+                  ]
+                }
+              ]
+            },
+            "position": {
+              "x": 623,
+              "y": 1021
+            },
+            "selected": false,
+            "positionAbsolute": {
+              "x": 623,
+              "y": 1021
+            },
+            "dragging": false
+          },
+          {
+            "width": 1069,
+            "height": 382,
+            "id": "4",
+            "type": "conditionalNode",
+            "data": {
+              "label": "Other cases",
+              "inputAttributes": ["cibil_score", "loan_duration"],
+              "outputAttributes": ["interest_rate"],
+              "rule": "ALL",
+              "conditions": [
+                {
+                  "multiple": false,
+                  "expression": [
+                    {
+                      "inputAttribute": "loan_duration",
+                      "operator": ">",
+                      "value": "10"
+                    }
+                  ]
+                }
+              ]
+            },
+            "position": {
+              "x": 623,
+              "y": 1542
+            },
+            "selected": false,
+            "positionAbsolute": {
+              "x": 623,
+              "y": 1542
+            },
+            "dragging": false
+          },
+          {
+            "width": 406,
+            "height": 188,
+            "id": "5",
+            "type": "outputNode",
+            "data": {
+              "label": "Lend at 13% interest",
+              "inputAttributes": ["cibil_score", "loan_duration"],
+              "outputAttributes": ["interest_rate"],
+              "outputFields": [
+                {
+                  "field": "",
+                  "value": "13"
+                }
+              ]
+            },
+            "position": {
+              "x": 1091,
+              "y": 732
+            },
+            "selected": false,
+            "positionAbsolute": {
+              "x": 1091,
+              "y": 732
+            },
+            "dragging": false
+          },
+          {
+            "width": 406,
+            "height": 188,
+            "id": "6",
+            "type": "outputNode",
+            "data": {
+              "label": "Lend at 11% interest",
+              "inputAttributes": ["cibil_score", "loan_duration"],
+              "outputAttributes": ["interest_rate"],
+              "outputFields": [
+                {
+                  "field": "",
+                  "value": "11"
+                }
+              ]
+            },
+            "position": {
+              "x": 1091,
+              "y": 1225
+            },
+            "selected": false,
+            "positionAbsolute": {
+              "x": 1091,
+              "y": 1225
+            },
+            "dragging": false
+          },
+          {
+            "width": 406,
+            "height": 188,
+            "id": "7",
+            "type": "outputNode",
+            "data": {
+              "label": "Lend at 9% interest",
+              "inputAttributes": ["cibil_score", "loan_duration"],
+              "outputAttributes": ["interest_rate"],
+              "outputFields": [
+                {
+                  "field": "",
+                  "value": "9"
+                }
+              ]
+            },
+            "position": {
+              "x": 1091,
+              "y": 1746
+            },
+            "selected": false,
+            "positionAbsolute": {
+              "x": 1091,
+              "y": 1746
+            },
+            "dragging": false
+          },
+          {
+            "width": 1069,
+            "height": 382,
+            "id": "8",
+            "type": "conditionalNode",
+            "data": {
+              "label": "CIBIL score below 750",
+              "inputAttributes": ["cibil_score", "loan_duration"],
+              "outputAttributes": ["interest_rate"],
+              "rule": "ALL",
+              "conditions": [
+                {
+                  "multiple": false,
+                  "expression": [
+                    {
+                      "inputAttribute": "cibil_score",
+                      "operator": "<",
+                      "value": "750"
+                    }
+                  ]
+                }
+              ]
+            },
+            "position": {
+              "x": 631,
+              "y": 2008
+            },
+            "selected": false,
+            "positionAbsolute": {
+              "x": 631,
+              "y": 2008
+            },
+            "dragging": false
+          }
+        ],
+        "edges": [
+          {
+            "id": "1-start-2",
+            "source": "1",
+            "target": "2",
+            "animated": false,
+            "sourceHandle": "yes",
+            "style": {
+              "strokeWidth": 3
+            },
+            "markerEnd": {
+              "type": "arrowclosed",
+              "width": 12,
+              "height": 12
+            }
+          },
+          {
+            "id": "2-yes-5",
+            "source": "2",
+            "target": "5",
+            "animated": false,
+            "sourceHandle": "yes",
+            "style": {
+              "strokeWidth": 3
+            },
+            "markerEnd": {
+              "type": "arrowclosed",
+              "width": 12,
+              "height": 12
+            }
+          },
+          {
+            "id": "2-no-3",
+            "source": "2",
+            "target": "3",
+            "animated": false,
+            "sourceHandle": "no",
+            "style": {
+              "strokeWidth": 3
+            },
+            "markerEnd": {
+              "type": "arrowclosed",
+              "width": 12,
+              "height": 12
+            }
+          },
+          {
+            "id": "3-yes-6",
+            "source": "3",
+            "target": "6",
+            "animated": false,
+            "sourceHandle": "yes",
+            "style": {
+              "strokeWidth": 3
+            },
+            "markerEnd": {
+              "type": "arrowclosed",
+              "width": 12,
+              "height": 12
+            }
+          },
+          {
+            "id": "3-no-4",
+            "source": "3",
+            "target": "4",
+            "animated": false,
+            "sourceHandle": "no",
+            "style": {
+              "strokeWidth": 3
+            },
+            "markerEnd": {
+              "type": "arrowclosed",
+              "width": 12,
+              "height": 12
+            }
+          },
+          {
+            "id": "4-yes-7",
+            "source": "4",
+            "target": "7",
+            "animated": false,
+            "sourceHandle": "yes",
+            "style": {
+              "strokeWidth": 3
+            },
+            "markerEnd": {
+              "type": "arrowclosed",
+              "width": 12,
+              "height": 12
+            }
+          },
+          {
+            "id": "8-start-7",
+            "source": "8",
+            "target": "7",
+            "animated": false,
+            "sourceHandle": "yes",
+            "style": {
+              "strokeWidth": 3
+            },
+            "markerEnd": {
+              "type": "arrowclosed",
+              "width": 12,
+              "height": 12
+            }
+          }
+        ]
+      }
+    }
 
-    console.log(completion.choices[0].message.content);
-    return res.status(200).json(completion.choices[0].message.content);
+
+    if (rule.version === version) {
+      await Rule.update({
+        title: rule.title,
+        description: rule.description,
+        inputAttributes: rule.inputAttributes,
+        outputAttributes: rule.outputAttributes,
+        version: rule.version,
+        condition: JSON.stringify(resp.condition)
+      }, {
+        where: {
+          id: ruleId
+        }
+      })
+
+      const updatedRule = await Rule.findOne({
+        id: ruleId
+      })
+
+      await Version.update(
+        {
+          title: updateRule.title,
+          description: updateRule.description,
+          inputAttributes: updateRule.inputAttributes,
+          outputAttributes: updateRule.outputAttributes,
+          version: updateRule.version,
+          condition: updatedRule.condition,
+        },
+        {
+          where: {
+            ruleId: ruleId,
+            version: version,
+          },
+        }
+      );
+
+      const versions = await rule.getVersions();
+      let versionValues = [];
+      await versions.map((version) => {
+        versionValues.push(version.version);
+      });
+      return res.status(200).json({ rule: updatedRule, versions: versionValues });
+    } else {
+      const ruleVersion = await Version.findOne({
+        where: {
+          ruleId: ruleId,
+          version: version,
+        },
+      });
+      await Version.update(
+        {
+          title: ruleVersion.title,
+          description: ruleVersion.description,
+          inputAttributes: ruleVersion.inputAttributes,
+          outputAttributes: ruleVersion.outputAttributes,
+          version: ruleVersion.version,
+          condition: JSON.stringify(resp.condition),
+        },
+        {
+          where: {
+            id: ruleVersion.id,
+          },
+        }
+      );
+      const updatedVersion = await Version.findOne({
+        where: { id: ruleVersion.id },
+      });
+      const versions = await rule.getVersions();
+      let versionValues = [];
+      await versions.map((version) => {
+        versionValues.push(version.version);
+      });
+
+      return res
+        .status(200)
+        .json({ rule: updatedVersion, versions: versionValues });
+    }
   } catch (error) {
     return next(createError(error.status, error.message));
   }
@@ -930,19 +1386,19 @@ const setEdgeColor = (condition, node, traversalNodes, color, result) => {
     condition.edges = condition.edges.map((e) =>
       e.id === targetEdges[index].id
         ? {
-            ...e,
-            animated: true,
-            markerEnd: {
-              type: "arrowclosed",
-              width: 12,
-              height: 12,
-              color: color,
-            },
-            style: {
-              strokeWidth: 5,
-              stroke: color,
-            },
-          }
+          ...e,
+          animated: true,
+          markerEnd: {
+            type: "arrowclosed",
+            width: 12,
+            height: 12,
+            color: color,
+          },
+          style: {
+            strokeWidth: 5,
+            stroke: color,
+          },
+        }
         : e
     );
   });
@@ -971,14 +1427,14 @@ const setNodeColor = (
   condition.nodes = condition.nodes.map((n) =>
     n.id === targetNode.id
       ? {
-          ...n,
-          data: {
-            ...n.data,
-            computed: computed,
-            color: color,
-            result: result,
-          },
-        }
+        ...n,
+        data: {
+          ...n.data,
+          computed: computed,
+          color: color,
+          result: result,
+        },
+      }
       : n
   );
 
@@ -1086,19 +1542,19 @@ const evaluateNodes = async (
           condition.edges = condition.edges.map((e) =>
             e.id === targetEdges[index].id
               ? {
-                  ...e,
-                  animated: true,
-                  markerEnd: {
-                    type: "arrowclosed",
-                    width: 12,
-                    height: 12,
-                    color: "#FF0072",
-                  },
-                  style: {
-                    strokeWidth: 5,
-                    stroke: "#FF0072",
-                  },
-                }
+                ...e,
+                animated: true,
+                markerEnd: {
+                  type: "arrowclosed",
+                  width: 12,
+                  height: 12,
+                  color: "#FF0072",
+                },
+                style: {
+                  strokeWidth: 5,
+                  stroke: "#FF0072",
+                },
+              }
               : e
           );
         });

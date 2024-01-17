@@ -1,4 +1,4 @@
-export const createRuleRequest = () => {
+export const createRuleRequest = (condition, rule) => {
     const prompt = `HOW TO BUILD THE RULE:
     you will have to generate a rule using this information about input attributes and output attributes and a text input where the conditions will be specified. the rule you will generate will be of this format
     {
@@ -158,29 +158,12 @@ export const createRuleRequest = () => {
     
     INPUT PROMPT:
     
-    If the CIBIL score is over 750:
-    If the loan duration is less than 5, lend at 13% interest.
-    If the duration is between 5 and 10, lend at 11% interest.
-    Otherwise, lend at 9% interest.
-    If the CIBIL score is below 750, follow other rules.
+    ${condition}
     
-    {
-      title: 'demo rule',
-      description: 'demo',
-      inputAttributes: [ 'cibil_score', 'loan_duration' ],
-      outputAttributes: [ 'interest' ],
-      condition: {
-            nodes: [
-                  {
-                      id: '1',
-                      type: 'attributeNode',
-                      data: { label: 'demo rule', description: 'demo' },
-                      position: { x: 234, y: 50 }
-                 }
-              ],
-           edges: []
-       }
-    }
+    INITIAL RULE:
+
+    ${rule}
+    
     This is the initial rule with input and output attributes
     Generate the corresponding complete rule with all conditional nodes and output nodes for the same`
 
