@@ -29,8 +29,9 @@ const Container = styled.div`
   flex-direction: column;
   gap: 10px;
   transition: all 0.3s ease;
-  @media (max-width: 600px) {
-    padding: 22px 22px 40px 22px;
+  @media (max-width: 500px) {
+    max-width: 320px;
+    padding: 16px 16px 30px 16px;
   }
 `;
 
@@ -38,6 +39,9 @@ const Title = styled.h1`
   font-size: 28px;
   font-weight: 500;
   color: ${({ theme }) => theme.text_primary};
+  @media (max-width: 600px) {
+    font-size: 22px;
+  }
 `;
 
 const Form = styled.form`
@@ -77,6 +81,9 @@ const OutlinedInput = styled.div`
   &:focus-within {
     border-color: ${({ theme }) => theme.primary};
   }
+  @media (max-width: 600px) {
+    padding: 12px;
+  }
 `;
 
 const Input = styled.input`
@@ -89,11 +96,17 @@ const Input = styled.input`
   &:focus {
     outline: none;
   }
+  @media (max-width: 600px) {
+    font-size: 14px;
+  }
 `;
 
 const Error = styled.p`
   font-size: 12px;
   margin: 0px 4px;
+  @media (max-width: 600px) {
+    font-size: 10px;
+  }
 `;
 
 const ForgotPassword = styled.p`
@@ -106,6 +119,9 @@ const ForgotPassword = styled.p`
   transition: all 0.3s ease;
   &:hover {
     color: ${({ theme }) => theme.primary + 80};
+  }
+  @media (max-width: 600px) {
+    font-size: 13px;
   }
 `;
 
@@ -128,6 +144,9 @@ const Button = styled.button`
     color: #666666;
     cursor: not-allowed;
   `}
+  @media (max-width: 600px) {
+    font-size: 14px;
+  }
 `;
 
 const GoogleButton = styled.button`
@@ -147,6 +166,9 @@ const GoogleButton = styled.button`
   align-items: center;
   gap: 10px;
   justify-content: center;
+  @media (max-width: 600px) {
+    font-size: 14px;
+  }
 `;
 
 const Text = styled.p`
@@ -154,6 +176,9 @@ const Text = styled.p`
   text-align: center;
   color: ${({ theme }) => theme.text_secondary};
   margin-top: 20px;
+  @media (max-width: 600px) {
+    font-size: 14px;
+  }
 `;
 
 const TextButton = styled.span`
@@ -302,39 +327,40 @@ const SignIn = (props) => {
         name: user.data.name,
         email: user.data.email,
         img: user.data.picture,
-      }).then((res) => {
-        if (res.status === 200) {
-          dispatch(loginSuccess(res.data));
-          dispatch(
-            openSnackbar({
-              message: "Logged In Successfully",
-              severity: "success",
-            })
-          );
-          setLoading(false);
-        } else {
-          dispatch(
-            openSnackbar({
-              message: res.data.message,
-              severity: "error",
-            })
-          );
-          setLoading(false);
-        }
-      }).catch((err) => {
+      })
+        .then((res) => {
+          if (res.status === 200) {
+            dispatch(loginSuccess(res.data));
+            dispatch(
+              openSnackbar({
+                message: "Logged In Successfully",
+                severity: "success",
+              })
+            );
+            setLoading(false);
+          } else {
+            dispatch(
+              openSnackbar({
+                message: res.data.message,
+                severity: "error",
+              })
+            );
+            setLoading(false);
+          }
+        })
+        .catch((err) => {
           dispatch(
             openSnackbar({
               message: err.response.data.message,
               severity: "error",
             })
           );
-            setErrorMessage({
-              ...errorMessage,
-              apierror: err.response.data.message,
-            });
-            setLoading(false);
-      }
-      );
+          setErrorMessage({
+            ...errorMessage,
+            apierror: err.response.data.message,
+          });
+          setLoading(false);
+        });
     },
     onError: (errorResponse) => {
       setLoading(false);

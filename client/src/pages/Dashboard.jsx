@@ -7,6 +7,7 @@ import { getRecentActivity } from "../api";
 import { openSnackbar } from "../redux/reducers/snackbarSlice";
 import Loader from "../components/Loader";
 import { useNavigate } from "react-router-dom";
+import ActivityCard from "../components/cards/ActivityCard";
 
 const Container = styled.div`
   padding: 20px 30px;
@@ -25,9 +26,10 @@ const Container = styled.div`
 const TopSection = styled.div`
   display: flex;
   align-items: center;
-  justify-content: flex-end;
+  justify-content: space-between;
   gap: 20px;
   @media (max-width: 768px) {
+    flex-direction: column;
   }
 `;
 
@@ -124,6 +126,10 @@ const Dashboard = ({ setOpenNewRule }) => {
   return (
     <Container>
       <TopSection>
+        <Flex>
+          <ActivityCard rule title="Total Rules" percentage={30} />
+          <ActivityCard title="Tested Rules" percentage={40} />
+        </Flex>
         <Flex>
           <Button onClick={() => setOpenNewRule(true)}>
             <AddRounded sx={{ fontSize: "22px" }} />
