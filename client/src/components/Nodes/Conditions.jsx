@@ -164,7 +164,7 @@ const Conditions = ({
                     ) {
                       return {
                         ...expr,
-                        inputAttribute: event.target.value + ",null,null",
+                        inputAttribute: event.target.value + ",null,null,null",
                       };
                     } else if (
                       field === "inputAttribute" &&
@@ -193,8 +193,8 @@ const Conditions = ({
   };
 
   const getInputAttribute = (value, pos) => {
-    if (value.split(",")[pos] !== null || undefined || "")
-      return (value = value.split(",")[pos]);
+    if (value?.split(",")[pos] !== null || undefined || "")
+      return (value = value?.split(",")[pos]);
     else return "null";
   };
 
@@ -222,7 +222,9 @@ const Conditions = ({
                           "," +
                           getInputAttribute(expr.inputAttribute, 1) +
                           "," +
-                          getInputAttribute(expr.inputAttribute, 2),
+                          getInputAttribute(expr.inputAttribute, 2) +
+                          "," +
+                          getInputAttribute(expr.inputAttribute, 3),
                       };
                     } else if (field === "val1") {
                       return {
@@ -232,7 +234,9 @@ const Conditions = ({
                           "," +
                           event.target.value +
                           "," +
-                          getInputAttribute(expr.inputAttribute, 2),
+                          getInputAttribute(expr.inputAttribute, 2) +
+                          "," +
+                          getInputAttribute(expr.inputAttribute, 3),
                       };
                     } else if (field === "val2") {
                       return {
@@ -241,6 +245,20 @@ const Conditions = ({
                           getInputAttribute(expr.inputAttribute, 0) +
                           "," +
                           getInputAttribute(expr.inputAttribute, 1) +
+                          "," +
+                          event.target.value +
+                          "," +
+                          getInputAttribute(expr.inputAttribute, 3),
+                      };
+                    } else if (field === "val3") {
+                      return {
+                        ...expr,
+                        inputAttribute:
+                          getInputAttribute(expr.inputAttribute, 0) +
+                          "," +
+                          getInputAttribute(expr.inputAttribute, 1) +
+                          "," +
+                          getInputAttribute(expr.inputAttribute, 2) +
                           "," +
                           event.target.value,
                       };
@@ -447,6 +465,9 @@ const Conditions = ({
                             handleFunctionInputAttributeChange("val1", index, e)
                           }
                         >
+                          <option selected hidden>
+                            Select
+                          </option>
                           {inputAttribute?.map((item) => (
                             <option key={item} value={item}>
                               {item}
@@ -465,11 +486,36 @@ const Conditions = ({
                             handleFunctionInputAttributeChange("val2", index, e)
                           }
                         >
+                          <option selected hidden>
+                            Select
+                          </option>
                           {inputAttribute?.map((item) => (
                             <option key={item} value={item}>
                               {item}
                             </option>
                           ))}
+                        </Select>
+                        ,
+                        <Select
+                          value={getInputAttribute(item.inputAttribute, 3)}
+                          onChange={(e) =>
+                            handleFunctionInputAttributeChange("val3", index, e)
+                          }
+                        >
+                          <option selected hidden>
+                            Unit
+                          </option>
+                          {specialAttributes
+                            ?.filter(
+                              (item) =>
+                                item.value ===
+                                getInputAttribute(item.inputAttribute, 0)
+                            )
+                            ?.units?.map((unit) => (
+                              <option key={unit.name} value={unit.value}>
+                                {unit.name}
+                              </option>
+                            ))}
                         </Select>
                         )
                       </>
@@ -482,6 +528,9 @@ const Conditions = ({
                   value={item.operator}
                   onChange={(e) => handleSelectChange("operator", index, e)}
                 >
+                  <option selected hidden>
+                    Select
+                  </option>
                   {arithmeticOperations?.map((item) => (
                     <option key={item.name} value={item.value}>
                       {item.name}
@@ -498,6 +547,9 @@ const Conditions = ({
                   }
                   onChange={(e) => handleSelectChange("value", index, e)}
                 >
+                  <option selected hidden>
+                    Select
+                  </option>
                   {inputAttribute?.map((item) => (
                     <option key={item} value={item}>
                       {item}
