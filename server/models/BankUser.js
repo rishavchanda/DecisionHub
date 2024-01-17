@@ -1,12 +1,7 @@
-export const User = (sequelize, DataTypes) => {
-  const User = sequelize.define(
+export const BankUser = (sequelize, DataTypes) => {
+  const BankUser = sequelize.define(
     "BankUser",
     {
-      id: {
-        type: DataTypes.UUID,
-        defaultValue: DataTypes.UUIDV4,
-        primaryKey: true,
-      },
       name: {
         type: DataTypes.STRING,
         allowNull: false,
@@ -17,25 +12,14 @@ export const User = (sequelize, DataTypes) => {
         unique: true,
         isEmail: true,
       },
-      loan_amount: {
-        type: DataTypes.INTEGER,
-        allowNull: false,
-      },
-      loan_duration: {
-        type: DataTypes.INTEGER,
-        allowNull: false,
-      },
-      loan_type: {
-        type: DataTypes.STRING,
-        allowNull: false,
-      },
       age: {
         type: DataTypes.INTEGER,
         allowNull: false,
       },
       account_number: {
-        type: DataTypes.INTEGER,
+        type: DataTypes.BIGINT,
         allowNull: false,
+        primaryKey: true,
       },
       date_of_birth: {
         type: DataTypes.DATE,
@@ -56,5 +40,5 @@ export const User = (sequelize, DataTypes) => {
     },
     { timestamps: true }
   );
-  return User;
+  return BankUser;
 };
