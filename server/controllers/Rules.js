@@ -4,6 +4,8 @@ import { Op } from "sequelize";
 import OpenAI from "openai";
 import { createRuleRequest } from "../utils/prompt.js";
 import * as dotenv from "dotenv";
+import xlsx from 'xlsx';
+import path from 'path';
 dotenv.config();
 
 const openai = new OpenAI({
@@ -367,6 +369,69 @@ export const deleteRule = async (req, res, next) => {
         });
       return res.status(200).json({ rule: rule, versions: versionValues });
     }
+  } catch (error) {
+    return next(createError(error.status, error.message));
+  }
+};
+
+export const testingExcel = async (req, res, next) => {
+  const storagePath = "FILES_STORAGE/";
+  try {
+    const file = req.file;
+
+    if (!file) {
+      return res.status(400).json({ error: 'No file uploaded' });
+    }
+
+    const filePath = path.join(storagePath, file.filename);
+    let workbook = xlsx.readFile(filePath);
+    let sheet_name_list = workbook.SheetNames;
+    console.log(sheet_name_list);
+
+    sheet_name_list.forEach(function (y) {
+      var worksheet = workbook.Sheets[y];
+      // getting the complete sheet
+      var headers = {};
+      var data = [];
+      for (let z in worksheet) {
+        if (z[0] === "!") continue;
+        // parse out the column, row, and value
+        var col = z.substring(0, 1);
+        var row = parseInt(z.substring(1));
+        var value = worksheet[z].v;
+        // store header names
+        if (row == 1) {
+          headers[col] = value;
+          // storing the header names
+          continue;
+        }
+        if (!data[row]) data[row] = {};
+        data[row][headers[col]] = value;
+      }
+      // drop those first two rows which are empty
+      data.shift();
+      data.shift();
+
+      // Add "output" field with a value of 0 to each row
+      data.forEach(row => {
+        row['output'] = 0;
+      });
+
+      var newWorkbook = xlsx.utils.book_new();
+      var newWorksheet = xlsx.utils.json_to_sheet(data);
+
+      // Add the worksheet to the new workbook
+      xlsx.utils.book_append_sheet(newWorkbook, newWorksheet, 'Sheet 1');
+
+      // Specify the path for the output file in the FILES_STORAGE directory
+      const outputFilePath = path.join(storagePath, 'output.xlsx');
+
+      // Write the new workbook to the specified path
+      xlsx.writeFile(newWorkbook, outputFilePath);
+
+      // Send a success response
+      res.json({ success: true, message: 'File processed and saved successfully' });
+    });
   } catch (error) {
     return next(createError(error.status, error.message));
   }
