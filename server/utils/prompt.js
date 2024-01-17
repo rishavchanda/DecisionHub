@@ -165,7 +165,9 @@ export const createRuleRequest = (condition, rule) => {
     ${rule}
     
     This is the initial rule with input and output attributes
-    Generate the corresponding complete rule with all conditional nodes and output nodes for the same`
+    Generate the corresponding complete rule with all conditional nodes and output nodes for the same
+    
+    generate only the valid json output. no text before the json no text after the json. i just want the json output.`
 
     return prompt;
 }

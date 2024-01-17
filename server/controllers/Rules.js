@@ -399,15 +399,12 @@ export const createRuleWithText = async (req, res, next) => {
       condition: JSON.parse(rule.dataValues.condition),
     };
     const prompt = createRuleRequest(conditions, JSON.stringify(parsedRule));
-    // const completion = await openai.chat.completions.create({
-    //   messages: [{ role: "user", content: prompt }],
-    //   model: "gpt-3.5-turbo",
-    // });
+    const completion = await openai.chat.completions.create({
+      messages: [{ role: "user", content: prompt }],
+      model: "gpt-3.5-turbo",
+    });
 
-    // const ruleResponse = await completion?.choices[0]?.message?.content
-
-    // console.log(completion?.choices[0]?.message?.content);
-
+    const newCondition = JSON.parse(completion.choices[0].message.content).condition;
 
     if (rule.version === version) {
       await Rule.update(
@@ -417,7 +414,7 @@ export const createRuleWithText = async (req, res, next) => {
           inputAttributes: rule.inputAttributes,
           outputAttributes: rule.outputAttributes,
           version: rule.version,
-          condition: JSON.stringify(ruleResponse.condition),
+          condition: JSON.stringify(newCondition),
         },
         {
           where: {
@@ -435,7 +432,7 @@ export const createRuleWithText = async (req, res, next) => {
           inputAttributes: updateRule.inputAttributes,
           outputAttributes: updateRule.outputAttributes,
           version: updateRule.version,
-          condition: updatedRule.condition,
+          condition: updateRule.condition,
         },
         {
           where: {
@@ -467,7 +464,7 @@ export const createRuleWithText = async (req, res, next) => {
           inputAttributes: ruleVersion.inputAttributes,
           outputAttributes: ruleVersion.outputAttributes,
           version: ruleVersion.version,
-          condition: JSON.stringify(ruleResponse.condition),
+          condition: JSON.stringify(newCondition),
         },
         {
           where: {
