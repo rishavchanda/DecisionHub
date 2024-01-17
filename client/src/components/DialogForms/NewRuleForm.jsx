@@ -9,7 +9,7 @@ import {
 import React, { useEffect, useState } from "react";
 import styled, { useTheme } from "styled-components";
 import TextInput from "../Inputs/TextInput";
-import { createRule, updateRule } from "../../api";
+import { createRule, getTableNames, updateRule } from "../../api";
 import { useLocation, useNavigate } from "react-router";
 import { useDispatch } from "react-redux";
 import { openSnackbar } from "../../redux/reducers/snackbarSlice";
@@ -32,7 +32,7 @@ const Body = styled.div`
 const Container = styled.div`
   max-width: 500px;
   width: 100%;
-  max-height: 600px;
+  max-height: 90vh;
   border-radius: 8px;
   margin: 50px 20px;
   padding: 22px 28px 30px 28px;
@@ -101,12 +101,6 @@ const Label = styled.label`
   `}
 `;
 
-const Flex = styled.div`
-  display: flex;
-  width: 100%;
-  gap: 10px;
-`;
-
 const Button = styled.button`
   width: 100%;
   border: none;
@@ -150,7 +144,7 @@ const NewRuleForm = ({ setOpenNewRule, updateForm }) => {
       edges: [],
     };
   };
-  const [tables, setTables] = useState(["test", "test2"]);
+  const [tables, setTables] = useState([]);
   const [ruleData, setRuleData] = useState(
     updateForm.update
       ? updateForm.data
@@ -165,6 +159,50 @@ const NewRuleForm = ({ setOpenNewRule, updateForm }) => {
   );
   const [buttonDisabled, setButtonDisabled] = useState(true);
   const [loading, setLoading] = useState(false);
+
+  const tablesList = async () => {
+    const token = localStorage.getItem("decisionhub-token-auth-x4");
+    await getTableNames(token)
+      .then((res) => {
+        setTables(res.data);
+      })
+      .catch((err) => {
+        dispath(
+          openSnackbar({
+            message: err.response.data.message,
+            severity: "error",
+          })
+        );
+      });
+  };
+
+  useEffect(() => {
+    tablesList();
+  }, []);
+
+  useEffect(() => {
+    // Clear inputAttributes when tables are unselected
+    if (ruleData?.tables?.length === 0) {
+      setRuleData({ ...ruleData, inputAttributes: [] });
+      return;
+    }
+
+    // Collect inputAttributes from selected tables
+    const selectedInputAttributes = ruleData?.tables.reduce(
+      (acc, selectedTable) => {
+        const tableData = tables.find(
+          (table) => table?.table === selectedTable
+        );
+        if (tableData) {
+          acc.push(...tableData.columns);
+        }
+        return acc;
+      },
+      []
+    );
+
+    setRuleData({ ...ruleData, inputAttributes: selectedInputAttributes });
+  }, [ruleData?.tables, tables]);
 
   const handelInputs = (e) => {
     const { name, value } = e.target;
@@ -325,69 +363,36 @@ const NewRuleForm = ({ setOpenNewRule, updateForm }) => {
               >
                 <MenuItem disabled>Select database Table</MenuItem>
                 {tables.map((table) => (
-                  <MenuItem key={table} value={table}>
+                  <MenuItem key={table?.table} value={table?.table}>
                     <Checkbox
-                      checked={ruleData?.tables.includes(table)}
+                      checked={ruleData?.tables.includes(table?.table)}
                       sx={{ padding: "0px", marginRight: "4px" }}
                     />
-                    {`Table Name: ${table}`}
+                    {`Table Name: ${table?.table}`}
                   </MenuItem>
                 ))}
               </Select>
-              {/* <Select
-                displayEmpty
-                value={ruleData?.tables}
-                onChange={(e) => {
-                  let tb = ruleData?.tables;
-                  setRuleData({
-                    ...ruleData,
-                    ruleData: tb.push(e.target.value),
-                  });
-                }}
-                autoWidth
-                sx={{
-                  color: theme.text_primary,
-                  border: `1px solid ${theme.text_secondary + 90}`,
-                  borderRadius: "8px",
-                  padding: "0px",
-                  fontSize: "12px",
-                  ".MuiSvgIcon-root ": {
-                    fill: `${theme.text_secondary} !important`,
-                  },
-                }}
-              >
-                <MenuItem value="" disabled>
-                  Select database Table
-                </MenuItem>
-                {tables.map((table) => (
-                  <MenuItem value={table}>Table Name: {table}</MenuItem>
-                ))}
-              </Select> */}
             </div>
-            <Flex>
-              <TextInput
-                label="Input Attributes"
-                placeholder="Enter input attributes"
-                name="inputAttributes"
-                height="60px"
-                chipableInput
-                chipableArray={ruleData.inputAttributes}
-                handelChange={handelChipableInputs}
-                removeChip={removeChip}
-                style={{ width: "100%" }}
-              />
-              <TextInput
-                label="Output Attributes"
-                placeholder="Enter output attributes"
-                name="outputAttributes"
-                height="60px"
-                chipableInput
-                chipableArray={ruleData.outputAttributes}
-                handelChange={handelChipableInputs}
-                removeChip={removeChip}
-                style={{ width: "100%" }}
-              />
-            </Flex>
+            <TextInput
+              label="Input Attributes"
+              placeholder="Enter input attributes"
+              name="inputAttributes"
+              height="60px"
+              chipableInput
+              chipableArray={ruleData.inputAttributes}
+              handelChange={handelChipableInputs}
+              removeChip={removeChip}
+            />
+            <TextInput
+              label="Output Attributes"
+              placeholder="Enter output attributes"
+              name="outputAttributes"
+              height="60px"
+              chipableInput
+              chipableArray={ruleData.outputAttributes}
+              handelChange={handelChipableInputs}
+              removeChip={removeChip}
+            />
           </Form>
           <Button
             onClick={(e) => {
