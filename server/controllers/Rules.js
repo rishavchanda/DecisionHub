@@ -910,7 +910,6 @@ function evaluateExpression(result, expression, inputData) {
   let { inputAttribute, operator, value } = expression;
   let inputValue;
   if (operator === "==" || operator === "!=") {
-    console.log("Here");
     inputValue = inputData[value]
       ? String(inputData[value]).toLowerCase()
       : String(inputData).toLowerCase();
