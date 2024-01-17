@@ -382,15 +382,36 @@ export const deleteRule = async (req, res, next) => {
 
 export const createRuleWithText = async (req, res, next) => {
   const userId = req.user.id;
+  const ruleId = req.params.id;
+  const { version, conditions } = req.body;
   try {
     const user = await User.findOne({ where: { id: userId } });
     if (!user) {
       return next(createError(404, "User not found"));
     }
-    const completion = await openai.chat.completions.create({
-      messages: [{ role: "user", content: createRuleRequest() }],
-      model: "gpt-3.5-turbo",
-    });
+    const rule = await Rule.findOne({ where: { id: ruleId } });
+    if (!rule) {
+      return next(createError(404, "No rule with that id"));
+    }
+    //check if user is owner of this rule
+    const userRules = await user.getRules();
+    const ruleIds = userRules.map((rule) => rule.id);
+    if (!ruleIds.includes(ruleId)) {
+      return next(createError(403, "You are not owner of this rule"));
+    }
+    // return res.json(rule);
+    const prompt = createRuleRequest(conditions, rule);
+    console.log(prompt);
+    return res.json(prompt);
+    // const completion = await openai.chat.completions.create({
+    //   messages: [{ role: "user", content: createRuleRequest() }],
+    //   model: "gpt-3.5-turbo",
+    // });
+    if(rule.version === version){
+      
+    }else{
+
+    } 
 
     console.log(completion.choices[0].message.content);
     return res.status(200).json(completion.choices[0].message.content);
