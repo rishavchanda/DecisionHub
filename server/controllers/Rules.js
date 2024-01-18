@@ -396,7 +396,7 @@ export const deleteRule = async (req, res, next) => {
 export const testingExcel = async (req, res, next) => {
   const storagePath = "FILES_STORAGE/";
   const userId = req.user.id;
-  const { id, version } = req.params;
+  const { id } = req.params;
   let data = [];
   try {
     const user = await User.findOne({ where: { id: userId } });
@@ -507,12 +507,6 @@ export const testingExcel = async (req, res, next) => {
               inputData,
               { condition: JSON.stringify(condition) }
             );
-            // testedRule?.output?.forEach((attribute) => {
-            //   const field = attribute.field;
-            //   const value = attribute.value;
-            //   inputData[field] = value;
-            //   data[index] = inputData;
-            // });
             if(testedRule.output){
               inputData[testedRule?.output[0]?.field] = testedRule?.output[0]?.value;
             }
