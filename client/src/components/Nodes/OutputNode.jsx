@@ -275,6 +275,9 @@ const OutputNode = ({ id, data, outputAttributes }) => {
                 value={field.field}
                 onChange={(e) => handleSelectChange("field", index, e)}
               >
+                <option selected hidden>
+                  Select
+                </option>
                 {data.outputAttributes?.map((attribute) => (
                   <option value={attribute}>{attribute}</option>
                 ))}

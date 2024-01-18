@@ -150,6 +150,7 @@ const TestDetails = () => {
     await testRule(id, rule?.version, testData, token)
       .then(async (res) => {
         await setRule(res.data?.rule);
+        console.log(res.data?.output);
         await setInputAttributes(res.data?.rule?.inputAttributes);
         await createFlow(res.data?.rule);
         setSubmitLoading(false);
