@@ -171,6 +171,11 @@ const TestDetails = () => {
     getTestedRule(testData);
   };
 
+  const handelExcelSubmit = (excelData) => {
+    console.log(excelData);
+    // getTestedRule(excelData);
+  };
+
   useEffect(() => {
     setViewport({ x: 200, y: 0, zoom: 1 }, { duration: 800 });
   }, [reload, setViewport, getRule, getTestedRule]);

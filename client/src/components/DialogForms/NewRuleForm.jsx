@@ -123,6 +123,7 @@ const Button = styled.button`
 `;
 
 const NewRuleForm = ({ setOpenNewRule, updateForm }) => {
+  console.log(updateForm.data);
   const navigate = useNavigate();
   const location = useLocation();
   const dispath = useDispatch();
@@ -266,6 +267,7 @@ const NewRuleForm = ({ setOpenNewRule, updateForm }) => {
           setButtonDisabled(false);
         });
     } else {
+      console.log(ruleData);
       ruleData.condition = JSON.stringify(
         getFlowData(ruleData.title, ruleData.description)
       );

@@ -17,6 +17,10 @@ export const Rule = (sequelize, DataTypes) => {
         type: DataTypes.STRING,
         allowNull: true,
       },
+      tables: {
+        type: DataTypes.ARRAY(DataTypes.STRING),
+        defaultValue: [],
+      },
       inputAttributes: {
         type: DataTypes.ARRAY(DataTypes.STRING),
         defaultValue: [],

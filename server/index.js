@@ -27,6 +27,10 @@ app.use(express.json());
 //   console.log("db has been re sync");
 // });
 
+// db.sequelize.sync({ alter: true }).then(() => {
+//   console.log("Database schema has been updated");
+// });
+
 app.use("/api/auth", authRoutes);
 app.use("/api/user", userRoutes);
 app.use("/api/rule", ruleRoutes);

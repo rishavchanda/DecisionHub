@@ -16,8 +16,14 @@ const User = db.user;
 const Version = db.version;
 
 export const createRule = async (req, res, next) => {
-  const { title, description, inputAttributes, outputAttributes, condition } =
-    req.body;
+  const {
+    title,
+    description,
+    tables,
+    inputAttributes,
+    outputAttributes,
+    condition,
+  } = req.body;
   const test = JSON.parse(req.body.condition);
   const userId = req.user.id;
   try {
@@ -28,6 +34,7 @@ export const createRule = async (req, res, next) => {
     const rule = await Rule.create({
       title,
       description,
+      tables,
       inputAttributes,
       outputAttributes,
       condition,
@@ -36,6 +43,7 @@ export const createRule = async (req, res, next) => {
     const version = await Version.create({
       title: rule.title,
       description: rule.description,
+      tables: rule.tables,
       inputAttributes: rule.inputAttributes,
       outputAttributes: rule.outputAttributes,
       condition: rule.condition,
@@ -164,6 +172,7 @@ export const updateRule = async (req, res, next) => {
         {
           title: newRule.title,
           description: newRule.description,
+          tables: newRule.tables,
           inputAttributes: newRule.inputAttributes,
           outputAttributes: newRule.outputAttributes,
           condition: newRule.condition,
@@ -180,6 +189,7 @@ export const updateRule = async (req, res, next) => {
         {
           title: newRule.title,
           description: newRule.description,
+          tables: newRule.tables,
           inputAttributes: newRule.inputAttributes,
           outputAttributes: newRule.outputAttributes,
           condition: newRule.condition,
@@ -212,6 +222,7 @@ export const updateRule = async (req, res, next) => {
         {
           title: newRule.title,
           description: newRule.description,
+          tables: newRule.tables,
           inputAttributes: newRule.inputAttributes,
           outputAttributes: newRule.outputAttributes,
           condition: newRule.condition,
@@ -272,6 +283,7 @@ export const updateRuleWithVersion = async (req, res, next) => {
     const version = await Version.create({
       title: updatedRule.title,
       description: updatedRule.description,
+      tables: updatedRule.tables,
       inputAttributes: updatedRule.inputAttributes,
       outputAttributes: updatedRule.outputAttributes,
       condition: updatedRule.condition,
@@ -339,6 +351,7 @@ export const deleteRule = async (req, res, next) => {
           {
             title: latestVersion.title,
             description: latestVersion.description,
+            tables: latestVersion.tables,
             inputAttributes: latestVersion.inputAttributes,
             outputAttributes: latestVersion.outputAttributes,
             condition: latestVersion.condition,
@@ -723,7 +736,7 @@ const evaluateNodes = async (
       );
       condition = updatedCondition;
       testedRule.condition = JSON.stringify(updatedCondition);
-      return {rule: testedRule, output: traversalNodes[0].data.outputFields};
+      return { rule: testedRule, output: traversalNodes[0].data.outputFields };
     }
     nextNode = traversalNodes[0];
     // set the traversalNodes to empty array
@@ -794,7 +807,7 @@ const evaluateNodes = async (
     );
     condition = updatedCondition;
     testedRule.condition = JSON.stringify(updatedCondition);
-    return {rule: testedRule, output: nextNode.data.outputFields};
+    return { rule: testedRule, output: nextNode.data.outputFields };
   } else {
     return evaluateNodes(
       nextNode,
@@ -925,7 +938,7 @@ export const testing = async (req, res, next) => {
     return res.json({
       rule: rule,
       versions: versionValues,
-      output: testedRule?.output ? testedRule.output : null 
+      output: testedRule?.output ? testedRule.output : null,
     });
   } catch (error) {
     return next(createError(error.status, error.message));
