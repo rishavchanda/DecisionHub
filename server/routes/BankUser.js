@@ -1,8 +1,10 @@
 import express from "express";
-import { createBankUser } from "../controllers/BankUser.js";
+import { createBankUser, createLoan } from "../controllers/BankUser.js";
 
 const router = express.Router();
 
-router.post("/", createBankUser);
+router.post("/create", createBankUser);
+
+router.post("/:id", createLoan);
 
 export default router;

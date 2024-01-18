@@ -17,7 +17,7 @@ export const BankUser = (sequelize, DataTypes) => {
         allowNull: false,
       },
       account_number: {
-        type: DataTypes.BIGINT,
+        type: DataTypes.STRING,
         allowNull: false,
         primaryKey: true,
       },
