@@ -28,7 +28,7 @@ app.use(express.json());
 // });
 
 // db.sequelize.sync({ alter: true }).then(() => {
-//   console.log("Database schema has been updated");
+//   console.log("Database schema has been updated"); 
 // });
 
 app.use("/api/auth", authRoutes);

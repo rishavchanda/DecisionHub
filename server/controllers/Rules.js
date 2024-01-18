@@ -142,7 +142,6 @@ export const searchRule = async (req, res) => {
 
     res.status(200).json(rules);
   } catch (err) {
-    console.error(err);
     res.status(500).json({ error: "Internal Server Error" });
   }
 };
@@ -391,6 +390,7 @@ export const testingExcel = async (req, res, next) => {
   const storagePath = "FILES_STORAGE/";
   const userId = req.user.id;
   const { id, version } = req.params;
+  let data = [];
   try {
     const user = await User.findOne({ where: { id: userId } });
     if (!user) {
@@ -415,13 +415,11 @@ export const testingExcel = async (req, res, next) => {
     const filePath = path.join(storagePath, file.filename);
     let workbook = xlsx.readFile(filePath);
     let sheet_name_list = workbook.SheetNames;
-    console.log(sheet_name_list);
 
-    sheet_name_list.forEach(function (y) {
+    sheet_name_list.forEach(async function (y) {
       var worksheet = workbook.Sheets[y];
       // getting the complete sheet
-      var headers = {};
-      var data = [];
+      let headers = {};
       for (let z in worksheet) {
         if (z[0] === "!") continue;
         // parse out the column, row, and value
@@ -440,11 +438,80 @@ export const testingExcel = async (req, res, next) => {
       // drop those first two rows which are empty
       data.shift();
       data.shift();
+      await data.map(async (inputData, index) => {
+        const condition = JSON.parse(rule.condition);
+        let testedRule;
+        const attributeNode = condition.nodes.find(
+          (node) => node.type === "attributeNode"
+        );
 
-      // Add "output" field with a value of 0 to each row
-      data.forEach((row) => {
-        row["output"] = 0;
-      });
+        const firstConditionalNodeId = condition.edges.find(
+          (edge) => edge.source === "1"
+        ).target;
+
+        if (firstConditionalNodeId) {
+          const firstConditionalNode = condition.nodes.find(
+            (node) => node.id === firstConditionalNodeId
+          );
+
+          if (firstConditionalNode) {
+            // sets the attribute Node color
+            condition.nodes.forEach((node, index) => {
+              if (node.type === "attributeNode") {
+                condition.nodes[index] = {
+                  ...node,
+                  data: {
+                    ...node.data,
+                    computed: "yes",
+                    color: "#02ab40",
+                    result: true,
+                  },
+                };
+              }
+            });
+
+            condition.edges.forEach((edge, index) => {
+              if (
+                edge.source === attributeNode.id &&
+                edge.target === firstConditionalNode.id
+              ) {
+                condition.edges[index] = {
+                  ...edge,
+                  animated: true,
+                  markerEnd: {
+                    type: "arrowclosed",
+                    width: 12,
+                    height: 12,
+                    color: "#02ab40",
+                  },
+                  style: {
+                    strokeWidth: 5,
+                    stroke: "#02ab40",
+                  },
+                };
+              }
+            });
+            let traversalNodes = [];
+            testedRule = await evaluateNodes(
+              firstConditionalNode,
+              condition,
+              rule,
+              traversalNodes,
+              inputData,
+              { condition: JSON.stringify(condition) }
+            );
+            // testedRule?.output?.forEach((attribute) => {
+            //   const field = attribute.field;
+            //   const value = attribute.value;
+            //   inputData[field] = value;
+            //   data[index] = inputData;
+            // });
+            inputData[index] = testedRule?.output[index].field;
+            rule.condition = testedRule?.rule?.condition;
+          }
+        }
+      })
+
 
       var newWorkbook = xlsx.utils.book_new();
       var newWorksheet = xlsx.utils.json_to_sheet(data);
@@ -469,6 +536,7 @@ export const testingExcel = async (req, res, next) => {
     res.json({
       success: true,
       message: "File processed and saved successfully",
+      data: data
     });
   } catch (error) {
     return next(createError(error.status, error.message));
@@ -615,19 +683,19 @@ const setEdgeColor = (condition, node, traversalNodes, color, result) => {
     condition.edges = condition.edges.map((e) =>
       e.id === targetEdges[index].id
         ? {
-            ...e,
-            animated: true,
-            markerEnd: {
-              type: "arrowclosed",
-              width: 12,
-              height: 12,
-              color: color,
-            },
-            style: {
-              strokeWidth: 5,
-              stroke: color,
-            },
-          }
+          ...e,
+          animated: true,
+          markerEnd: {
+            type: "arrowclosed",
+            width: 12,
+            height: 12,
+            color: color,
+          },
+          style: {
+            strokeWidth: 5,
+            stroke: color,
+          },
+        }
         : e
     );
   });
@@ -656,14 +724,14 @@ const setNodeColor = (
   condition.nodes = condition.nodes.map((n) =>
     n.id === targetNode.id
       ? {
-          ...n,
-          data: {
-            ...n.data,
-            computed: computed,
-            color: color,
-            result: result,
-          },
-        }
+        ...n,
+        data: {
+          ...n.data,
+          computed: computed,
+          color: color,
+          result: result,
+        },
+      }
       : n
   );
 
@@ -770,19 +838,19 @@ const evaluateNodes = async (
           condition.edges = condition.edges.map((e) =>
             e.id === targetEdges[index].id
               ? {
-                  ...e,
-                  animated: true,
-                  markerEnd: {
-                    type: "arrowclosed",
-                    width: 12,
-                    height: 12,
-                    color: "#FF0072",
-                  },
-                  style: {
-                    strokeWidth: 5,
-                    stroke: "#FF0072",
-                  },
-                }
+                ...e,
+                animated: true,
+                markerEnd: {
+                  type: "arrowclosed",
+                  width: 12,
+                  height: 12,
+                  color: "#FF0072",
+                },
+                style: {
+                  strokeWidth: 5,
+                  stroke: "#FF0072",
+                },
+              }
               : e
           );
         });
@@ -1004,9 +1072,7 @@ function evaluateExpression(expression, inputData) {
     return sideResults.length > 0 ? sideResults[sideResults.length - 1] : 0;
   };
   const leftSideValue = evaluateSide(lhs, inputData);
-  console.log(leftSideValue);
   const rightSideValue = evaluateSide(rhs, inputData);
-  console.log(rightSideValue);
 
   switch (comparator) {
     case ">":
