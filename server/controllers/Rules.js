@@ -513,25 +513,17 @@ export const testingExcel = async (req, res, next) => {
             //   inputData[field] = value;
             //   data[index] = inputData;
             // });
-            inputData[index] = testedRule?.output[index].field;
+            if(testedRule.output){
+              inputData[testedRule?.output[0]?.field] = testedRule?.output[0]?.value;
+            }
+            data[index] = inputData;
             rule.condition = testedRule?.rule?.condition;
           }
         }
       })
 
-
-      var newWorkbook = xlsx.utils.book_new();
-      var newWorksheet = xlsx.utils.json_to_sheet(data);
-
-      // Add the worksheet to the new workbook
-      xlsx.utils.book_append_sheet(newWorkbook, newWorksheet, "Sheet 1");
-
-      // Specify the path for the output file in the FILES_STORAGE directory
-      const outputFilePath = path.join(storagePath, "output.xlsx");
-
-      // Write the new workbook to the specified path
-      xlsx.writeFile(newWorkbook, outputFilePath);
     });
+      const fieldNames = Object.keys(data[0]);
     await Rule.update(
       { ...rule, tested: true },
       {
@@ -541,9 +533,8 @@ export const testingExcel = async (req, res, next) => {
       }
     );
     res.json({
-      success: true,
-      message: "File processed and saved successfully",
-      data: data
+      fields: fieldNames,
+      data: data,
     });
   } catch (error) {
     return next(createError(error.status, error.message));
