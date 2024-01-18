@@ -3,8 +3,10 @@ import * as dotenv from "dotenv";
 import userRoutes from "./routes/User.js";
 import authRoutes from "./routes/Auth.js";
 import ruleRoutes from "./routes/Rule.js";
+import bankUserRoutes from "./routes/BankUser.js";
 import cors from "cors";
 import morgan from "morgan";
+import db from "./models/index.js";
 dotenv.config();
 
 const app = express();
@@ -21,13 +23,14 @@ app.use(morgan("tiny"));
 
 app.use(express.json());
 
-// db.sequelize.sync({ force: true }).then(() => {
+// db.sequelize.sync({ force: false }).then(() => {
 //   console.log("db has been re sync");
 // });
 
 app.use("/api/auth", authRoutes);
 app.use("/api/user", userRoutes);
 app.use("/api/rule", ruleRoutes);
+app.use("/api/bankUser", bankUserRoutes);
 
 app.use((err, req, res, next) => {
   const status = err.status || 500;

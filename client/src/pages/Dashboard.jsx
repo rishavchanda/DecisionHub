@@ -8,6 +8,7 @@ import { openSnackbar } from "../redux/reducers/snackbarSlice";
 import Loader from "../components/Loader";
 import { useNavigate } from "react-router-dom";
 import ActivityCard from "../components/cards/ActivityCard";
+import { Skeleton } from "@mui/material";
 
 const Container = styled.div`
   padding: 20px 30px;
@@ -130,19 +131,26 @@ const Dashboard = ({ setOpenNewRule }) => {
   return (
     <Container>
       <TopSection>
-        <Flex>
-          <ActivityCard
-            rule
-            title="Total Rules"
-            percentage={((total / 20) * 100).toFixed(1)}
-            total={total}
-          />
-          <ActivityCard
-            title="Tested Rules"
-            percentage={((tested / total) * 100).toFixed(1)}
-            total={tested}
-          />
-        </Flex>
+        {loading ? (
+          <Flex>
+            <Skeleton variant="rounded" height={80} width={200} />
+            <Skeleton variant="rounded" height={80} width={200} />
+          </Flex>
+        ) : (
+          <Flex>
+            <ActivityCard
+              rule
+              title="Total Rules"
+              percentage={((total / 20) * 100).toFixed(1)}
+              total={total}
+            />
+            <ActivityCard
+              title="Tested Rules"
+              percentage={((tested / total) * 100).toFixed(1)}
+              total={tested}
+            />
+          </Flex>
+        )}
         <Flex>
           <Button onClick={() => setOpenNewRule(true)}>
             <AddRounded sx={{ fontSize: "22px" }} />

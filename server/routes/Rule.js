@@ -7,10 +7,12 @@ import {
   getRules,
   searchRule,
   testing,
+  testingExcel,
   updateRule,
   updateRuleWithVersion,
 } from "../controllers/Rules.js";
 import { verifyToken } from "../middleware/verifyToken.js";
+import { uploadMiddleware } from "../middleware/upload.js";
 
 const router = express.Router();
 
@@ -18,6 +20,7 @@ router.patch("/ruleWithText/:id", verifyToken, createRuleWithText);
 router.post("/", verifyToken, createRule);
 router.get("/", verifyToken, getRules);
 router.post("/testing/:id/:version", verifyToken, testing);
+router.post("/testingWithData/:id/:version", verifyToken, uploadMiddleware, testingExcel);
 router.post("/:id", verifyToken, getRuleByIdAndVersion);
 router.get("/searchRule", verifyToken, searchRule);
 router.patch("/:id", verifyToken, updateRule);

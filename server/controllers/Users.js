@@ -2,6 +2,14 @@ import db from "../models/index.js";
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 import { createError } from "../error.js";
+import { Sequelize, DataTypes } from "sequelize";
+import * as dotenv from "dotenv";
+
+dotenv.config();
+
+const sequelize = new Sequelize(process.env.DATABASE_URL, {
+  dialect: "postgres",
+});
 
 const User = db.user;
 
@@ -33,7 +41,7 @@ export const getRecentActivity = async (req, res, next) => {
     const totalRules = rules.length;
     const testedRules = rules.filter(rule => rule.tested === true).length;
 
-    return res.status(200).json({rules: rules, total: totalRules, tested: testedRules});
+    return res.status(200).json({ rules: rules, total: totalRules, tested: testedRules });
   } catch (error) {
     return next(createError(error.status, error.message));
   }
@@ -73,7 +81,7 @@ export const updateProfile = async (req, res, next) => {
     if (!user) {
       return next(createError(404, "User not found"));
     }
-    if(!user.googleAuth){
+    if (!user.googleAuth) {
       await User.update(
         { ...user, name: name, email: email, password: password },
         {
@@ -89,4 +97,34 @@ export const updateProfile = async (req, res, next) => {
     return next(createError(error.status, error.message));
   }
 
-} 
+}
+
+export const getTablesList = async (req, res, next) => {
+  try {
+    const [results] = await db.sequelize.query(
+      "SELECT tablename FROM pg_tables WHERE schemaname = 'public'"
+    );
+
+    const excludedTables = ['users', 'rules', 'versions'];
+
+    const tableNames = results
+      .map((result) => result.tablename)
+      .filter((tableName) => !excludedTables.includes(tableName));
+
+    const tableDetails = await Promise.all(
+      tableNames.map(async (tableName) => {
+        const [columns, _] = await db.sequelize.query(
+          `SELECT column_name FROM information_schema.columns WHERE table_name = '${tableName}'`
+        );
+
+        const columnNames = columns.map((column) => column.column_name);
+
+        return { table: tableName, columns: columnNames };
+      })
+    );
+
+    return res.json(tableDetails);
+  } catch (error) {
+    return next(createError(error.status, error.message));
+  }
+};

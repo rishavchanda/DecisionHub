@@ -2,38 +2,44 @@ import { useState } from "react";
 import styled from "styled-components";
 import SignIn from "../components/SignIn";
 import SignUp from "../components/SignUp";
+import BG from "../images/auth-bg.png";
 // import SignUp from "../components/SignUp";
 // import Logo from "../Images/Logo.svg";
 
+const OuterContainer = styled.div`
+  height: 100vh;
+  background: black;
+  overflow: hidden;
+`;
+
 const Container = styled.div`
-  padding: 20px 30px;
-  padding-bottom: 50px;
+  padding: 0px 150px;
   height: 100%;
-  overflow-y: scroll;
-  overflow-x: hidden;
-  display: flex;
-  flex-direction: column;
-  gap: 20px;
+  overflow: hidden;
   @media (max-width: 768px) {
     padding: 6px 0px;
   }
-  background: ${({ theme }) => theme.bg};
+  // background: ${({ theme }) => theme.bg};
+  background: url(${BG});
+  background-repeat: no-repeat;
+  background-size: contain;
+  background-position: center;
+  background-attachment: fixed;
+  display: flex;
+  align-items: center;
 `;
 
 const Wrapper = styled.div`
-  width: 100%;
-  height: 100%;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
+  display: inline-block;
+  width: 400px;
+  text-align: center;
 `;
 
 const Logotext = styled.div`
   font-size: 38px;
   font-weight: bold;
-  display: flex;
-  align-items: center;
+  display: inline;
+  margin-left: 50px;
   text-transform: uppercase;
   background: linear-gradient(
     225deg,
@@ -50,17 +56,18 @@ const Logotext = styled.div`
   }
 `;
 
-const LogoImg = styled.img`
-  height: 36px;
-  margin-right: 10px;
-  @media only screen and (max-width: 600px) {
-    height: 30px;
-  }
-`;
+// const LogoImg = styled.img`
+//   height: 36px;
+//   margin-right: 10px;
+//   @media only screen and (max-width: 600px) {
+//     height: 30px;
+//   }
+// `;
 
 const WelcomeText = styled.div`
   font-size: 16px;
   font-weight: 600;
+  margin-left: 50px;
   margin-bottom: 36px;
   color: ${({ theme }) => theme.text_primary + 80};
   @media only screen and (max-width: 600px) {
@@ -71,24 +78,26 @@ const WelcomeText = styled.div`
 const Authentication = () => {
   const [openSignUp, setOpenSignUp] = useState(false);
   return (
-    <Container>
-      <Wrapper>
-        <Logotext>
-          {/* <LogoImg src={Logo} /> */}
-          DecisionHub
-        </Logotext>
-        <WelcomeText>
-          {openSignUp
-            ? "Welcome to DecisionHub!"
-            : "Welcome back to DecisionHub!"}
-        </WelcomeText>
-        {openSignUp ? (
-          <SignUp setOpenSignUp={setOpenSignUp} />
-        ) : (
-          <SignIn setOpenSignUp={setOpenSignUp} />
-        )}
-      </Wrapper>
-    </Container>
+    <OuterContainer>
+      <Container>
+        <Wrapper>
+          <Logotext>
+            {/* <LogoImg src={Logo} /> */}
+            DecisionHub
+          </Logotext>
+          <WelcomeText>
+            {openSignUp
+              ? "Welcome to DecisionHub!"
+              : "Welcome back to DecisionHub!"}
+          </WelcomeText>
+          {openSignUp ? (
+            <SignUp setOpenSignUp={setOpenSignUp} />
+          ) : (
+            <SignIn setOpenSignUp={setOpenSignUp} />
+          )}
+        </Wrapper>
+      </Container>
+    </OuterContainer>
   );
 };
 
