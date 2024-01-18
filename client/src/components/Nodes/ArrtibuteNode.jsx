@@ -6,10 +6,14 @@ import {
   EditOutlined,
   SubtitlesRounded,
 } from "@mui/icons-material";
+import { useLocation, useNavigate } from "react-router";
 import { useDispatch, useSelector } from "react-redux";
 import { ruleUpdated } from "../../redux/reducers/rulesSlice";
 import NewRuleForm from "../DialogForms/NewRuleForm";
 import { nanoid } from "nanoid";
+import GenerateWithAIForm from "../DialogForms/GenerateWithAIForm";
+import { createRuleWithText } from "../../api";
+import { openSnackbar } from "../../redux/reducers/snackbarSlice";
 
 const Wrapper = styled.div`
   display: flex;
@@ -145,8 +149,11 @@ const AttributeNode = ({ id, data }) => {
   const theme = useTheme();
   const reactFlow = useReactFlow();
   const dispatch = useDispatch();
+  const location = useLocation();
+  let path = location.pathname.split("/");
   const { updated } = useSelector((state) => state.rule);
   const [openUpdateDialog, setOpenUpdateDialog] = useState(false);
+  const [loading, setLoading] = useState(false);
 
   const [isNotConnected, setIsNotConnected] = useState(false);
 
@@ -176,13 +183,23 @@ const AttributeNode = ({ id, data }) => {
         conditions: [
           {
             multiple: false,
-            expression: [
-              {
-                inputAttribute: "",
-                operator: "",
-                value: "",
-              },
-            ],
+            expression: {
+              lhs: [
+                {
+                  op1: "",
+                  operator: null,
+                  op2: null,
+                },
+              ],
+              comparator: "",
+              rhs: [
+                {
+                  op1: "",
+                  operator: null,
+                  op2: null,
+                },
+              ],
+            },
           },
         ],
       },
@@ -209,6 +226,36 @@ const AttributeNode = ({ id, data }) => {
 
     reactFlow.addNodes(newNode);
     reactFlow.addEdges(newEdge);
+  };
+
+  const generateAIRule = async (prompt) => {
+    setLoading(true);
+    console.log(path[2]);
+    const token = localStorage.getItem("decisionhub-token-auth-x4");
+    await createRuleWithText(
+      path[2],
+      { conditions: prompt, version: "1" },
+      token
+    )
+      .then((res) => {
+        dispatch(
+          openSnackbar({
+            message: "Created new rule with AI!",
+            severity: "success",
+          })
+        );
+        dispatch(ruleUpdated());
+        setLoading(false);
+      })
+      .catch((err) => {
+        dispatch(
+          openSnackbar({
+            message: err.response.data.message,
+            severity: "error",
+          })
+        );
+        setLoading(false);
+      });
   };
 
   return (
@@ -251,6 +298,10 @@ const AttributeNode = ({ id, data }) => {
             <AddNoNode>
               <AddRounded sx={{ fontSize: "14px" }} />
             </AddNoNode>
+            <GenerateWithAIForm
+              loading={loading}
+              submitPrompt={(prompt) => generateAIRule(prompt)}
+            />
             <OutlineWrapper
               style={{
                 display: "flex",

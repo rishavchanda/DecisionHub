@@ -4,6 +4,8 @@ import { Op } from "sequelize";
 import OpenAI from "openai";
 import { createRuleRequest } from "../utils/prompt.js";
 import * as dotenv from "dotenv";
+import xlsx from "xlsx";
+import path from "path";
 dotenv.config();
 
 const openai = new OpenAI({
@@ -17,7 +19,6 @@ export const createRule = async (req, res, next) => {
   const { title, description, inputAttributes, outputAttributes, condition } =
     req.body;
   const test = JSON.parse(req.body.condition);
-  console.log(test.nodes);
   const userId = req.user.id;
   try {
     const user = await User.findOne({ where: { id: userId } });
@@ -333,14 +334,6 @@ export const deleteRule = async (req, res, next) => {
           });
 
         const latestVersion = ruleVersions[ruleVersions.length - 1];
-        console.log({
-          title: latestVersion.title,
-          description: latestVersion.description,
-          inputAttributes: latestVersion.inputAttributes,
-          outputAttributes: latestVersion.outputAttributes,
-          condition: latestVersion.condition,
-          version: latestVersion.version,
-        });
 
         await Rule.update(
           {
@@ -381,537 +374,214 @@ export const deleteRule = async (req, res, next) => {
   }
 };
 
-export const createRuleWithText = async (req, res, next) => {
-  // const userId = req.user.id;
+export const testingExcel = async (req, res, next) => {
+  const storagePath = "FILES_STORAGE/";
+  const userId = req.user.id;
+  const { id, version } = req.params;
   try {
-    // const user = await User.findOne({ where: { id: userId } });
-    // if (!user) {
-    //   return next(createError(404, "User not found"));
-    // }
-    console.log("start");
-    const completion = await openai.chat.completions.create({
-      messages: [{ role: "user", content: createRuleRequest() }],
-      model: "gpt-3.5-turbo",
-    });
+    const user = await User.findOne({ where: { id: userId } });
+    if (!user) {
+      return next(createError(404, "User not found"));
+    }
+    const rule = await Rule.findOne({ where: { id: id } });
+    if (!rule) {
+      return next(createError(404, "No rule with that id"));
+    }
+    //check if user is owner of this rule
+    const userRules = await user.getRules();
+    const ruleIds = userRules.map((rule) => rule.id);
+    if (!ruleIds.includes(id)) {
+      return next(createError(403, "You are not owner of this rule"));
+    }
+    const file = req.file;
 
-    console.log(completion.choices[0].message.content);
-    return res.status(200).json(completion.choices[0].message.content);
+    if (!file) {
+      return res.status(400).json({ error: "No file uploaded" });
+    }
+
+    const filePath = path.join(storagePath, file.filename);
+    let workbook = xlsx.readFile(filePath);
+    let sheet_name_list = workbook.SheetNames;
+    console.log(sheet_name_list);
+
+    sheet_name_list.forEach(function (y) {
+      var worksheet = workbook.Sheets[y];
+      // getting the complete sheet
+      var headers = {};
+      var data = [];
+      for (let z in worksheet) {
+        if (z[0] === "!") continue;
+        // parse out the column, row, and value
+        var col = z.substring(0, 1);
+        var row = parseInt(z.substring(1));
+        var value = worksheet[z].v;
+        // store header names
+        if (row == 1) {
+          headers[col] = value;
+          // storing the header names
+          continue;
+        }
+        if (!data[row]) data[row] = {};
+        data[row][headers[col]] = value;
+      }
+      // drop those first two rows which are empty
+      data.shift();
+      data.shift();
+
+      // Add "output" field with a value of 0 to each row
+      data.forEach((row) => {
+        row["output"] = 0;
+      });
+
+      var newWorkbook = xlsx.utils.book_new();
+      var newWorksheet = xlsx.utils.json_to_sheet(data);
+
+      // Add the worksheet to the new workbook
+      xlsx.utils.book_append_sheet(newWorkbook, newWorksheet, "Sheet 1");
+
+      // Specify the path for the output file in the FILES_STORAGE directory
+      const outputFilePath = path.join(storagePath, "output.xlsx");
+
+      // Write the new workbook to the specified path
+      xlsx.writeFile(newWorkbook, outputFilePath);
+    });
+    await Rule.update(
+      { ...rule, tested: true },
+      {
+        where: {
+          id: id,
+        },
+      }
+    );
+    res.json({
+      success: true,
+      message: "File processed and saved successfully",
+    });
   } catch (error) {
     return next(createError(error.status, error.message));
   }
 };
 
-/*"condition": {
-        "nodes": [
-            {
-                "width": 406,
-                "height": 188,
-                "id": "9",
-                "type": "outputNode",
-                "data": {
-                    "label": "Set Interest rate",
-                    "inputAttributes": [
-                        "account_no",
-                        "loan_duration",
-                        "date_of_birth",
-                        "employment_status",
-                        "annual_income",
-                        "credit_score"
-                    ],
-                    "outputAttributes": [
-                        "interest_rate"
-                    ],
-                    "outputFields": [
-                        {
-                            "field": "",
-                            "value": "9"
-                        }
-                    ]
-                },
-                "position": {
-                    "x": -1215.6890993257136,
-                    "y": 2251.2520005223014
-                },
-                "selected": false,
-                "positionAbsolute": {
-                    "x": -1215.6890993257136,
-                    "y": 2251.2520005223014
-                },
-                "dragging": false
-            },
-            {
-                "width": 406,
-                "height": 188,
-                "id": "8",
-                "type": "outputNode",
-                "data": {
-                    "label": "Set Interest rate",
-                    "inputAttributes": [
-                        "account_no",
-                        "loan_duration",
-                        "date_of_birth",
-                        "employment_status",
-                        "annual_income",
-                        "credit_score"
-                    ],
-                    "outputAttributes": [
-                        "interest_rate"
-                    ],
-                    "outputFields": [
-                        {
-                            "field": "",
-                            "value": "8"
-                        }
-                    ]
-                },
-                "position": {
-                    "x": 1376.1750501662927,
-                    "y": 2207.60460483563
-                },
-                "selected": false,
-                "positionAbsolute": {
-                    "x": 1376.1750501662927,
-                    "y": 2207.60460483563
-                },
-                "dragging": false
-            },
-            {
-                "width": 406,
-                "height": 188,
-                "id": "7",
-                "type": "outputNode",
-                "data": {
-                    "label": "Set interest rate",
-                    "inputAttributes": [
-                        "account_no",
-                        "loan_duration",
-                        "date_of_birth",
-                        "employment_status",
-                        "annual_income",
-                        "credit_score"
-                    ],
-                    "outputAttributes": [
-                        "interest_rate"
-                    ],
-                    "outputFields": [
-                        {
-                            "field": "",
-                            "value": "11"
-                        }
-                    ]
-                },
-                "position": {
-                    "x": 17.510900674286233,
-                    "y": 2239.2520005223014
-                },
-                "selected": false,
-                "positionAbsolute": {
-                    "x": 17.510900674286233,
-                    "y": 2239.2520005223014
-                },
-                "dragging": false
-            },
-            {
-                "width": 1069,
-                "height": 382,
-                "id": "6",
-                "type": "conditionalNode",
-                "data": {
-                    "label": "Loan duration less than 5",
-                    "inputAttributes": [
-                        "account_no",
-                        "loan_duration",
-                        "date_of_birth",
-                        "employment_status",
-                        "annual_income",
-                        "credit_score"
-                    ],
-                    "outputAttributes": [
-                        "interest_rate"
-                    ],
-                    "rule": "Any",
-                    "conditions": [
-                        {
-                            "multiple": false,
-                            "expression": [
-                                {
-                                    "inputAttribute": "loan_duration",
-                                    "operator": "<",
-                                    "value": "5"
-                                }
-                            ]
-                        }
-                    ]
-                },
-                "position": {
-                    "x": -100.82243265904708,
-                    "y": 1660.2520005223014
-                },
-                "selected": false,
-                "dragging": false,
-                "positionAbsolute": {
-                    "x": -100.82243265904708,
-                    "y": 1660.2520005223014
-                }
-            },
-            {
-                "width": 1069,
-                "height": 382,
-                "id": "5",
-                "type": "conditionalNode",
-                "data": {
-                    "label": "Loan Duration More than 10",
-                    "inputAttributes": [
-                        "account_no",
-                        "loan_duration",
-                        "date_of_birth",
-                        "employment_status",
-                        "annual_income",
-                        "credit_score"
-                    ],
-                    "outputAttributes": [
-                        "interest_rate"
-                    ],
-                    "rule": "Any",
-                    "conditions": [
-                        {
-                            "multiple": false,
-                            "expression": [
-                                {
-                                    "inputAttribute": "loan_duration",
-                                    "operator": ">",
-                                    "value": "10"
-                                }
-                            ]
-                        }
-                    ]
-                },
-                "position": {
-                    "x": -1378.022432659047,
-                    "y": 1596.2520005223014
-                },
-                "selected": false,
-                "dragging": false,
-                "positionAbsolute": {
-                    "x": -1378.022432659047,
-                    "y": 1596.2520005223014
-                }
-            },
-            {
-                "width": 1069,
-                "height": 382,
-                "id": "4",
-                "type": "conditionalNode",
-                "data": {
-                    "label": "Loan duration equal to 8 ",
-                    "inputAttributes": [
-                        "account_no",
-                        "loan_duration",
-                        "date_of_birth",
-                        "employment_status",
-                        "annual_income",
-                        "credit_score"
-                    ],
-                    "outputAttributes": [
-                        "interest_rate"
-                    ],
-                    "rule": "Any",
-                    "conditions": [
-                        {
-                            "multiple": false,
-                            "expression": [
-                                {
-                                    "inputAttribute": "loan_duration",
-                                    "operator": "==",
-                                    "value": "8"
-                                }
-                            ]
-                        }
-                    ]
-                },
-                "position": {
-                    "x": 1067.8417168329595,
-                    "y": 1568.6046048356304
-                },
-                "selected": false,
-                "dragging": false,
-                "positionAbsolute": {
-                    "x": 1067.8417168329595,
-                    "y": 1568.6046048356304
-                }
-            },
-            {
-                "width": 1069,
-                "height": 382,
-                "id": "3",
-                "type": "conditionalNode",
-                "data": {
-                    "label": "Credit Score Greater than 750",
-                    "inputAttributes": [
-                        "account_no",
-                        "loan_duration",
-                        "date_of_birth",
-                        "employment_status",
-                        "annual_income",
-                        "credit_score"
-                    ],
-                    "outputAttributes": [
-                        "interest_rate"
-                    ],
-                    "rule": "All",
-                    "conditions": [
-                        {
-                            "multiple": false,
-                            "expression": [
-                                {
-                                    "inputAttribute": "credit_score",
-                                    "operator": ">",
-                                    "value": "750"
-                                }
-                            ]
-                        }
-                    ]
-                },
-                "position": {
-                    "x": 89.64423400761984,
-                    "y": 1014.2520005223013
-                },
-                "selected": true,
-                "positionAbsolute": {
-                    "x": 89.64423400761984,
-                    "y": 1014.2520005223013
-                },
-                "dragging": false
-            },
-            {
-                "width": 1528,
-                "height": 484,
-                "id": "2",
-                "type": "conditionalNode",
-                "data": {
-                    "label": "Not Under Age and has High Income",
-                    "inputAttributes": [
-                        "account_no",
-                        "loan_duration",
-                        "date_of_birth",
-                        "employment_status",
-                        "annual_income",
-                        "credit_score"
-                    ],
-                    "outputAttributes": [
-                        "interest_rate"
-                    ],
-                    "rule": "All",
-                    "conditions": [
-                        {
-                            "multiple": false,
-                            "expression": [
-                                {
-                                    "inputAttribute": "date_diff,current_date,date_of_birth",
-                                    "operator": ">",
-                                    "value": "18"
-                                }
-                            ],
-                            "boolean": "&&"
-                        },
-                        {
-                            "multiple": false,
-                            "expression": [
-                                {
-                                    "inputAttribute": "annual_income",
-                                    "operator": "/",
-                                    "value": "12"
-                                },
-                                {
-                                    "inputAttribute": null,
-                                    "operator": ">",
-                                    "value": "1000000"
-                                }
-                            ]
-                        }
-                    ]
-                },
-                "position": {
-                    "x": -142.36048076879842,
-                    "y": 438.4262862586197
-                },
-                "selected": false,
-                "positionAbsolute": {
-                    "x": -142.36048076879842,
-                    "y": 438.4262862586197
-                },
-                "dragging": false
-            },
-            {
-                "width": 500,
-                "height": 276,
-                "id": "1",
-                "type": "attributeNode",
-                "data": {
-                    "label": "Loan Interest Rate",
-                    "description": "Set loan interest rate according to user data",
-                    "inputAttributes": [
-                        "account_no",
-                        "loan_duration",
-                        "date_of_birth",
-                        "employment_status",
-                        "annual_income",
-                        "credit_score"
-                    ],
-                    "outputAttributes": [
-                        "interest_rate"
-                    ]
-                },
-                "position": {
-                    "x": 260,
-                    "y": 50
-                },
-                "selected": false,
-                "dragging": false,
-                "positionAbsolute": {
-                    "x": 260,
-                    "y": 50
-                }
-            }
-        ],
-        "edges": [
-            {
-                "id": "5-yes-9",
-                "source": "5",
-                "target": "9",
-                "animated": false,
-                "sourceHandle": "yes",
-                "style": {
-                    "strokeWidth": 2
-                },
-                "markerEnd": {
-                    "type": "arrowclosed",
-                    "width": 12,
-                    "height": 12
-                    color: '#FF0072',
-                }
-    style: {
-      strokeWidth: 2,
-      stroke: '#FF0072',
-    },
-            },
-            {
-                "id": "4-yes-8",
-                "source": "4",
-                "target": "8",
-                "animated": false,
-                "sourceHandle": "yes",
-                "style": {
-                    "strokeWidth": 2
-                },
-                "markerEnd": {
-                    "type": "arrowclosed",
-                    "width": 12,
-                    "height": 12
-                }
-            },
-            {
-                "id": "6-yes-7",
-                "source": "6",
-                "target": "7",
-                "animated": false,
-                "sourceHandle": "yes",
-                "style": {
-                    "strokeWidth": 2
-                },
-                "markerEnd": {
-                    "type": "arrowclosed",
-                    "width": 12,
-                    "height": 12
-                }
-            },
-            {
-                "id": "3-yes-6",
-                "source": "3",
-                "target": "6",
-                "animated": false,
-                "sourceHandle": "yes",
-                "style": {
-                    "strokeWidth": 3
-                },
-                "markerEnd": {
-                    "type": "arrowclosed",
-                    "width": 12,
-                    "height": 12
-                }
-            },
-            {
-                "id": "3-yes-5",
-                "source": "3",
-                "target": "5",
-                "animated": false,
-                "sourceHandle": "yes",
-                "style": {
-                    "strokeWidth": 3
-                },
-                "markerEnd": {
-                    "type": "arrowclosed",
-                    "width": 12,
-                    "height": 12
-                }
-            },
-            {
-                "id": "3-yes-4",
-                "source": "3",
-                "target": "4",
-                "animated": false,
-                "sourceHandle": "yes",
-                "style": {
-                    "strokeWidth": 3
-                },
-                "markerEnd": {
-                    "type": "arrowclosed",
-                    "width": 12,
-                    "height": 12
-                }
-            },
-            {
-                "id": "2-yes-3",
-                "source": "2",
-                "target": "3",
-                "animated": false,
-                "sourceHandle": "yes",
-                "style": {
-                    "strokeWidth": 3
-                },
-                "markerEnd": {
-                    "type": "arrowclosed",
-                    "width": 12,
-                    "height": 12
-                }
-            },
-            {
-                "id": "1-start-2",
-                "source": "1",
-                "target": "2",
-                "animated": false,
-                "style": {
-                    "strokeWidth": 3
-                },
-                "markerEnd": {
-                    "type": "arrowclosed",
-                    "width": 12,
-                    "height": 12
-                }
-            }
-        ]
+export const createRuleWithText = async (req, res, next) => {
+  const userId = req.user.id;
+  const ruleId = req.params.id;
+  const { version, conditions } = req.body;
+  try {
+    const user = await User.findOne({ where: { id: userId } });
+    if (!user) {
+      return next(createError(404, "User not found"));
     }
-    */
-/*
-const inputData = {
-  account_no: 4543566,
-  loan_duration: 345654,
-  date_of_birth: 19/11/2003,
-  employment_status: "employed",
-  annual_income: 1200000,
-  credit_score: 800
+    const rule = await Rule.findOne({ where: { id: ruleId } });
+    if (!rule) {
+      return next(createError(404, "No rule with that id"));
+    }
+    //check if user is owner of this rule
+    const userRules = await user.getRules();
+    const ruleIds = userRules.map((rule) => rule.id);
+    if (!ruleIds.includes(ruleId)) {
+      return next(createError(403, "You are not owner of this rule"));
+    }
+    const parsedRule = {
+      title: rule.dataValues.title,
+      description: rule.dataValues.description,
+      inputAttributes: rule.dataValues.inputAttributes,
+      outputAttributes: rule.dataValues.outputAttributes,
+      condition: JSON.parse(rule.dataValues.condition),
+    };
+    const prompt = createRuleRequest(conditions, JSON.stringify(parsedRule));
+    const completion = await openai.chat.completions.create({
+      messages: [{ role: "user", content: prompt }],
+      model: "gpt-3.5-turbo",
+    });
+
+    const newCondition = JSON.parse(
+      completion.choices[0].message.content
+    ).condition;
+
+    if (rule.version === version) {
+      await Rule.update(
+        {
+          title: rule.title,
+          description: rule.description,
+          inputAttributes: rule.inputAttributes,
+          outputAttributes: rule.outputAttributes,
+          version: rule.version,
+          condition: JSON.stringify(newCondition),
+        },
+        {
+          where: {
+            id: ruleId,
+          },
+        }
+      );
+
+      const updatedRule = await Rule.findOne({ where: { id: ruleId } });
+
+      await Version.update(
+        {
+          title: updateRule.title,
+          description: updateRule.description,
+          inputAttributes: updateRule.inputAttributes,
+          outputAttributes: updateRule.outputAttributes,
+          version: updateRule.version,
+          condition: updateRule.condition,
+        },
+        {
+          where: {
+            ruleId: ruleId,
+            version: version,
+          },
+        }
+      );
+
+      const versions = await rule.getVersions();
+      let versionValues = [];
+      await versions.map((version) => {
+        versionValues.push(version.version);
+      });
+      return res
+        .status(200)
+        .json({ rule: updatedRule, versions: versionValues });
+    } else {
+      const ruleVersion = await Version.findOne({
+        where: {
+          ruleId: ruleId,
+          version: version,
+        },
+      });
+      await Version.update(
+        {
+          title: ruleVersion.title,
+          description: ruleVersion.description,
+          inputAttributes: ruleVersion.inputAttributes,
+          outputAttributes: ruleVersion.outputAttributes,
+          version: ruleVersion.version,
+          condition: JSON.stringify(newCondition),
+        },
+        {
+          where: {
+            id: ruleVersion.id,
+          },
+        }
+      );
+      const updatedVersion = await Version.findOne({
+        where: { id: ruleVersion.id },
+      });
+      const versions = await rule.getVersions();
+      let versionValues = [];
+      await versions.map((version) => {
+        versionValues.push(version.version);
+      });
+
+      return res
+        .status(200)
+        .json({ rule: updatedVersion, versions: versionValues });
+    }
+  } catch (error) {
+    return next(createError(error.status, error.message));
+  }
 };
-*/
+
 const specialFunctions = ["date_diff", "time_diff"];
 const specialArrtibutes = ["current_date", "current_time"];
 
@@ -1053,8 +723,7 @@ const evaluateNodes = async (
       );
       condition = updatedCondition;
       testedRule.condition = JSON.stringify(updatedCondition);
-
-      return testedRule;
+      return {rule: testedRule, output: traversalNodes[0].data.outputFields};
     }
     nextNode = traversalNodes[0];
     // set the traversalNodes to empty array
@@ -1125,7 +794,7 @@ const evaluateNodes = async (
     );
     condition = updatedCondition;
     testedRule.condition = JSON.stringify(updatedCondition);
-    return testedRule;
+    return {rule: testedRule, output: nextNode.data.outputFields};
   } else {
     return evaluateNodes(
       nextNode,
@@ -1136,7 +805,6 @@ const evaluateNodes = async (
       testedRule
     );
   }
-  return testedRule;
 };
 
 export const testing = async (req, res, next) => {
@@ -1243,64 +911,106 @@ export const testing = async (req, res, next) => {
           { condition: JSON.stringify(condition) }
         );
 
-        rule.condition = testedRule.condition;
+        rule.condition = testedRule.rule.condition;
       }
     }
-
+    await Rule.update(
+      { ...rule, tested: true },
+      {
+        where: {
+          id: id,
+        },
+      }
+    );
     return res.json({
       rule: rule,
       versions: versionValues,
+      output: testedRule?.output ? testedRule.output : null 
     });
   } catch (error) {
     return next(createError(error.status, error.message));
   }
 };
+function evaluateExpression(expression, inputData) {
+  const { lhs, comparator, rhs } = expression;
 
-function evaluateExpression(result, expression, inputData) {
-  let { inputAttribute, operator, value } = expression;
-  const inputValue = inputData[value]
-    ? parseInt(inputData[value])
-    : parseInt(value);
+  const evaluateSide = (side, inputData) => {
+    const sideResults = []; // Array to store results of each operand
+    const getComparisonValue = (attribute, inputData) => {
+      const attributeValue =
+        inputData[attribute] !== undefined
+          ? String(inputData[attribute]).toLowerCase()
+          : String(attribute).toLowerCase();
 
-  const getComparisonValue = (attribute) =>
-    attribute === null ? result : inputData[attribute];
+      return attributeValue;
+    };
+    side.forEach((operand) => {
+      let sideValue = 0;
 
-  const performComparison = (attribute) => {
-    let attributeValue = 0;
-    if (checkSpecialFunction(attribute?.split(",")[0])) {
-      attributeValue = evaluateSpecialFunction(attribute, inputData);
-    } else {
-      attributeValue = getComparisonValue(attribute);
-    }
-    switch (operator) {
-      case ">":
-        return attributeValue > inputValue;
-      case "<":
-        return attributeValue < inputValue;
-      case "==":
-        return attributeValue === inputValue;
-      case "!=":
-        return attributeValue !== inputValue;
-      case ">=":
-        return attributeValue >= inputValue;
-      case "<=":
-        return attributeValue <= inputValue;
-      case "/":
-        return attributeValue / inputValue;
-      case "*":
-        return attributeValue * inputValue;
-      case "+":
-        return attributeValue + inputValue;
-      case "-":
-        return attributeValue - inputValue;
-      case "%":
-        return attributeValue % inputValue;
-      default:
-        return false;
-    }
+      if (operand.op1 === null) {
+        // Use the result of the previous evaluation
+        if (sideResults.length > 0) {
+          sideValue = sideResults[sideResults.length - 1];
+        } else {
+          // Handle if no previous result is available
+          sideValue = 0;
+        }
+      } else if (checkSpecialFunction(operand.op1.split(",")[0])) {
+        sideValue = evaluateSpecialFunction(operand.op1, inputData);
+      } else {
+        sideValue = getComparisonValue(operand.op1, inputData);
+      }
+
+      switch (operand.operator) {
+        case "/":
+          sideValue /= parseFloat(operand.op2);
+          break;
+        case "*":
+          sideValue *= parseFloat(operand.op2);
+          break;
+        case "+":
+          sideValue += parseFloat(operand.op2);
+          break;
+        case "-":
+          sideValue -= parseFloat(operand.op2);
+          break;
+        default:
+          if (comparator === "==" || comparator === "!=") {
+            sideValue = sideValue;
+          } else {
+            sideValue = parseFloat(sideValue);
+          }
+          break;
+      }
+
+      // Store the result of the current operand in the array
+      sideResults.push(sideValue);
+    });
+
+    // Return the final result of the last operand
+    return sideResults.length > 0 ? sideResults[sideResults.length - 1] : 0;
   };
+  const leftSideValue = evaluateSide(lhs, inputData);
+  console.log(leftSideValue);
+  const rightSideValue = evaluateSide(rhs, inputData);
+  console.log(rightSideValue);
 
-  return performComparison(inputAttribute);
+  switch (comparator) {
+    case ">":
+      return leftSideValue > rightSideValue;
+    case "<":
+      return leftSideValue < rightSideValue;
+    case "==":
+      return leftSideValue == rightSideValue;
+    case "!=":
+      return leftSideValue !== rightSideValue;
+    case ">=":
+      return leftSideValue >= rightSideValue;
+    case "<=":
+      return leftSideValue <= rightSideValue;
+    default:
+      return false;
+  }
 }
 
 function checkSpecialFunction(func) {
@@ -1381,13 +1091,10 @@ function evaluateCondition(condition, inputData) {
   const { expression, boolean } = condition;
   // Evaluate the first expression
   let result = [];
-  result.push(evaluateExpression(null, expression[0], inputData));
-  // If there are more expressions, combine the results using boolean logic
-  for (let i = 1; i < expression.length; i++) {
-    result.push(evaluateExpression(result[i - 1], expression[i], inputData));
-  }
+  result.push(evaluateExpression(expression, inputData));
   return result[result.length - 1];
 }
+
 function evaluateConditions(conditions, rule, inputAttributes) {
   let result = [];
   const eachConditionResult = [];
@@ -1396,6 +1103,7 @@ function evaluateConditions(conditions, rule, inputAttributes) {
   for (const condition of conditions) {
     const conditionResult = evaluateCondition(condition, inputAttributes);
     eachConditionResult.push(conditionResult);
+
     if (logicalOperator) {
       // If a logical operator is present, combine the previous result with the current result
       result[result.length - 1] = performLogicalOperation(
@@ -1416,14 +1124,13 @@ function evaluateConditions(conditions, rule, inputAttributes) {
   }
 
   if (rule === "Any") {
-    if (result.includes(true)) return [true, eachConditionResult];
+    return [result.includes(true), eachConditionResult];
   } else if (rule === "All") {
-    if (result.includes(false)) return [false, eachConditionResult];
+    return [result.every(Boolean), eachConditionResult];
   }
 
   return [result[0], eachConditionResult];
 }
-
 // Helper function to perform logical operations
 function performLogicalOperation(operand1, operator, operand2) {
   switch (operator) {
@@ -1432,6 +1139,6 @@ function performLogicalOperation(operand1, operator, operand2) {
     case "||":
       return operand1 || operand2;
     default:
-      return false; // Default to false if an invalid operator is provided
+      return false;
   }
 }

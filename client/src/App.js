@@ -49,8 +49,21 @@ function App() {
     if (darkMode === undefined) {
       dispatch(setDarkMode(false));
     }
-    console.log(currentUser);
   });
+
+  // set the menuOpen state to false if the screen size is less than 768px
+  useEffect(() => {
+    const resize = () => {
+      if (window.innerWidth < 1110) {
+        setMenuOpen(false);
+      } else {
+        setMenuOpen(true);
+      }
+    };
+    resize();
+    window.addEventListener("resize", resize);
+    return () => window.removeEventListener("resize", resize);
+  }, []);
 
   return (
     <ThemeProvider theme={darkMode ? darkTheme : lightTheme}>

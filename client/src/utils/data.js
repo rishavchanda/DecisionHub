@@ -19,6 +19,9 @@ export const arithmeticOperations = [
     name: "Modulus '%'",
     value: "%",
   },
+];
+
+export const comparisonOperations = [
   {
     name: "Greater than '>'",
     value: ">",
@@ -56,6 +59,36 @@ export const specialFunctions = [
   },
 ];
 
+export const dateUnits = [
+  {
+    name: "Days",
+    value: "days",
+  },
+  {
+    name: "Months",
+    value: "months",
+  },
+  {
+    name: "Years",
+    value: "years",
+  },
+];
+
+export const timeUnits = [
+  {
+    name: "Seconds",
+    value: "seconds",
+  },
+  {
+    name: "Minutes",
+    value: "minutes",
+  },
+  {
+    name: "Hours",
+    value: "hours",
+  },
+];
+
 export const specialAttributes = [
   {
     name: "Current_Date",
@@ -88,3 +121,11 @@ export const checkConditionType = [
     value: "All",
   },
 ];
+
+export const dummyPrompt = `
+Example prompt:\n
+-If the CIBIL score is over 750: 
+  -If the loan duration is less than 5, lend at 13% interest. 
+  -If the duration is between 5 and 10, lend at 11% interest Otherwise, lend at 9% interest. 
+  -If the CIBIL score is below 750, follow other rules.
+`;

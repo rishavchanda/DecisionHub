@@ -3,13 +3,14 @@ import React from "react";
 import styled from "styled-components";
 
 const Container = styled.div`
+  flex: 1;
   display: flex;
   flex-direction: column;
   gap: 4px;
 `;
 
 const Label = styled.label`
-  font-size: 12px;
+  font-size: 10px;
   color: ${({ theme }) => theme.text_secondary};
   padding: 0px 4px;
   text-transform: uppercase;
@@ -76,7 +77,7 @@ const OutlinedInput = styled.div`
 
 const Input = styled.input`
   width: 100%;
-  font-size: 14px;
+  font-size: 12px;
   outline: none;
   border: none;
   background-color: transparent;

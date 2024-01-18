@@ -8,8 +8,11 @@ import React from "react";
 import styled, { useTheme } from "styled-components";
 import {
   arithmeticOperations,
+  comparisonOperations,
+  dateUnits,
   specialAttributes,
   specialFunctions,
+  timeUnits,
 } from "../../utils/data";
 import { useReactFlow } from "reactflow";
 
@@ -144,7 +147,75 @@ const Conditions = ({
   const test = result ? result[index] : null;
 
   // update the expression
-  const handleSelectChange = (field, expressionIndex, event) => {
+  const handleSelectChange = (part, field, expressionIndex, event) => {
+    console.log(event.target.value);
+    const updatedNodes = reactFlow.getNodes().map((node) => {
+      if (node.id === nodeId) {
+        const updatedData = {
+          ...node.data,
+          conditions: node.data.conditions.map((condition, cIndex) => {
+            if (cIndex === conditionIndex) {
+              const updatedExpression = {
+                ...condition.expression,
+                [part]: condition?.expression[part]?.map((expr, eIndex) => {
+                  if (eIndex === expressionIndex) {
+                    if (
+                      field === "op1" &&
+                      expr.op1 !== null &&
+                      specialFunctions?.find(
+                        (func) => func.value === event.target.value
+                      )
+                    ) {
+                      return {
+                        ...expr,
+                        op1: event.target.value + ",null,null,null",
+                      };
+                    } else if (
+                      field === "op2" &&
+                      expr.op2 !== null &&
+                      specialFunctions?.find(
+                        (func) => func.value === event.target.value
+                      )
+                    ) {
+                      return {
+                        ...expr,
+                        op2: event.target.value + ",null,null,null",
+                      };
+                    } else if (field === "op1" && expr.op1 !== null) {
+                      return { ...expr, op1: event.target.value };
+                    } else if (field === "operator") {
+                      return { ...expr, operator: event.target.value };
+                    } else if (field === "op2") {
+                      console.log(event.target.value);
+                      return { ...expr, op2: event.target.value };
+                    }
+                  }
+                  return expr;
+                }),
+              };
+
+              return {
+                ...condition,
+                expression: {
+                  ...condition.expression,
+                  [part]: updatedExpression[part],
+                },
+              };
+            }
+            return condition;
+          }),
+        };
+
+        return { ...node, data: updatedData };
+      }
+      return node;
+    });
+    console.log(updatedNodes);
+    reactFlow.setNodes(updatedNodes);
+  };
+
+  // handel chnage for comparator
+  const handleComparatorChange = (event) => {
     const updatedNodes = reactFlow.getNodes().map((node) => {
       if (node.id === nodeId) {
         const updatedData = {
@@ -153,32 +224,10 @@ const Conditions = ({
             if (cIndex === conditionIndex) {
               return {
                 ...condition,
-                expression: condition.expression.map((expr, eIndex) => {
-                  if (eIndex === expressionIndex) {
-                    if (
-                      field === "inputAttribute" &&
-                      expr.inputAttribute !== null &&
-                      specialFunctions?.find(
-                        (func) => func.value === event.target.value
-                      )
-                    ) {
-                      return {
-                        ...expr,
-                        inputAttribute: event.target.value + ",null,null",
-                      };
-                    } else if (
-                      field === "inputAttribute" &&
-                      expr.inputAttribute !== null
-                    ) {
-                      return { ...expr, inputAttribute: event.target.value };
-                    } else if (field === "operator") {
-                      return { ...expr, operator: event.target.value };
-                    } else if (field === "value") {
-                      return { ...expr, value: event.target.value };
-                    }
-                  }
-                  return expr;
-                }),
+                expression: {
+                  ...condition.expression,
+                  comparator: event.target.value,
+                },
               };
             }
             return condition;
@@ -193,8 +242,8 @@ const Conditions = ({
   };
 
   const getInputAttribute = (value, pos) => {
-    if (value.split(",")[pos] !== null || undefined || "")
-      return (value = value.split(",")[pos]);
+    if (value?.split(",")[pos] !== null || undefined || "")
+      return (value = value?.split(",")[pos]);
     else return "null";
   };
 
@@ -212,42 +261,117 @@ const Conditions = ({
             if (cIndex === conditionIndex) {
               return {
                 ...condition,
-                expression: condition.expression.map((expr, eIndex) => {
-                  if (eIndex === expressionIndex) {
-                    if (field === "fun" && expr.inputAttribute !== null) {
-                      return {
-                        ...expr,
-                        inputAttribute:
-                          event.target.value +
-                          "," +
-                          getInputAttribute(expr.inputAttribute, 1) +
-                          "," +
-                          getInputAttribute(expr.inputAttribute, 2),
-                      };
-                    } else if (field === "val1") {
-                      return {
-                        ...expr,
-                        inputAttribute:
-                          getInputAttribute(expr.inputAttribute, 0) +
-                          "," +
-                          event.target.value +
-                          "," +
-                          getInputAttribute(expr.inputAttribute, 2),
-                      };
-                    } else if (field === "val2") {
-                      return {
-                        ...expr,
-                        inputAttribute:
-                          getInputAttribute(expr.inputAttribute, 0) +
-                          "," +
-                          getInputAttribute(expr.inputAttribute, 1) +
-                          "," +
-                          event.target.value,
-                      };
+                expression: {
+                  lhs: condition.expression.lhs.map((lhsItem, lhsIndex) => {
+                    if (lhsIndex === expressionIndex) {
+                      if (field === "fun" && lhsItem.op1 !== null) {
+                        return {
+                          ...lhsItem,
+                          op1:
+                            event.target.value +
+                            "," +
+                            getInputAttribute(lhsItem.op1, 1) +
+                            "," +
+                            getInputAttribute(lhsItem.op1, 2) +
+                            "," +
+                            getInputAttribute(lhsItem.op1, 3),
+                        };
+                      } else if (field === "val1") {
+                        return {
+                          ...lhsItem,
+                          op1:
+                            getInputAttribute(lhsItem.op1, 0) +
+                            "," +
+                            event.target.value +
+                            "," +
+                            getInputAttribute(lhsItem.op1, 2) +
+                            "," +
+                            getInputAttribute(lhsItem.op1, 3),
+                        };
+                      } else if (field === "val2") {
+                        return {
+                          ...lhsItem,
+                          op1:
+                            getInputAttribute(lhsItem.op1, 0) +
+                            "," +
+                            getInputAttribute(lhsItem.op1, 1) +
+                            "," +
+                            event.target.value +
+                            "," +
+                            getInputAttribute(lhsItem.op1, 3),
+                        };
+                      } else if (field === "val3") {
+                        return {
+                          ...lhsItem,
+                          op1:
+                            getInputAttribute(lhsItem.op1, 0) +
+                            "," +
+                            getInputAttribute(lhsItem.op1, 1) +
+                            "," +
+                            getInputAttribute(lhsItem.op1, 2) +
+                            "," +
+                            event.target.value,
+                        };
+                      }
                     }
-                  }
-                  return expr;
-                }),
+                    return lhsItem;
+                  }),
+                  comparator: condition.expression.comparator,
+                  rhs: condition.expression.rhs.map((lhsItem, lhsIndex) => {
+                    if (lhsIndex === expressionIndex) {
+                      if (field === "fun" && lhsItem.op1 !== null) {
+                        return {
+                          ...lhsItem,
+                          op1:
+                            event.target.value +
+                            "," +
+                            getInputAttribute(lhsItem.op1, 1) +
+                            "," +
+                            getInputAttribute(lhsItem.op1, 2) +
+                            "," +
+                            getInputAttribute(lhsItem.op1, 3),
+                        };
+                      } else if (field === "val1") {
+                        return {
+                          ...lhsItem,
+                          op1:
+                            getInputAttribute(lhsItem.op1, 0) +
+                            "," +
+                            event.target.value +
+                            "," +
+                            getInputAttribute(lhsItem.op1, 2) +
+                            "," +
+                            getInputAttribute(lhsItem.op1, 3),
+                        };
+                      } else if (field === "val2") {
+                        return {
+                          ...lhsItem,
+                          op1:
+                            getInputAttribute(lhsItem.op1, 0) +
+                            "," +
+                            getInputAttribute(lhsItem.op1, 1) +
+                            "," +
+                            event.target.value +
+                            "," +
+                            getInputAttribute(lhsItem.op1, 3),
+                        };
+                      } else if (field === "val3") {
+                        return {
+                          ...lhsItem,
+                          op1:
+                            getInputAttribute(lhsItem.op1, 0) +
+                            "," +
+                            getInputAttribute(lhsItem.op1, 1) +
+                            "," +
+                            getInputAttribute(lhsItem.op1, 2) +
+                            "," +
+                            event.target.value,
+                        };
+                      }
+                    }
+                    return lhsItem;
+                  }),
+                },
               };
             }
             return condition;
@@ -262,19 +386,42 @@ const Conditions = ({
   };
 
   // add a blank expression
-  const addBlankExpression = () => {
+  const addBlankExpression = (part) => {
     const updatedNodes = reactFlow.getNodes().map((node) => {
       if (node.id === nodeId) {
         const updatedData = {
           ...node.data,
           conditions: node.data.conditions.map((condition, cIndex) => {
             if (cIndex === conditionIndex) {
+              if (
+                condition.expression[part].length === 1 &&
+                condition.expression[part][0].operator == null &&
+                condition.expression[part][0].op2 == null
+              ) {
+                // add operator and op2 to the first expression
+                return {
+                  ...condition,
+                  expression: {
+                    ...condition.expression,
+                    [part]: [
+                      {
+                        ...condition.expression[part][0],
+                        operator: "",
+                        op2: "",
+                      },
+                    ],
+                  },
+                };
+              }
               return {
                 ...condition,
-                expression: [
+                expression: {
                   ...condition.expression,
-                  { inputAttribute: null, operator: "", value: "" },
-                ],
+                  [part]: [
+                    ...condition.expression[part],
+                    { op1: null, operator: "", op2: "" },
+                  ],
+                },
               };
             }
             return condition;
@@ -289,19 +436,38 @@ const Conditions = ({
   };
 
   // delete the expression
-  const deleteExpression = (expressionIndex) => {
+  const deleteExpression = (part, expressionIndex) => {
     const updatedNodes = reactFlow.getNodes().map((node) => {
       if (node.id === nodeId) {
         const updatedData = {
           ...node.data,
           conditions: node.data.conditions.map((condition, cIndex) => {
             if (cIndex === conditionIndex) {
-              return {
-                ...condition,
-                expression: condition.expression.filter(
-                  (expr, eIndex) => eIndex !== expressionIndex
-                ),
-              };
+              if (condition.expression[part].length === 1) {
+                return {
+                  ...condition,
+                  expression: {
+                    ...condition.expression,
+                    [part]: [
+                      {
+                        ...condition.expression[part][0],
+                        operator: null,
+                        op2: null,
+                      },
+                    ],
+                  },
+                };
+              } else {
+                return {
+                  ...condition,
+                  expression: {
+                    ...condition.expression,
+                    [part]: condition.expression[part].filter(
+                      (lhsItem, lhsIndex) => lhsIndex !== expressionIndex
+                    ),
+                  },
+                };
+              }
             }
             return condition;
           }),
@@ -346,6 +512,39 @@ const Conditions = ({
 
     reactFlow.setNodes(updatedNodes);
   };
+
+  // generate the rule string
+  function generateRuleString(expression) {
+    let ruleString = "";
+    let result = "";
+
+    if (!Array.isArray(expression) || expression.length === 0) {
+      return ruleString;
+    }
+
+    expression.forEach((expr, index) => {
+      if (index > 0) {
+        // Add logical operator (e.g., AND, OR) based on your requirements
+        //   ruleString += " AND ";
+      }
+
+      if (expr.inputAttribute === null) {
+        // If inputAttribute is null, use the result of the previous expression
+        ruleString = `(${result} ${expr.operator} ${expr.value})`;
+      } else {
+        // If inputAttribute is not null, use the provided inputAttribute
+        ruleString = `(${expr.inputAttribute} ${expr.operator} ${expr.value})`;
+      }
+
+      // Update the result for the next iteration
+      result =
+        expr.inputAttribute !== null
+          ? `(${expr.inputAttribute} ${expr.operator} ${expr.value})`
+          : `(${result} ${expr.operator} ${expr.value})`;
+    });
+
+    return ruleString;
+  }
 
   return (
     <Wrapper>
@@ -401,16 +600,14 @@ const Conditions = ({
           {conditionIndex + 1}
         </div>
         <VR />
-        {condition.expression?.map((item, index) => (
+        {condition.expression?.lhs?.map((item, index) => (
           <>
             <ConditionBody key={index}>
-              {item.inputAttribute !== null && (
+              {item?.op1 !== null && (
                 <OutlineWrapper>
                   <Select
-                    value={getInputAttribute(item.inputAttribute, 0)}
-                    onChange={(e) =>
-                      handleSelectChange("inputAttribute", index, e)
-                    }
+                    value={getInputAttribute(item?.op1, 0)}
+                    onChange={(e) => handleSelectChange("lhs", "op1", index, e)}
                   >
                     <option selected hidden>
                       Select
@@ -431,94 +628,178 @@ const Conditions = ({
                         {item.name}
                       </option>
                     ))}
+                    <option value="">Custom Value</option>
                   </Select>
-                  {/* When a special function is selected i have to show two more selectable options and make a final string and set that as the value */}
-                  {
-                    // if the selected input attribute is a special function
-                    specialFunctions?.find(
-                      (func) =>
-                        func.value === getInputAttribute(item.inputAttribute, 0)
-                    ) && (
-                      <>
-                        (
-                        <Select
-                          value={getInputAttribute(item.inputAttribute, 1)}
+
+                  {(item?.op1 === "__custom__" ||
+                    !inputAttribute?.includes(
+                      getInputAttribute(item?.op1, 0)
+                    )) && (
+                    <>
+                      {(item?.op1 === "__custom__" ||
+                        !specialFunctions?.find(
+                          (func) =>
+                            func.value === getInputAttribute(item?.op1, 0)
+                        )) && (
+                        <Input
+                          value={item?.op1}
                           onChange={(e) =>
-                            handleFunctionInputAttributeChange("val1", index, e)
+                            handleSelectChange("lhs", "op1", index, e)
                           }
-                        >
-                          {inputAttribute?.map((item) => (
-                            <option key={item} value={item}>
-                              {item}
-                            </option>
-                          ))}
-                          {specialAttributes?.map((item) => (
-                            <option key={item.name} value={item.value}>
-                              {item.name}
-                            </option>
-                          ))}
-                        </Select>
-                        ,
-                        <Select
-                          value={getInputAttribute(item.inputAttribute, 2)}
-                          onChange={(e) =>
-                            handleFunctionInputAttributeChange("val2", index, e)
-                          }
-                        >
-                          {inputAttribute?.map((item) => (
-                            <option key={item} value={item}>
-                              {item}
-                            </option>
-                          ))}
-                        </Select>
+                          placeholder="Enter Value"
+                        />
+                      )}
+                      {
+                        // if the selected input attribute is a special function
+                        specialFunctions?.find(
+                          (func) =>
+                            func.value === getInputAttribute(item?.op1, 0)
+                        ) && (
+                          <>
+                            (
+                            <Select
+                              value={getInputAttribute(item?.op1, 1)}
+                              onChange={(e) =>
+                                handleFunctionInputAttributeChange(
+                                  "val1",
+                                  index,
+                                  e
+                                )
+                              }
+                            >
+                              <option selected hidden>
+                                Select
+                              </option>
+                              {inputAttribute?.map((item) => (
+                                <option key={item} value={item}>
+                                  {item}
+                                </option>
+                              ))}
+                              {specialAttributes?.map((item) => (
+                                <option key={item.name} value={item.value}>
+                                  {item.name}
+                                </option>
+                              ))}
+                            </Select>
+                            ,
+                            <Select
+                              value={getInputAttribute(item?.op1, 2)}
+                              onChange={(e) =>
+                                handleFunctionInputAttributeChange(
+                                  "val2",
+                                  index,
+                                  e
+                                )
+                              }
+                            >
+                              <option selected hidden>
+                                Select
+                              </option>
+                              {inputAttribute?.map((item) => (
+                                <option key={item} value={item}>
+                                  {item}
+                                </option>
+                              ))}
+                            </Select>
+                            ,
+                            <Select
+                              value={getInputAttribute(item?.op1, 3)}
+                              onChange={(e) =>
+                                handleFunctionInputAttributeChange(
+                                  "val3",
+                                  index,
+                                  e
+                                )
+                              }
+                            >
+                              <option selected hidden>
+                                Unit
+                              </option>
+                              {getInputAttribute(item?.op1, 0) ===
+                                "date_diff" && (
+                                <>
+                                  {dateUnits?.map((item, index) => (
+                                    <option key={index} value={item.value}>
+                                      {item.name}
+                                    </option>
+                                  ))}
+                                </>
+                              )}
+                              {getInputAttribute(item?.op1, 0) ===
+                                "time_diff" && (
+                                <>
+                                  {timeUnits?.map((item, index) => (
+                                    <option key={index} value={item.value}>
+                                      {item.name}
+                                    </option>
+                                  ))}
+                                </>
+                              )}
+                            </Select>
+                            )
+                          </>
                         )
-                      </>
-                    )
-                  }
+                      }
+                    </>
+                  )}
                 </OutlineWrapper>
               )}
-              <OutlineWrapper>
-                <Select
-                  value={item.operator}
-                  onChange={(e) => handleSelectChange("operator", index, e)}
-                >
-                  {arithmeticOperations?.map((item) => (
-                    <option key={item.name} value={item.value}>
-                      {item.name}
+              {item.operator != null && (
+                <OutlineWrapper>
+                  <Select
+                    value={item?.operator}
+                    onChange={(e) =>
+                      handleSelectChange("lhs", "operator", index, e)
+                    }
+                  >
+                    <option selected hidden>
+                      Select
                     </option>
-                  ))}
-                </Select>
-              </OutlineWrapper>
-              <OutlineWrapper>
-                <Select
-                  value={
-                    inputAttribute?.includes(item.value)
-                      ? item.value
-                      : "__custom__"
-                  }
-                  onChange={(e) => handleSelectChange("value", index, e)}
-                >
-                  {inputAttribute?.map((item) => (
-                    <option key={item} value={item}>
-                      {item}
+                    {arithmeticOperations?.map((item) => (
+                      <option key={item.name} value={item.value}>
+                        {item.name}
+                      </option>
+                    ))}
+                  </Select>
+                </OutlineWrapper>
+              )}
+              {item?.op2 !== null && (
+                <OutlineWrapper>
+                  <Select
+                    value={
+                      inputAttribute?.includes(item?.op2)
+                        ? item.op2
+                        : "__custom__"
+                    }
+                    onChange={(e) => handleSelectChange("lhs", "op2", index, e)}
+                  >
+                    <option selected hidden>
+                      Select
                     </option>
-                  ))}
-                  {specialAttributes?.map((item) => (
-                    <option key={item.name} value={item.value}>
-                      {item.name}
-                    </option>
-                  ))}
-                  <option value="__custom__">Custom Value</option>
-                </Select>
-                {(item.value === "__custom__" ||
-                  inputAttribute?.includes(item.value) === false) && (
-                  <Input
-                    value={item.value}
-                    onChange={(e) => handleSelectChange("value", index, e)}
-                    placeholder="Enter Value"
-                  />
-                )}
-              </OutlineWrapper>
+                    {inputAttribute?.map((item) => (
+                      <option key={item} value={item}>
+                        {item}
+                      </option>
+                    ))}
+                    {specialAttributes?.map((item) => (
+                      <option key={item.name} value={item.value}>
+                        {item.name}
+                      </option>
+                    ))}
+                    <option value="">Custom Value</option>
+                  </Select>
+                  {(item?.op2 === "__custom__" ||
+                    inputAttribute?.includes(item?.op2) === false) && (
+                    <Input
+                      value={item?.op2}
+                      onChange={(e) =>
+                        handleSelectChange("lhs", "op2", index, e)
+                      }
+                      placeholder="Enter Value"
+                    />
+                  )}
+                </OutlineWrapper>
+              )}
             </ConditionBody>
             {index > 0 && (
               <DeleteOutlineRounded
@@ -528,17 +809,281 @@ const Conditions = ({
                   color: theme.text_secondary,
                   cursor: "pointer",
                 }}
-                onClick={() => deleteExpression(index)}
+                onClick={() => deleteExpression("lhs", index)}
               />
             )}
             <VR key={index} />
           </>
         ))}
-        <Button onClick={() => addBlankExpression()}>
+
+        {condition.expression?.lhs[0].op2 != null && (
+          <DeleteOutlineRounded
+            key={index}
+            sx={{
+              fontSize: "18px",
+              color: theme.text_secondary,
+              cursor: "pointer",
+            }}
+            onClick={() => deleteExpression("lhs", index)}
+          />
+        )}
+        <Button onClick={() => addBlankExpression("lhs")}>
           <AddRounded sx={{ fontSize: "18px", color: theme.primary }} />
           Add Expression
         </Button>
-        <VR />
+
+        {/* lhs */}
+        <VR style={{ width: "5px" }} />
+
+        <Select
+          value={condition?.expression?.comparator}
+          onChange={(e) => handleComparatorChange(e)}
+          style={{ fontSize: "12px" }}
+        >
+          <option selected hidden>
+            Select Boolean Operator
+          </option>
+          {comparisonOperations?.map((item) => (
+            <option key={item.name} value={item.value}>
+              {item.name}
+            </option>
+          ))}
+        </Select>
+        <VR style={{ width: "4px" }} />
+        {/* rhs */}
+        {condition.expression?.rhs?.map((item, index) => (
+          <>
+            <ConditionBody key={index}>
+              {item?.op1 !== null && (
+                <OutlineWrapper>
+                  <Select
+                    value={getInputAttribute(item?.op1, 0)}
+                    onChange={(e) => handleSelectChange("rhs", "op1", index, e)}
+                  >
+                    <option selected hidden>
+                      Select
+                    </option>
+                    {inputAttribute?.map((item, index) => (
+                      <option key={index} value={item}>
+                        {item}
+                      </option>
+                    ))}
+                    {specialAttributes?.map((item) => (
+                      <option key={item.name} value={item.value}>
+                        {item.name}
+                      </option>
+                    ))}
+                    <Hr />
+                    {specialFunctions?.map((item) => (
+                      <option key={item.name} value={item.value}>
+                        {item.name}
+                      </option>
+                    ))}
+                    <option value="">Custom Value</option>
+                  </Select>
+
+                  {(item?.op1 === "__custom__" ||
+                    !inputAttribute?.includes(
+                      getInputAttribute(item?.op1, 0)
+                    )) && (
+                    <>
+                      {(item?.op1 === "__custom__" ||
+                        !specialFunctions?.find(
+                          (func) =>
+                            func.value === getInputAttribute(item?.op1, 0)
+                        )) && (
+                        <Input
+                          value={item?.op1}
+                          onChange={(e) =>
+                            handleSelectChange("rhs", "op1", index, e)
+                          }
+                          placeholder="Enter Value"
+                        />
+                      )}
+                      {
+                        // if the selected input attribute is a special function
+                        specialFunctions?.find(
+                          (func) =>
+                            func.value === getInputAttribute(item?.op1, 0)
+                        ) && (
+                          <>
+                            (
+                            <Select
+                              value={getInputAttribute(item?.op1, 1)}
+                              onChange={(e) =>
+                                handleFunctionInputAttributeChange(
+                                  "val1",
+                                  index,
+                                  e
+                                )
+                              }
+                            >
+                              <option selected hidden>
+                                Select
+                              </option>
+                              {inputAttribute?.map((item) => (
+                                <option key={item} value={item}>
+                                  {item}
+                                </option>
+                              ))}
+                              {specialAttributes?.map((item) => (
+                                <option key={item.name} value={item.value}>
+                                  {item.name}
+                                </option>
+                              ))}
+                            </Select>
+                            ,
+                            <Select
+                              value={getInputAttribute(item?.op1, 2)}
+                              onChange={(e) =>
+                                handleFunctionInputAttributeChange(
+                                  "val2",
+                                  index,
+                                  e
+                                )
+                              }
+                            >
+                              <option selected hidden>
+                                Select
+                              </option>
+                              {inputAttribute?.map((item) => (
+                                <option key={item} value={item}>
+                                  {item}
+                                </option>
+                              ))}
+                            </Select>
+                            ,
+                            <Select
+                              value={getInputAttribute(item?.op1, 3)}
+                              onChange={(e) =>
+                                handleFunctionInputAttributeChange(
+                                  "val3",
+                                  index,
+                                  e
+                                )
+                              }
+                            >
+                              <option selected hidden>
+                                Unit
+                              </option>
+                              {getInputAttribute(item?.op1, 0) ===
+                                "date_diff" && (
+                                <>
+                                  {dateUnits?.map((item, index) => (
+                                    <option key={index} value={item.value}>
+                                      {item.name}
+                                    </option>
+                                  ))}
+                                </>
+                              )}
+                              {getInputAttribute(item?.op1, 0) ===
+                                "time_diff" && (
+                                <>
+                                  {timeUnits?.map((item, index) => (
+                                    <option key={index} value={item.value}>
+                                      {item.name}
+                                    </option>
+                                  ))}
+                                </>
+                              )}
+                            </Select>
+                            )
+                          </>
+                        )
+                      }
+                    </>
+                  )}
+                </OutlineWrapper>
+              )}
+              {item?.operator != null && (
+                <OutlineWrapper>
+                  <Select
+                    value={item.operator}
+                    onChange={(e) =>
+                      handleSelectChange("rhs", "operator", index, e)
+                    }
+                  >
+                    <option selected hidden>
+                      Select
+                    </option>
+                    {arithmeticOperations?.map((item) => (
+                      <option key={item.name} value={item.value}>
+                        {item.name}
+                      </option>
+                    ))}
+                  </Select>
+                </OutlineWrapper>
+              )}
+              {item?.op2 !== null && (
+                <OutlineWrapper>
+                  <Select
+                    value={
+                      inputAttribute?.includes(item?.op2)
+                        ? item?.op2
+                        : "__custom__"
+                    }
+                    onChange={(e) => handleSelectChange("rhs", "op2", index, e)}
+                  >
+                    <option selected hidden>
+                      Select
+                    </option>
+                    {inputAttribute?.map((item) => (
+                      <option key={item} value={item}>
+                        {item}
+                      </option>
+                    ))}
+                    {specialAttributes?.map((item) => (
+                      <option key={item.name} value={item.value}>
+                        {item.name}
+                      </option>
+                    ))}
+                    <option value="">Custom Value</option>
+                  </Select>
+                  {(item?.op2 === "__custom__" ||
+                    inputAttribute?.includes(item?.op2) === false) && (
+                    <Input
+                      value={item?.op2}
+                      onChange={(e) =>
+                        handleSelectChange("rhs", "op2", index, e)
+                      }
+                      placeholder="Enter Value"
+                    />
+                  )}
+                </OutlineWrapper>
+              )}
+            </ConditionBody>
+            {index > 0 && (
+              <DeleteOutlineRounded
+                key={index}
+                sx={{
+                  fontSize: "18px",
+                  color: theme.text_secondary,
+                  cursor: "pointer",
+                }}
+                onClick={() => deleteExpression("rhs", index)}
+              />
+            )}
+            <VR key={index} />
+          </>
+        ))}
+
+        {condition.expression?.rhs[0].op2 != null && (
+          <DeleteOutlineRounded
+            key={index}
+            sx={{
+              fontSize: "18px",
+              color: theme.text_secondary,
+              cursor: "pointer",
+            }}
+            onClick={() => deleteExpression("rhs", index)}
+          />
+        )}
+
+        <Button onClick={() => addBlankExpression("rhs")}>
+          <AddRounded sx={{ fontSize: "18px", color: theme.primary }} />
+          Add Expression
+        </Button>
+        <VR style={{ width: "6px" }} />
         <DeleteOutlineRounded
           sx={{
             fontSize: "18px",

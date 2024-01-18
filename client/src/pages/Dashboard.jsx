@@ -7,6 +7,8 @@ import { getRecentActivity } from "../api";
 import { openSnackbar } from "../redux/reducers/snackbarSlice";
 import Loader from "../components/Loader";
 import { useNavigate } from "react-router-dom";
+import ActivityCard from "../components/cards/ActivityCard";
+import { Skeleton } from "@mui/material";
 
 const Container = styled.div`
   padding: 20px 30px;
@@ -25,9 +27,10 @@ const Container = styled.div`
 const TopSection = styled.div`
   display: flex;
   align-items: center;
-  justify-content: flex-end;
+  justify-content: space-between;
   gap: 20px;
   @media (max-width: 768px) {
+    flex-direction: column;
   }
 `;
 
@@ -96,6 +99,8 @@ const Dashboard = ({ setOpenNewRule }) => {
   const dispath = useDispatch();
   const navigate = useNavigate();
   const [recentRules, setRecentRules] = useState([]);
+  const [total, setTotal] = useState(0);
+  const [tested, setTested] = useState(0);
   const [loading, setLoading] = useState(false);
 
   const getReentRules = async () => {
@@ -103,7 +108,9 @@ const Dashboard = ({ setOpenNewRule }) => {
     const token = localStorage.getItem("decisionhub-token-auth-x4");
     await getRecentActivity(token)
       .then((res) => {
-        setRecentRules(res.data);
+        setRecentRules(res?.data?.rules);
+        setTotal(res?.data?.total);
+        setTested(res?.data?.tested);
         setLoading(false);
       })
       .catch((err) => {
@@ -124,6 +131,26 @@ const Dashboard = ({ setOpenNewRule }) => {
   return (
     <Container>
       <TopSection>
+        {loading ? (
+          <Flex>
+            <Skeleton variant="rounded" height={80} width={200} />
+            <Skeleton variant="rounded" height={80} width={200} />
+          </Flex>
+        ) : (
+          <Flex>
+            <ActivityCard
+              rule
+              title="Total Rules"
+              percentage={((total / 20) * 100).toFixed(1)}
+              total={total}
+            />
+            <ActivityCard
+              title="Tested Rules"
+              percentage={((tested / total) * 100).toFixed(1)}
+              total={tested}
+            />
+          </Flex>
+        )}
         <Flex>
           <Button onClick={() => setOpenNewRule(true)}>
             <AddRounded sx={{ fontSize: "22px" }} />

@@ -35,10 +35,23 @@ export const getRules = async (filter, token) =>
     headers: { Authorization: `Bearer ${token}` },
   });
 
+export const getTableNames = async (token) =>
+  await API.get(`/user/getTableList`, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+
 // Rules
 export const createRule = async (data, token) =>
   await API.post(
     "/rule",
+    data,
+    { headers: { Authorization: `Bearer ${token}` } },
+    { withCredentials: true }
+  );
+
+export const createRuleWithText = async (id, data, token) =>
+  await API.patch(
+    `/rule/ruleWithText/${id}`,
     data,
     { headers: { Authorization: `Bearer ${token}` } },
     { withCredentials: true }
