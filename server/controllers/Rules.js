@@ -976,7 +976,11 @@ function evaluateExpression(expression, inputData) {
           sideValue -= parseFloat(operand.op2);
           break;
         default:
-          sideValue = parseFloat(sideValue);
+          if (comparator === "==" || comparator === "!=") {
+            sideValue = sideValue;
+          } else {
+            sideValue = parseFloat(sideValue);
+          }
           break;
       }
 

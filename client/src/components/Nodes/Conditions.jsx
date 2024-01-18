@@ -628,7 +628,7 @@ const Conditions = ({
                         {item.name}
                       </option>
                     ))}
-                    <option value="__custom__">Custom Value</option>
+                    <option value="">Custom Value</option>
                   </Select>
 
                   {(item?.op1 === "__custom__" ||
@@ -644,7 +644,7 @@ const Conditions = ({
                         <Input
                           value={item?.op1}
                           onChange={(e) =>
-                            handleSelectChange("rhs", "op1", index, e)
+                            handleSelectChange("lhs", "op1", index, e)
                           }
                           placeholder="Enter Value"
                         />
@@ -786,7 +786,7 @@ const Conditions = ({
                         {item.name}
                       </option>
                     ))}
-                    <option value="__custom__">Custom Value</option>
+                    <option value="">Custom Value</option>
                   </Select>
                   {(item?.op2 === "__custom__" ||
                     inputAttribute?.includes(item?.op2) === false) && (
@@ -879,7 +879,7 @@ const Conditions = ({
                         {item.name}
                       </option>
                     ))}
-                    <option value="__custom__">Custom Value</option>
+                    <option value="">Custom Value</option>
                   </Select>
 
                   {(item?.op1 === "__custom__" ||
@@ -1037,7 +1037,7 @@ const Conditions = ({
                         {item.name}
                       </option>
                     ))}
-                    <option value="__custom__">Custom Value</option>
+                    <option value="">Custom Value</option>
                   </Select>
                   {(item?.op2 === "__custom__" ||
                     inputAttribute?.includes(item?.op2) === false) && (
