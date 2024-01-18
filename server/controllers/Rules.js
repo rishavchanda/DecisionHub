@@ -3,6 +3,7 @@ import { createError } from "../error.js";
 import { Op } from "sequelize";
 import OpenAI from "openai";
 import { createRuleRequest } from "../utils/prompt.js";
+import { Sequelize } from "sequelize";
 import * as dotenv from "dotenv";
 import xlsx from "xlsx";
 import path from "path";
@@ -11,9 +12,15 @@ dotenv.config();
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
 });
+
+const sequelize = new Sequelize(process.env.DATABASE_URL, {
+  dialect: "postgres",
+});
+
 const Rule = db.rule;
 const User = db.user;
 const Version = db.version;
+const BankUser = db.bankUser;
 
 export const createRule = async (req, res, next) => {
   const {
@@ -738,6 +745,33 @@ const setNodeColor = (
   return condition;
 };
 
+export const testWithDb = async (req, res, next) => {
+  const userId = req.user.id;
+  const id = req.params.id;
+  const tableName = req.body.name;
+  try {
+    const user = await User.findOne({ where: { id: userId } });
+    if (!user) {
+      return next(createError(404, "User not found"));
+    }
+    const rule = await Rule.findOne({ where: { id: id } });
+    if (!rule) {
+      return next(createError(404, "No rule with that id"));
+    }
+    //check if user is owner of this rule
+    const userRules = await user.getRules();
+    const ruleIds = userRules.map((rule) => rule.id);
+    if (!ruleIds.includes(id)) {
+      return next(createError(403, "You are not owner of this rule"));
+    }
+    const sql = `SELECT * FROM ${tableName}`; 
+    const [rows] = await sequelize.query(sql, { type: sequelize.QueryTypes.SELECT });
+    return res.json(rows);
+  } catch (error) {
+    return next(createError(error.status, error.message));
+  }
+}
+
 const evaluateNodes = async (
   node,
   condition,
@@ -888,7 +922,7 @@ const evaluateNodes = async (
   }
 };
 
-export const testing = async (req, res, next) => {
+export const testing = async (req, res, next) => { 
   const inputAttributes = req.body;
   const { id, version } = req.params;
   const userId = req.user.id;
