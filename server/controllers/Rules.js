@@ -887,7 +887,7 @@ const evaluateNodes = async (
   }
 
   if (!nextNode) {
-    return testedRule;
+    return { rule: testedRule, output: [] };
   }
 
   if (nextNode.type === "outputNode") {
@@ -1016,7 +1016,7 @@ export const testing = async (req, res, next) => {
           inputAttributes,
           { condition: JSON.stringify(condition) }
         );
-
+        console.log(testedRule);
         rule.condition = testedRule.rule.condition;
       }
     }
@@ -1226,7 +1226,7 @@ function evaluateConditions(conditions, rule, inputAttributes) {
       logicalOperator = condition.boolean;
     }
   }
-
+  console.log(result);
   if (rule === "Any") {
     return [result.includes(true), eachConditionResult];
   } else if (rule === "All") {

@@ -30,12 +30,12 @@ const Condition = styled.div`
   gap: 8px;
   padding: 0 8px;
   border-radius: 8px;
-  background: transparent;
-  border: 1px solid ${({ theme }) => theme.text_secondary + 50};
+  background: ${({ theme }) => theme.text_secondary + 10};
   ${({ result, color }) =>
     result &&
     `
-  border: 1px solid ${color ? "#02ab40" : "#FF0072"};
+  border: 0.5px solid ${color ? "#02ab4080" : "#FF007280"};
+  background: ${color ? "#02ab4010" : "#FF007210"};
   `}
 `;
 
@@ -63,7 +63,7 @@ const ConditionBody = styled.div`
 `;
 
 const OutlineWrapper = styled.div`
-  border: 1px solid ${({ theme }) => theme.text_secondary + 50};
+  border: 1px solid ${({ theme }) => theme.text_secondary + 20};
   border-radius: 8px;
   padding: 9px 8px;
   font-size: 10px;
@@ -84,7 +84,6 @@ const Select = styled.select`
   padding-right: 2px;
   font-size: 10px;
   color: ${({ theme }) => theme.text_primary};
-  background: ${({ theme }) => theme.card};
   &:focus {
     outline: none;
   }
@@ -97,7 +96,6 @@ const Input = styled.input`
   font-size: 10px;
   font-weight: 600;
   color: ${({ theme }) => theme.text_primary};
-  background: ${({ theme }) => theme.card};
   &:focus {
     outline: none;
   }
@@ -812,7 +810,6 @@ const Conditions = ({
                 onClick={() => deleteExpression("lhs", index)}
               />
             )}
-            <VR key={index} />
           </>
         ))}
 
@@ -828,12 +825,11 @@ const Conditions = ({
           />
         )}
         <Button onClick={() => addBlankExpression("lhs")}>
-          <AddRounded sx={{ fontSize: "18px", color: theme.primary }} />
-          Add Expression
+          <AddRounded sx={{ fontSize: "14px", color: theme.primary }} />
         </Button>
 
         {/* lhs */}
-        <VR style={{ width: "5px" }} />
+        <VR style={{ width: "2px" }} />
 
         <Select
           value={condition?.expression?.comparator}
@@ -849,7 +845,7 @@ const Conditions = ({
             </option>
           ))}
         </Select>
-        <VR style={{ width: "4px" }} />
+        <VR style={{ width: "2px" }} />
         {/* rhs */}
         {condition.expression?.rhs?.map((item, index) => (
           <>
@@ -1063,7 +1059,6 @@ const Conditions = ({
                 onClick={() => deleteExpression("rhs", index)}
               />
             )}
-            <VR key={index} />
           </>
         ))}
 
@@ -1080,10 +1075,9 @@ const Conditions = ({
         )}
 
         <Button onClick={() => addBlankExpression("rhs")}>
-          <AddRounded sx={{ fontSize: "18px", color: theme.primary }} />
-          Add Expression
+          <AddRounded sx={{ fontSize: "14px", color: theme.primary }} />
         </Button>
-        <VR style={{ width: "6px" }} />
+        <VR style={{ width: "1px" }} />
         <DeleteOutlineRounded
           sx={{
             fontSize: "18px",
@@ -1102,7 +1096,7 @@ const Conditions = ({
       </Condition>
       {!withBoolean && (
         <>
-          <VR style={{ height: "10px", margin: "0px 20px", width: "2px" }} />
+          <VR style={{ height: "14px", margin: "0px 20px", width: "2px" }} />
           <Button
             style={{
               width: "fit-content",
