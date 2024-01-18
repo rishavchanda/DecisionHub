@@ -20,6 +20,7 @@ import { useDispatch, useSelector } from "react-redux";
 import { ruleUpdated } from "../../redux/reducers/rulesSlice";
 
 const Wrapper = styled.div`
+  cursor: pointer !important;
   display: flex;
   flex-direction: row;
   justify-content: center;
@@ -40,6 +41,7 @@ const Indicator = styled.div`
 `;
 
 const Node = styled.div`
+  cursor: pointer !important;
   background-color: ${({ theme }) => theme.card};
   border-left: 6px solid ${({ theme }) => theme.yellow + 90};
   border-radius: 8px;
