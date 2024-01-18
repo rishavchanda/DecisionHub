@@ -70,7 +70,7 @@ const Button = styled.div`
   `}
 `;
 
-const TestRuleForm = ({ attributes, loading, submitTestData }) => {
+const TestRuleForm = ({ attributes, loading, submitTestData, output }) => {
   const theme = useTheme();
   const [buttonDisabled, setButtonDisabled] = useState(true);
   const [testData, setTestData] = useState(
@@ -138,6 +138,19 @@ const TestRuleForm = ({ attributes, loading, submitTestData }) => {
               );
             })}
           </Form>
+          {output && (
+            <div>
+              <Title style={{ fontSize: "14px" }}>Output</Title>
+              {output.map((item, index) => (
+                <Desc
+                  style={{ fontSize: "12px", fontWeight: "400" }}
+                  key={index}
+                >
+                  {item?.field} : {item?.value}
+                </Desc>
+              ))}
+            </div>
+          )}
           <Button
             onClick={() =>
               !buttonDisabled && !loading && submitTestData(testData)
