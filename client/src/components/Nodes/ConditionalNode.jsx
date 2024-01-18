@@ -13,6 +13,8 @@ import {
   SubtitlesRounded,
   BubbleChartRounded,
   DeleteOutlineRounded,
+  ExpandMoreRounded,
+  ExpandLessRounded,
 } from "@mui/icons-material";
 import Conditions from "./Conditions";
 import { checkConditionType, logicalOperations } from "../../utils/data";
@@ -20,6 +22,8 @@ import { useDispatch, useSelector } from "react-redux";
 import { ruleUpdated } from "../../redux/reducers/rulesSlice";
 
 const Wrapper = styled.div`
+  cursor: pointer !important;
+  min-width: 250px;
   display: flex;
   flex-direction: row;
   justify-content: center;
@@ -40,6 +44,7 @@ const Indicator = styled.div`
 `;
 
 const Node = styled.div`
+  cursor: pointer !important;
   background-color: ${({ theme }) => theme.card};
   border-left: 6px solid ${({ theme }) => theme.yellow + 90};
   border-radius: 8px;
@@ -69,6 +74,8 @@ const NodeHeader = styled.div`
 `;
 
 const NodeTitle = styled.input`
+  width: 100%;
+  min-width: 300px;
   flex: 1;
   font-size: 14px;
   font-weight: 500;
@@ -98,6 +105,13 @@ const Hr = styled.div`
   height: 1px;
   background: ${({ theme }) => theme.text_secondary + 20};
   border-radius: 8px;
+`;
+
+const FlexDisplay = styled.div`
+  width: max-content;
+  display: flex;
+  flex-direction: row;
+  gap: 40px;
 `;
 
 const Flex = styled.div`
@@ -170,7 +184,6 @@ const No = styled.div`
   flex-direction: column;
   align-items: center;
   position: relative;
-  font-size: 10px;
 `;
 
 const Yes = styled.div`
@@ -181,10 +194,6 @@ const Yes = styled.div`
 `;
 
 const NodeButtons = styled.div`
-  position: absolute;
-  top: 250%;
-  left: -55%;
-  transform: translate(0, -50%);
   display: flex;
   flex-direction: column;
   justify-content: center;
@@ -353,8 +362,8 @@ const calculateNodePosition = (
 ) => {
   const offsetX =
     sourceHandle === "no"
-      ? currentNode.position.x + width / 3 + 600 + 1200 * neighbourOffset
-      : currentNode.position.x + width / 3 - 600 - 1200 * neighbourOffset; // Adjust as needed
+      ? currentNode.position.x + width / 3 + 600 + 1000 * neighbourOffset
+      : currentNode.position.x + width / 3 - 600 - 1000 * neighbourOffset; // Adjust as needed
   const offsetY = 200; // Adjust as needed
   const x = offsetX;
   const y = depth + offsetY;
@@ -384,7 +393,7 @@ const YesNode = ({ id, data }) => {
     <Yes>
       <VR
         style={{
-          height: "60px",
+          minHeight: "60px",
           background: data?.computed === "yes" ? data?.color : theme.arrow,
           width: "3px",
         }}
@@ -406,7 +415,7 @@ const YesNode = ({ id, data }) => {
       </OutlineWrapper>
 
       {yesEdges.length === 0 ? (
-        <NodeButtons style={{ top: "170%", left: "-55%" }}>
+        <NodeButtons>
           <AddNoNode>
             <AddRounded sx={{ fontSize: "14px" }} />
           </AddNoNode>
@@ -510,18 +519,24 @@ const NoNode = ({ id, data }) => {
 
   return (
     <No>
+      <VR
+        style={{
+          minHeight: "60px",
+          background: data?.computed === "no" ? data?.color : theme.arrow,
+          width: "3px",
+        }}
+      />
       <OutlineWrapper
         style={{
           borderColor: data?.computed === "no" ? data?.color : theme.arrow,
           color: data?.computed === "no" && data?.color,
-          borderWidth: "3px",
           width: "100px",
+          borderWidth: "3px",
           height: "40px",
           display: "flex",
           justifyContent: "center",
           alignItems: "center",
-          fontSize: "20px",
-          marginTop: noEdges.length === 0 ? "0px" : "30px",
+          fontSize: "18px",
         }}
       >
         No
@@ -598,7 +613,7 @@ const NoNode = ({ id, data }) => {
             dispatch(ruleUpdated());
           }}
         >
-          <AddRounded sx={{ fontSize: "14px", color: "inherit" }} />
+          <AddRounded sx={{ fontSize: "18px", color: "inherit" }} />
         </AddNoNode>
       )}
       <Handle id="no" type="source" position={Position.Bottom} />
@@ -610,6 +625,7 @@ function ConditionalNode({ id, data }) {
   const theme = useTheme();
   const dispatch = useDispatch();
   const reactFlow = useReactFlow();
+  const [expanded, setExpanded] = useState(true);
   const { updated } = useSelector((state) => state.rule);
   const [noOfEdgesParent, setNoOfEdgesParent] = useState(0);
 
@@ -919,95 +935,108 @@ function ConditionalNode({ id, data }) {
               />
               Delete
             </OutlineWrapper>
+            {expanded ? (
+              <ExpandLessRounded
+                sx={{
+                  fontSize: "16px",
+                  color: theme.text_primary,
+                  cursor: "pointer",
+                }}
+                onClick={() => setExpanded(!expanded)}
+              />
+            ) : (
+              <ExpandMoreRounded
+                sx={{
+                  fontSize: "16px",
+                  color: theme.text_primary,
+                  cursor: "pointer",
+                }}
+                onClick={() => setExpanded(!expanded)}
+              />
+            )}
           </NodeHeader>
-          <Hr />
-          <NodeBody>
-            {data.conditions?.map((condition, index) => (
-              <div key={index}>
-                <Conditions
-                  nodeId={id}
-                  condition={condition}
-                  conditionIndex={index}
-                  inputAttribute={data.inputAttributes}
-                  resultAttribute={data.outputAttributes}
-                  withBoolean={condition.boolean}
-                  booleanDisabled={index === data.conditions.length - 1}
-                  deleteCondition={deleteCondition}
-                  addBooleanCondition={addBooleanCondition}
-                  result={data?.result}
-                  index={index}
-                />
-                {condition.boolean && (
-                  <BooleanCondition>
-                    <VR
-                      style={{
-                        height: "10px",
-                        margin: "0px 20px",
-                        width: "2px",
-                        background: theme.secondary,
-                      }}
+          {expanded && (
+            <>
+              <Hr />
+              <NodeBody>
+                {data.conditions?.map((condition, index) => (
+                  <div key={index}>
+                    <Conditions
+                      nodeId={id}
+                      condition={condition}
+                      conditionIndex={index}
+                      inputAttribute={data.inputAttributes}
+                      resultAttribute={data.outputAttributes}
+                      withBoolean={condition.boolean}
+                      booleanDisabled={index === data.conditions.length - 1}
+                      deleteCondition={deleteCondition}
+                      addBooleanCondition={addBooleanCondition}
+                      result={data?.result}
+                      index={index}
                     />
-                    <OutlineWrapper
-                      style={{
-                        borderColor: theme.secondary,
-                        width: "fit-content",
-                      }}
-                    >
-                      <Select
-                        value={condition.boolean}
-                        onChange={(e) => {
-                          handelBooleanChange(index, e);
-                        }}
-                      >
-                        {logicalOperations.map((item) => (
-                          <option value={item.value}>{item.name}</option>
-                        ))}
-                      </Select>
-                      <DeleteOutlineRounded
-                        sx={{
-                          fontSize: "16px",
-                          color: theme.text_secondary,
-                          cursor: "pointer",
-                        }}
-                        onClick={() => deleteBoolean(index)}
-                      />
-                    </OutlineWrapper>
-                    <VR
-                      style={{
-                        height: "10px",
-                        margin: "0px 20px",
-                        width: "2px",
-                        background: theme.secondary,
-                      }}
-                    />
-                  </BooleanCondition>
-                )}
-              </div>
-            ))}
-          </NodeBody>
-          <Hr />
-          <NodeFooter>
-            <Button onClick={() => addCondition()}>
-              <AddRounded sx={{ fontSize: "16px", color: theme.primary }} />
-              Add Condition
-            </Button>
-          </NodeFooter>
+                    {condition.boolean && (
+                      <BooleanCondition>
+                        <VR
+                          style={{
+                            height: "10px",
+                            margin: "0px 20px",
+                            width: "2px",
+                            background: theme.secondary,
+                          }}
+                        />
+                        <OutlineWrapper
+                          style={{
+                            borderColor: theme.secondary,
+                            width: "fit-content",
+                          }}
+                        >
+                          <Select
+                            value={condition.boolean}
+                            onChange={(e) => {
+                              handelBooleanChange(index, e);
+                            }}
+                          >
+                            {logicalOperations.map((item) => (
+                              <option value={item.value}>{item.name}</option>
+                            ))}
+                          </Select>
+                          <DeleteOutlineRounded
+                            sx={{
+                              fontSize: "16px",
+                              color: theme.text_secondary,
+                              cursor: "pointer",
+                            }}
+                            onClick={() => deleteBoolean(index)}
+                          />
+                        </OutlineWrapper>
+                        <VR
+                          style={{
+                            height: "10px",
+                            margin: "0px 20px",
+                            width: "2px",
+                            background: theme.secondary,
+                          }}
+                        />
+                      </BooleanCondition>
+                    )}
+                  </div>
+                ))}
+              </NodeBody>
+              <Hr />
+              <NodeFooter>
+                <Button onClick={() => addCondition()}>
+                  <AddRounded sx={{ fontSize: "16px", color: theme.primary }} />
+                  Add Condition
+                </Button>
+              </NodeFooter>
+            </>
+          )}
         </Node>
-        <YesNode id={id} data={data} />
+        <FlexDisplay>
+          <YesNode id={id} data={data} />
+          {noOfEdgesParent <= 1 && <NoNode id={id} data={data} />}
+        </FlexDisplay>
       </FlexRight>
-
-      {noOfEdgesParent <= 1 && (
-        <>
-          <Hr
-            style={{
-              height: "3px",
-              background: data?.computed === "no" ? data?.color : theme.arrow,
-              width: "100px",
-            }}
-          />
-          <NoNode id={id} data={data} />
-        </>
-      )}
     </Wrapper>
   );
 }

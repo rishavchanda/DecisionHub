@@ -10,12 +10,12 @@ import {
   RuleRounded,
 } from "@mui/icons-material";
 import { useDispatch, useSelector } from "react-redux";
-import { NavLink, Link, useNavigate, useLocation } from "react-router-dom";
+import { NavLink, Link, useNavigate } from "react-router-dom";
 import styled, { useTheme } from "styled-components";
 import { Avatar } from "@mui/material";
 import { useEffect, useState } from "react";
 import { logout, setDarkMode } from "../redux/reducers/userSlice";
-// import Logo from "../Images/Logo.svg";
+import Logo from "../images/logo.png";
 
 const Container = styled.div`
   ${({ collapsed }) =>
@@ -74,7 +74,7 @@ const FlexTopDown = styled.div`
 `;
 
 const LogoText = styled(Link)`
-  font-size: 24px;
+  font-size: 22px;
   font-weight: bold;
   display: flex;
   align-items: center;
@@ -106,7 +106,7 @@ const Colapse = styled.div`
 `;
 
 const LogoImg = styled.img`
-  height: 30px;
+  height: 25px;
   margin-right: 10px;
   @media only screen and (max-width: 600px) {
     height: 22px;
@@ -231,7 +231,7 @@ const Sidebar = ({ setMenuOpen }) => {
         <div>
           <Flex>
             <LogoText to="/">
-              {/* <LogoImg src={Logo} /> */}
+              {!collapsed && <LogoImg src={Logo} />}
               {!collapsed && "DecisionHub"}
               <Colapse
                 onClick={(e) => {

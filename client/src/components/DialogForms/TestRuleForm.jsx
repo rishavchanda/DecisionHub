@@ -48,6 +48,20 @@ const Form = styled.form`
   gap: 10px;
 `;
 
+const Hr = styled.div`
+  width: 80%;
+  height: 1px;
+  margin: 15px 0px 15px 0px;
+  background: ${({ theme }) => theme.menu_secondary_text + 30};
+`;
+
+const Flex = styled.div`
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 10px;
+`;
+
 const Button = styled.div`
   border-radius: 6px;
   padding: 8px 14px;
@@ -70,7 +84,15 @@ const Button = styled.div`
   `}
 `;
 
-const TestRuleForm = ({ attributes, loading, submitTestData }) => {
+const TestRuleForm = ({
+  attributes,
+  loading,
+  submitTestData,
+  excelLoading,
+  dbLoading,
+  submitExcelData,
+  output,
+}) => {
   const theme = useTheme();
   const [buttonDisabled, setButtonDisabled] = useState(true);
   const [testData, setTestData] = useState(
@@ -99,6 +121,15 @@ const TestRuleForm = ({ attributes, loading, submitTestData }) => {
   useEffect(() => {
     setButtonDisabled(!checkInputs());
   }, [checkInputs, testData]);
+
+  const handleFileChange = (e) => {
+    const file = e.target.files[0];
+    // You can perform additional checks on the file if needed
+    // For example, check the file type or size
+
+    // Pass the file to the submitExcelData function
+    submitExcelData(file);
+  };
 
   return (
     <div>
@@ -138,6 +169,19 @@ const TestRuleForm = ({ attributes, loading, submitTestData }) => {
               );
             })}
           </Form>
+          {output.length > 0 && (
+            <div>
+              <Title style={{ fontSize: "14px" }}>Output</Title>
+              {output.map((item, index) => (
+                <Desc
+                  style={{ fontSize: "12px", fontWeight: "400" }}
+                  key={index}
+                >
+                  {item?.field} : {item?.value}
+                </Desc>
+              ))}
+            </div>
+          )}
           <Button
             onClick={() =>
               !buttonDisabled && !loading && submitTestData(testData)
@@ -150,6 +194,50 @@ const TestRuleForm = ({ attributes, loading, submitTestData }) => {
               </>
             ) : (
               "Submit"
+            )}
+          </Button>
+
+          <Flex>
+            <Hr />
+            Or
+            <Hr />
+          </Flex>
+          <label htmlFor="excelFile">
+            <Button
+              as="div"
+              style={{
+                backgroundColor: theme.secondary,
+                color: theme.white,
+              }}
+            >
+              {excelLoading ? (
+                <>
+                  <CircularProgress size={18} color="inherit" />
+                </>
+              ) : (
+                "Upload Excel Sheet"
+              )}
+            </Button>
+          </label>
+          <input
+            id="excelFile"
+            type="file"
+            accept=".xlsx, .xls" // Specify accepted file types if needed
+            onChange={handleFileChange}
+            style={{ display: "none" }}
+          />
+          <Button
+            style={{
+              backgroundColor: theme.primary,
+              color: theme.white,
+            }}
+          >
+            {dbLoading ? (
+              <>
+                <CircularProgress size={18} color="inherit" />
+              </>
+            ) : (
+              "Run On Database"
             )}
           </Button>
         </Container>

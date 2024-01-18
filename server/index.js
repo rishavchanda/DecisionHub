@@ -27,13 +27,17 @@ app.use(express.json());
 //   console.log("db has been re sync");
 // });
 
+// db.sequelize.sync({ alter: true }).then(() => {
+//   console.log("Database schema has been updated"); 
+// });
+
 app.use("/api/auth", authRoutes);
 app.use("/api/user", userRoutes);
 app.use("/api/rule", ruleRoutes);
 app.use("/api/bankUser", bankUserRoutes);
 
 app.use((err, req, res, next) => {
-  const status = err.status || 500;
+  const status = err.status || 500; 
   const message = err.message || "Something went wrong";
   return res.status(status).json({
     success: false,

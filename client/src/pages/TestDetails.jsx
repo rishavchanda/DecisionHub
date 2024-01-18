@@ -16,11 +16,12 @@ import styled, { useTheme } from "styled-components";
 import { CircularProgress, MenuItem, Select } from "@mui/material";
 import { ArrowBackRounded, EditRounded } from "@mui/icons-material";
 import { useNavigate, useParams, useLocation } from "react-router-dom";
-import { getRuleById, testRule } from "../api";
+import { getRuleById, testRule, uploadExcel } from "../api";
 import { useDispatch, useSelector } from "react-redux";
 import { openSnackbar } from "../redux/reducers/snackbarSlice";
 import { ruleReload } from "../redux/reducers/rulesSlice";
 import TestRuleForm from "../components/DialogForms/TestRuleForm";
+import ResultDialog from "../components/ResultDialog";
 
 const FlexDisplay = styled.div`
   display: flex;
@@ -93,12 +94,16 @@ const TestDetails = () => {
   const [nodes, setNodes, onNodesChange] = useNodesState();
   const [edges, setEdges, onEdgesChange] = useEdgesState();
   const [rule, setRule] = useState();
+  const [output, setOutput] = useState([]);
   const [versions, setVersions] = useState([]);
   const [version, setVersion] = useState();
 
   //loader
   const [loading, setLoading] = useState(true);
   const [submitLoading, setSubmitLoading] = useState(false);
+  const [excelLoading, setExcelLoading] = useState(false);
+  const [dbLoading, setDbLoading] = useState(false);
+  const [showResult, setShowResult] = useState({ open: false, result: [] });
 
   //Functions
 
@@ -150,7 +155,7 @@ const TestDetails = () => {
     await testRule(id, rule?.version, testData, token)
       .then(async (res) => {
         await setRule(res.data?.rule);
-        console.log(res.data?.output);
+        await setOutput(res.data?.output);
         await setInputAttributes(res.data?.rule?.inputAttributes);
         await createFlow(res.data?.rule);
         setSubmitLoading(false);
@@ -168,6 +173,28 @@ const TestDetails = () => {
 
   const handelSubmitTestData = (testData) => {
     getTestedRule(testData);
+  };
+
+  const handelExcelSubmit = async (excelData) => {
+    var formData = new FormData();
+    formData.append("file", excelData);
+    const token = localStorage.getItem("decisionhub-token-auth-x4");
+    setExcelLoading(true);
+    await uploadExcel(formData, id, token)
+      .then((res) => {
+        console.log(res.data);
+        setShowResult({ open: true, result: res.data });
+        setExcelLoading(false);
+      })
+      .catch((err) => {
+        dispath(
+          openSnackbar({
+            message: err.response.data.message,
+            severity: "error",
+          })
+        );
+        setExcelLoading(false);
+      });
   };
 
   useEffect(() => {
@@ -238,6 +265,9 @@ const TestDetails = () => {
                 attributes={inputAttributes}
                 loading={submitLoading}
                 submitTestData={(testData) => handelSubmitTestData(testData)}
+                output={output}
+                excelLoading={excelLoading}
+                submitExcelData={(excelData) => handelExcelSubmit(excelData)}
               />
               <Button onClick={() => navigate(`/rules/${path[2]}`)}>
                 <EditRounded style={{ fontSize: "12px" }} /> Edit Rule
@@ -246,6 +276,9 @@ const TestDetails = () => {
           </Panel>
           <Panel position="bottom-right"></Panel>
         </ReactFlow>
+      )}
+      {showResult.open && (
+        <ResultDialog result={showResult.result} setResult={setShowResult} />
       )}
     </div>
   );

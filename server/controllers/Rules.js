@@ -3,6 +3,7 @@ import { createError } from "../error.js";
 import { Op } from "sequelize";
 import OpenAI from "openai";
 import { createRuleRequest } from "../utils/prompt.js";
+import { Sequelize } from "sequelize";
 import * as dotenv from "dotenv";
 import xlsx from "xlsx";
 import path from "path";
@@ -11,13 +12,25 @@ dotenv.config();
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
 });
+
+const sequelize = new Sequelize(process.env.DATABASE_URL, {
+  dialect: "postgres",
+});
+
 const Rule = db.rule;
 const User = db.user;
 const Version = db.version;
+const BankUser = db.bankUser;
 
 export const createRule = async (req, res, next) => {
-  const { title, description, inputAttributes, outputAttributes, condition } =
-    req.body;
+  const {
+    title,
+    description,
+    tables,
+    inputAttributes,
+    outputAttributes,
+    condition,
+  } = req.body;
   const test = JSON.parse(req.body.condition);
   const userId = req.user.id;
   try {
@@ -28,6 +41,7 @@ export const createRule = async (req, res, next) => {
     const rule = await Rule.create({
       title,
       description,
+      tables,
       inputAttributes,
       outputAttributes,
       condition,
@@ -36,6 +50,7 @@ export const createRule = async (req, res, next) => {
     const version = await Version.create({
       title: rule.title,
       description: rule.description,
+      tables: rule.tables,
       inputAttributes: rule.inputAttributes,
       outputAttributes: rule.outputAttributes,
       condition: rule.condition,
@@ -134,7 +149,6 @@ export const searchRule = async (req, res) => {
 
     res.status(200).json(rules);
   } catch (err) {
-    console.error(err);
     res.status(500).json({ error: "Internal Server Error" });
   }
 };
@@ -164,6 +178,7 @@ export const updateRule = async (req, res, next) => {
         {
           title: newRule.title,
           description: newRule.description,
+          tables: newRule.tables,
           inputAttributes: newRule.inputAttributes,
           outputAttributes: newRule.outputAttributes,
           condition: newRule.condition,
@@ -180,6 +195,7 @@ export const updateRule = async (req, res, next) => {
         {
           title: newRule.title,
           description: newRule.description,
+          tables: newRule.tables,
           inputAttributes: newRule.inputAttributes,
           outputAttributes: newRule.outputAttributes,
           condition: newRule.condition,
@@ -212,6 +228,7 @@ export const updateRule = async (req, res, next) => {
         {
           title: newRule.title,
           description: newRule.description,
+          tables: newRule.tables,
           inputAttributes: newRule.inputAttributes,
           outputAttributes: newRule.outputAttributes,
           condition: newRule.condition,
@@ -272,6 +289,7 @@ export const updateRuleWithVersion = async (req, res, next) => {
     const version = await Version.create({
       title: updatedRule.title,
       description: updatedRule.description,
+      tables: updatedRule.tables,
       inputAttributes: updatedRule.inputAttributes,
       outputAttributes: updatedRule.outputAttributes,
       condition: updatedRule.condition,
@@ -339,6 +357,7 @@ export const deleteRule = async (req, res, next) => {
           {
             title: latestVersion.title,
             description: latestVersion.description,
+            tables: latestVersion.tables,
             inputAttributes: latestVersion.inputAttributes,
             outputAttributes: latestVersion.outputAttributes,
             condition: latestVersion.condition,
@@ -377,7 +396,8 @@ export const deleteRule = async (req, res, next) => {
 export const testingExcel = async (req, res, next) => {
   const storagePath = "FILES_STORAGE/";
   const userId = req.user.id;
-  const { id, version } = req.params;
+  const { id } = req.params;
+  let data = [];
   try {
     const user = await User.findOne({ where: { id: userId } });
     if (!user) {
@@ -402,13 +422,11 @@ export const testingExcel = async (req, res, next) => {
     const filePath = path.join(storagePath, file.filename);
     let workbook = xlsx.readFile(filePath);
     let sheet_name_list = workbook.SheetNames;
-    console.log(sheet_name_list);
 
-    sheet_name_list.forEach(function (y) {
+    sheet_name_list.forEach(async function (y) {
       var worksheet = workbook.Sheets[y];
       // getting the complete sheet
-      var headers = {};
-      var data = [];
+      let headers = {};
       for (let z in worksheet) {
         if (z[0] === "!") continue;
         // parse out the column, row, and value
@@ -427,23 +445,77 @@ export const testingExcel = async (req, res, next) => {
       // drop those first two rows which are empty
       data.shift();
       data.shift();
+      await data.map(async (inputData, index) => {
+        const condition = JSON.parse(rule.condition);
+        let testedRule;
+        const attributeNode = condition.nodes.find(
+          (node) => node.type === "attributeNode"
+        );
 
-      // Add "output" field with a value of 0 to each row
-      data.forEach((row) => {
-        row["output"] = 0;
-      });
+        const firstConditionalNodeId = condition.edges.find(
+          (edge) => edge.source === "1"
+        ).target;
 
-      var newWorkbook = xlsx.utils.book_new();
-      var newWorksheet = xlsx.utils.json_to_sheet(data);
+        if (firstConditionalNodeId) {
+          const firstConditionalNode = condition.nodes.find(
+            (node) => node.id === firstConditionalNodeId
+          );
 
-      // Add the worksheet to the new workbook
-      xlsx.utils.book_append_sheet(newWorkbook, newWorksheet, "Sheet 1");
+          if (firstConditionalNode) {
+            // sets the attribute Node color
+            condition.nodes.forEach((node, index) => {
+              if (node.type === "attributeNode") {
+                condition.nodes[index] = {
+                  ...node,
+                  data: {
+                    ...node.data,
+                    computed: "yes",
+                    color: "#02ab40",
+                    result: true,
+                  },
+                };
+              }
+            });
 
-      // Specify the path for the output file in the FILES_STORAGE directory
-      const outputFilePath = path.join(storagePath, "output.xlsx");
+            condition.edges.forEach((edge, index) => {
+              if (
+                edge.source === attributeNode.id &&
+                edge.target === firstConditionalNode.id
+              ) {
+                condition.edges[index] = {
+                  ...edge,
+                  animated: true,
+                  markerEnd: {
+                    type: "arrowclosed",
+                    width: 12,
+                    height: 12,
+                    color: "#02ab40",
+                  },
+                  style: {
+                    strokeWidth: 5,
+                    stroke: "#02ab40",
+                  },
+                };
+              }
+            });
+            let traversalNodes = [];
+            testedRule = await evaluateNodes(
+              firstConditionalNode,
+              condition,
+              rule,
+              traversalNodes,
+              inputData,
+              { condition: JSON.stringify(condition) }
+            );
+            if(testedRule.output){
+              inputData[testedRule?.output[0]?.field] = testedRule?.output[0]?.value;
+            }
+            data[index] = inputData;
+            rule.condition = testedRule?.rule?.condition;
+          }
+        }
+      })
 
-      // Write the new workbook to the specified path
-      xlsx.writeFile(newWorkbook, outputFilePath);
     });
     await Rule.update(
       { ...rule, tested: true },
@@ -454,8 +526,8 @@ export const testingExcel = async (req, res, next) => {
       }
     );
     res.json({
-      success: true,
-      message: "File processed and saved successfully",
+      fields: Object.keys(data[0]),
+      data: data,
     });
   } catch (error) {
     return next(createError(error.status, error.message));
@@ -602,19 +674,19 @@ const setEdgeColor = (condition, node, traversalNodes, color, result) => {
     condition.edges = condition.edges.map((e) =>
       e.id === targetEdges[index].id
         ? {
-            ...e,
-            animated: true,
-            markerEnd: {
-              type: "arrowclosed",
-              width: 12,
-              height: 12,
-              color: color,
-            },
-            style: {
-              strokeWidth: 5,
-              stroke: color,
-            },
-          }
+          ...e,
+          animated: true,
+          markerEnd: {
+            type: "arrowclosed",
+            width: 12,
+            height: 12,
+            color: color,
+          },
+          style: {
+            strokeWidth: 5,
+            stroke: color,
+          },
+        }
         : e
     );
   });
@@ -643,19 +715,46 @@ const setNodeColor = (
   condition.nodes = condition.nodes.map((n) =>
     n.id === targetNode.id
       ? {
-          ...n,
-          data: {
-            ...n.data,
-            computed: computed,
-            color: color,
-            result: result,
-          },
-        }
+        ...n,
+        data: {
+          ...n.data,
+          computed: computed,
+          color: color,
+          result: result,
+        },
+      }
       : n
   );
 
   return condition;
 };
+
+export const testWithDb = async (req, res, next) => {
+  const userId = req.user.id;
+  const id = req.params.id;
+  const tableName = req.body.name;
+  try {
+    const user = await User.findOne({ where: { id: userId } });
+    if (!user) {
+      return next(createError(404, "User not found"));
+    }
+    const rule = await Rule.findOne({ where: { id: id } });
+    if (!rule) {
+      return next(createError(404, "No rule with that id"));
+    }
+    //check if user is owner of this rule
+    const userRules = await user.getRules();
+    const ruleIds = userRules.map((rule) => rule.id);
+    if (!ruleIds.includes(id)) {
+      return next(createError(403, "You are not owner of this rule"));
+    }
+    const sql = `SELECT * FROM ${tableName}`; 
+    const [rows] = await sequelize.query(sql, { type: sequelize.QueryTypes.SELECT });
+    return res.json(rows);
+  } catch (error) {
+    return next(createError(error.status, error.message));
+  }
+}
 
 const evaluateNodes = async (
   node,
@@ -723,7 +822,7 @@ const evaluateNodes = async (
       );
       condition = updatedCondition;
       testedRule.condition = JSON.stringify(updatedCondition);
-      return {rule: testedRule, output: traversalNodes[0].data.outputFields};
+      return { rule: testedRule, output: traversalNodes[0].data.outputFields };
     }
     nextNode = traversalNodes[0];
     // set the traversalNodes to empty array
@@ -757,19 +856,19 @@ const evaluateNodes = async (
           condition.edges = condition.edges.map((e) =>
             e.id === targetEdges[index].id
               ? {
-                  ...e,
-                  animated: true,
-                  markerEnd: {
-                    type: "arrowclosed",
-                    width: 12,
-                    height: 12,
-                    color: "#FF0072",
-                  },
-                  style: {
-                    strokeWidth: 5,
-                    stroke: "#FF0072",
-                  },
-                }
+                ...e,
+                animated: true,
+                markerEnd: {
+                  type: "arrowclosed",
+                  width: 12,
+                  height: 12,
+                  color: "#FF0072",
+                },
+                style: {
+                  strokeWidth: 5,
+                  stroke: "#FF0072",
+                },
+              }
               : e
           );
         });
@@ -781,7 +880,7 @@ const evaluateNodes = async (
   }
 
   if (!nextNode) {
-    return testedRule;
+    return { rule: testedRule, output: [] };
   }
 
   if (nextNode.type === "outputNode") {
@@ -794,7 +893,7 @@ const evaluateNodes = async (
     );
     condition = updatedCondition;
     testedRule.condition = JSON.stringify(updatedCondition);
-    return {rule: testedRule, output: nextNode.data.outputFields};
+    return { rule: testedRule, output: nextNode.data.outputFields };
   } else {
     return evaluateNodes(
       nextNode,
@@ -807,7 +906,7 @@ const evaluateNodes = async (
   }
 };
 
-export const testing = async (req, res, next) => {
+export const testing = async (req, res, next) => { 
   const inputAttributes = req.body;
   const { id, version } = req.params;
   const userId = req.user.id;
@@ -910,7 +1009,7 @@ export const testing = async (req, res, next) => {
           inputAttributes,
           { condition: JSON.stringify(condition) }
         );
-
+        console.log(testedRule);
         rule.condition = testedRule.rule.condition;
       }
     }
@@ -925,7 +1024,7 @@ export const testing = async (req, res, next) => {
     return res.json({
       rule: rule,
       versions: versionValues,
-      output: testedRule?.output ? testedRule.output : null 
+      output: testedRule?.output ? testedRule.output : null,
     });
   } catch (error) {
     return next(createError(error.status, error.message));
@@ -991,9 +1090,7 @@ function evaluateExpression(expression, inputData) {
     return sideResults.length > 0 ? sideResults[sideResults.length - 1] : 0;
   };
   const leftSideValue = evaluateSide(lhs, inputData);
-  console.log(leftSideValue);
   const rightSideValue = evaluateSide(rhs, inputData);
-  console.log(rightSideValue);
 
   switch (comparator) {
     case ">":
@@ -1122,7 +1219,7 @@ function evaluateConditions(conditions, rule, inputAttributes) {
       logicalOperator = condition.boolean;
     }
   }
-
+  console.log(result);
   if (rule === "Any") {
     return [result.includes(true), eachConditionResult];
   } else if (rule === "All") {
