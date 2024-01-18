@@ -2,11 +2,15 @@ import { useState } from "react";
 import styled from "styled-components";
 import SignIn from "../components/SignIn";
 import SignUp from "../components/SignUp";
-import BG from "../images/auth-bg.png";
+import BG from "../images/BG.png";
+import ReactFlow, { Background, Panel } from "reactflow";
+import { dummyRuleEdges, dummyRuleNodes } from "../utils/data";
+import AttributeNode from "../components/Nodes/ArrtibuteNode";
+import ConditionalNode from "../components/Nodes/ConditionalNode";
+import OutputNode from "../components/Nodes/OutputNode";
 
 const OuterContainer = styled.div`
   height: 100vh;
-  background: black;
   overflow: hidden;
 `;
 
@@ -23,6 +27,7 @@ const Container = styled.div`
   background-position: center;
   background-attachment: fixed;
   display: flex;
+  overflow-y: scroll;
   align-items: center;
 `;
 
@@ -64,24 +69,40 @@ const WelcomeText = styled.div`
   }
 `;
 
+const nodeTypes = {
+  attributeNode: AttributeNode,
+  conditionalNode: ConditionalNode,
+  outputNode: OutputNode,
+};
+
 const Authentication = () => {
   const [openSignUp, setOpenSignUp] = useState(false);
   return (
     <OuterContainer>
       <Container>
-        <Wrapper>
-          <Logotext>DecisionHub</Logotext>
-          <WelcomeText>
-            {openSignUp
-              ? "Welcome to DecisionHub!"
-              : "Welcome back to DecisionHub!"}
-          </WelcomeText>
-          {openSignUp ? (
-            <SignUp setOpenSignUp={setOpenSignUp} />
-          ) : (
-            <SignIn setOpenSignUp={setOpenSignUp} />
-          )}
-        </Wrapper>
+        <ReactFlow
+          nodeTypes={nodeTypes}
+          fitView={true}
+          nodes={dummyRuleNodes}
+          edges={dummyRuleEdges}
+        >
+          <Background />
+          <Panel position="left">
+            <Wrapper>
+              <Logotext>DecisionHub</Logotext>
+              <WelcomeText>
+                {openSignUp
+                  ? "Welcome to DecisionHub!"
+                  : "Welcome back to DecisionHub!"}
+              </WelcomeText>
+              {openSignUp ? (
+                <SignUp setOpenSignUp={setOpenSignUp} />
+              ) : (
+                <SignIn setOpenSignUp={setOpenSignUp} />
+              )}
+            </Wrapper>
+          </Panel>
+        </ReactFlow>
       </Container>
     </OuterContainer>
   );
