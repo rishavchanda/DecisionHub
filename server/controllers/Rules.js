@@ -517,7 +517,6 @@ export const testingExcel = async (req, res, next) => {
       })
 
     });
-      const fieldNames = Object.keys(data[0]);
     await Rule.update(
       { ...rule, tested: true },
       {
@@ -527,7 +526,7 @@ export const testingExcel = async (req, res, next) => {
       }
     );
     res.json({
-      fields: fieldNames,
+      fields: Object.keys(data[0]),
       data: data,
     });
   } catch (error) {
