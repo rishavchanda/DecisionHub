@@ -723,8 +723,7 @@ const evaluateNodes = async (
       );
       condition = updatedCondition;
       testedRule.condition = JSON.stringify(updatedCondition);
-
-      return testedRule;
+      return {rule: testedRule, output: traversalNodes[0].data.outputFields};
     }
     nextNode = traversalNodes[0];
     // set the traversalNodes to empty array
@@ -795,7 +794,7 @@ const evaluateNodes = async (
     );
     condition = updatedCondition;
     testedRule.condition = JSON.stringify(updatedCondition);
-    return testedRule;
+    return {rule: testedRule, output: nextNode.data.outputFields};
   } else {
     return evaluateNodes(
       nextNode,
@@ -806,7 +805,6 @@ const evaluateNodes = async (
       testedRule
     );
   }
-  return testedRule;
 };
 
 export const testing = async (req, res, next) => {
@@ -913,7 +911,7 @@ export const testing = async (req, res, next) => {
           { condition: JSON.stringify(condition) }
         );
 
-        rule.condition = testedRule.condition;
+        rule.condition = testedRule.rule.condition;
       }
     }
     await Rule.update(
@@ -927,6 +925,7 @@ export const testing = async (req, res, next) => {
     return res.json({
       rule: rule,
       versions: versionValues,
+      output: testedRule?.output ? testedRule.output : null 
     });
   } catch (error) {
     return next(createError(error.status, error.message));
