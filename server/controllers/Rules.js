@@ -134,7 +134,6 @@ export const searchRule = async (req, res) => {
 
     res.status(200).json(rules);
   } catch (err) {
-    console.error(err);
     res.status(500).json({ error: "Internal Server Error" });
   }
 };
@@ -402,7 +401,6 @@ export const testingExcel = async (req, res, next) => {
     const filePath = path.join(storagePath, file.filename);
     let workbook = xlsx.readFile(filePath);
     let sheet_name_list = workbook.SheetNames;
-    console.log(sheet_name_list);
 
     sheet_name_list.forEach(function (y) {
       var worksheet = workbook.Sheets[y];
@@ -429,6 +427,9 @@ export const testingExcel = async (req, res, next) => {
       data.shift();
 
       // Add "output" field with a value of 0 to each row
+
+      console.log(data);
+      
       data.forEach((row) => {
         row["output"] = 0;
       });
