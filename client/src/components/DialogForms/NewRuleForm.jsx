@@ -188,7 +188,7 @@ const NewRuleForm = ({ setOpenNewRule, updateForm }) => {
     }
 
     // Collect inputAttributes from selected tables
-    const selectedInputAttributes = ruleData?.tables.reduce(
+    const selectedInputAttributes = ruleData?.tables?.reduce(
       (acc, selectedTable) => {
         const tableData = tables.find(
           (table) => table?.table === selectedTable

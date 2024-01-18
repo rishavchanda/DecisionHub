@@ -1,5 +1,5 @@
 export const createRuleRequest = (condition, rule) => {
-    const prompt = `HOW TO BUILD THE RULE:
+  const prompt = `HOW TO BUILD THE RULE:
     you will have to generate a rule using this information about input attributes and output attributes and a text input where the conditions will be specified. the rule you will generate will be of this format
     {
         "title": "demo rule",
@@ -50,17 +50,54 @@ export const createRuleRequest = (condition, rule) => {
                         ],
                         "rule": "All",
                         "conditions": [
-                            {
-                                "multiple": false,
-                                "expression": [
-                                    {
-                                        "inputAttribute": "cibil_score",
-                                        "operator": ">",
-                                        "value": "750"
-                                    }
-                                ]
-                            }
-                        ]
+{
+    multiple: false,
+    expression: 
+    {
+      lhs: [{
+        op1:  'a',
+        operator: null,
+        op2: null
+      }],
+      comparator: '==',
+      rhs: [
+      {
+        op1:  '2',
+        operator: null,
+        op2: null,
+      }
+      ]
+    },
+    boolean: "&&",
+  },{
+    multiple: false,
+    expression: 
+    {
+      lhs: [{
+        op1:  'c',
+        operator: '/',
+        op2: '2'
+      }],
+      comparator: '>',
+      rhs: [
+      {
+        op1:  'd',
+        operator: '/',
+        op2: '4',
+      },
+      {
+        op1:  null,
+        operator: '+',
+        op2: '12',
+      },
+      {
+        op1:  null,
+        operator: '/',
+        op2: '2',
+      }
+      ]
+    }
+  }]
                     },
                     "position": {
                         "x": 89.64423400761984,
@@ -167,7 +204,7 @@ export const createRuleRequest = (condition, rule) => {
     This is the initial rule with input and output attributes
     Generate the corresponding complete rule with all conditional nodes and output nodes for the same
     
-    generate only the valid json output. no text before the json no text after the json. i just want the json output.`
+    generate only the valid json output. no text before the json no text after the json. i just want the json output.`;
 
-    return prompt;
-}
+  return prompt;
+};

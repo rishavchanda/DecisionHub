@@ -148,6 +148,7 @@ const Conditions = ({
 
   // update the expression
   const handleSelectChange = (part, field, expressionIndex, event) => {
+    console.log(event.target.value);
     const updatedNodes = reactFlow.getNodes().map((node) => {
       if (node.id === nodeId) {
         const updatedData = {
@@ -641,7 +642,7 @@ const Conditions = ({
                             func.value === getInputAttribute(item?.op1, 0)
                         )) && (
                         <Input
-                          value={item.value}
+                          value={item?.op1}
                           onChange={(e) =>
                             handleSelectChange("rhs", "op1", index, e)
                           }
@@ -790,7 +791,7 @@ const Conditions = ({
                   {(item?.op2 === "__custom__" ||
                     inputAttribute?.includes(item?.op2) === false) && (
                     <Input
-                      value={item.value}
+                      value={item?.op2}
                       onChange={(e) =>
                         handleSelectChange("lhs", "op2", index, e)
                       }
@@ -892,7 +893,7 @@ const Conditions = ({
                             func.value === getInputAttribute(item?.op1, 0)
                         )) && (
                         <Input
-                          value={item.value}
+                          value={item?.op1}
                           onChange={(e) =>
                             handleSelectChange("rhs", "op1", index, e)
                           }
@@ -1018,7 +1019,7 @@ const Conditions = ({
                   <Select
                     value={
                       inputAttribute?.includes(item?.op2)
-                        ? item.op2
+                        ? item?.op2
                         : "__custom__"
                     }
                     onChange={(e) => handleSelectChange("rhs", "op2", index, e)}
@@ -1041,7 +1042,7 @@ const Conditions = ({
                   {(item?.op2 === "__custom__" ||
                     inputAttribute?.includes(item?.op2) === false) && (
                     <Input
-                      value={item.value}
+                      value={item?.op2}
                       onChange={(e) =>
                         handleSelectChange("rhs", "op2", index, e)
                       }

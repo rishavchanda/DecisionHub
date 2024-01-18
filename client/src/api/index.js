@@ -49,6 +49,14 @@ export const createRule = async (data, token) =>
     { withCredentials: true }
   );
 
+export const createRuleWithText = async (id, data, token) =>
+  await API.patch(
+    `/rule/ruleWithText/${id}`,
+    data,
+    { headers: { Authorization: `Bearer ${token}` } },
+    { withCredentials: true }
+  );
+
 export const searchRule = async (title, token) =>
   await API.get(
     `/rule/searchRule?title=${title}`,

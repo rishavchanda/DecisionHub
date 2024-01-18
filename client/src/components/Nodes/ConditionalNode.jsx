@@ -683,13 +683,23 @@ function ConditionalNode({ id, data }) {
             ...node.data.conditions,
             {
               multiple: false,
-              expression: [
-                {
-                  inputAttribute: "",
-                  operator: "Equal",
-                  value: "",
-                },
-              ],
+              expression: {
+                lhs: [
+                  {
+                    op1: "",
+                    operator: null,
+                    op2: null,
+                  },
+                ],
+                comparator: "",
+                rhs: [
+                  {
+                    op1: "",
+                    operator: null,
+                    op2: null,
+                  },
+                ],
+              },
             },
           ],
         };
