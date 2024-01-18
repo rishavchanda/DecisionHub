@@ -3,8 +3,6 @@ import styled from "styled-components";
 import SignIn from "../components/SignIn";
 import SignUp from "../components/SignUp";
 import BG from "../images/auth-bg.png";
-// import SignUp from "../components/SignUp";
-// import Logo from "../Images/Logo.svg";
 
 const OuterContainer = styled.div`
   height: 100vh;
@@ -19,7 +17,6 @@ const Container = styled.div`
   @media (max-width: 768px) {
     padding: 6px 0px;
   }
-  // background: ${({ theme }) => theme.bg};
   background: url(${BG});
   background-repeat: no-repeat;
   background-size: contain;
@@ -56,14 +53,6 @@ const Logotext = styled.div`
   }
 `;
 
-// const LogoImg = styled.img`
-//   height: 36px;
-//   margin-right: 10px;
-//   @media only screen and (max-width: 600px) {
-//     height: 30px;
-//   }
-// `;
-
 const WelcomeText = styled.div`
   font-size: 16px;
   font-weight: 600;
@@ -81,10 +70,7 @@ const Authentication = () => {
     <OuterContainer>
       <Container>
         <Wrapper>
-          <Logotext>
-            {/* <LogoImg src={Logo} /> */}
-            DecisionHub
-          </Logotext>
+          <Logotext>DecisionHub</Logotext>
           <WelcomeText>
             {openSignUp
               ? "Welcome to DecisionHub!"
