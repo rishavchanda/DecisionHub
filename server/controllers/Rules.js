@@ -397,7 +397,7 @@ export const testingExcel = async (req, res, next) => {
     if (!file) {
       return res.status(400).json({ error: "No file uploaded" });
     }
-
+ 
     const filePath = path.join(storagePath, file.filename);
     let workbook = xlsx.readFile(filePath);
     let sheet_name_list = workbook.SheetNames;
@@ -426,13 +426,80 @@ export const testingExcel = async (req, res, next) => {
       data.shift();
       data.shift();
 
-      // Add "output" field with a value of 0 to each row
+      data.forEach(async (inputData, index) => {
+        const condition = JSON.parse(rule.condition);
+        let testedRule;
+        const attributeNode = condition.nodes.find(
+          (node) => node.type === "attributeNode"
+        );
 
-      console.log(data);
-      
-      data.forEach((row) => {
-        row["output"] = 0;
-      });
+        const firstConditionalNodeId = condition.edges.find(
+          (edge) => edge.source === "1"
+        ).target;
+
+        if (firstConditionalNodeId) {
+          const firstConditionalNode = condition.nodes.find(
+            (node) => node.id === firstConditionalNodeId
+          );
+
+          if (firstConditionalNode) {
+            // sets the attribute Node color
+            condition.nodes.forEach((node, index) => {
+              if (node.type === "attributeNode") {
+                condition.nodes[index] = {
+                  ...node, 
+                  data: {
+                    ...node.data,
+                    computed: "yes",
+                    color: "#02ab40",
+                    result: true,
+                  },
+                };
+              }
+            });
+
+            condition.edges.forEach((edge, index) => {
+              if (
+                edge.source === attributeNode.id &&
+                edge.target === firstConditionalNode.id
+              ) {
+                condition.edges[index] = {
+                  ...edge,
+                  animated: true,
+                  markerEnd: {
+                    type: "arrowclosed",
+                    width: 12,
+                    height: 12,
+                    color: "#02ab40",
+                  },
+                  style: {
+                    strokeWidth: 5,
+                    stroke: "#02ab40",
+                  },
+                };
+              }
+            });
+            let traversalNodes = [];
+            testedRule = await evaluateNodes(
+              firstConditionalNode,
+              condition,
+              rule,
+              traversalNodes,
+              inputData,
+              { condition: JSON.stringify(condition) }
+            );
+            testedRule.output.forEach((attribute) => {
+              const field = attribute.field;
+              const value = attribute.value;
+              inputData[field] = value;
+              data[index] = inputData
+            });
+            rule.condition = testedRule.rule.condition;
+          }
+        }
+      })
+
+      console.log(data)
 
       var newWorkbook = xlsx.utils.book_new();
       var newWorksheet = xlsx.utils.json_to_sheet(data);
@@ -603,19 +670,19 @@ const setEdgeColor = (condition, node, traversalNodes, color, result) => {
     condition.edges = condition.edges.map((e) =>
       e.id === targetEdges[index].id
         ? {
-            ...e,
-            animated: true,
-            markerEnd: {
-              type: "arrowclosed",
-              width: 12,
-              height: 12,
-              color: color,
-            },
-            style: {
-              strokeWidth: 5,
-              stroke: color,
-            },
-          }
+          ...e,
+          animated: true,
+          markerEnd: {
+            type: "arrowclosed",
+            width: 12,
+            height: 12,
+            color: color,
+          },
+          style: {
+            strokeWidth: 5,
+            stroke: color,
+          },
+        }
         : e
     );
   });
@@ -644,14 +711,14 @@ const setNodeColor = (
   condition.nodes = condition.nodes.map((n) =>
     n.id === targetNode.id
       ? {
-          ...n,
-          data: {
-            ...n.data,
-            computed: computed,
-            color: color,
-            result: result,
-          },
-        }
+        ...n,
+        data: {
+          ...n.data,
+          computed: computed,
+          color: color,
+          result: result,
+        },
+      }
       : n
   );
 
@@ -724,7 +791,7 @@ const evaluateNodes = async (
       );
       condition = updatedCondition;
       testedRule.condition = JSON.stringify(updatedCondition);
-      return {rule: testedRule, output: traversalNodes[0].data.outputFields};
+      return { rule: testedRule, output: traversalNodes[0].data.outputFields };
     }
     nextNode = traversalNodes[0];
     // set the traversalNodes to empty array
@@ -758,19 +825,19 @@ const evaluateNodes = async (
           condition.edges = condition.edges.map((e) =>
             e.id === targetEdges[index].id
               ? {
-                  ...e,
-                  animated: true,
-                  markerEnd: {
-                    type: "arrowclosed",
-                    width: 12,
-                    height: 12,
-                    color: "#FF0072",
-                  },
-                  style: {
-                    strokeWidth: 5,
-                    stroke: "#FF0072",
-                  },
-                }
+                ...e,
+                animated: true,
+                markerEnd: {
+                  type: "arrowclosed",
+                  width: 12,
+                  height: 12,
+                  color: "#FF0072",
+                },
+                style: {
+                  strokeWidth: 5,
+                  stroke: "#FF0072",
+                },
+              }
               : e
           );
         });
@@ -795,7 +862,7 @@ const evaluateNodes = async (
     );
     condition = updatedCondition;
     testedRule.condition = JSON.stringify(updatedCondition);
-    return {rule: testedRule, output: nextNode.data.outputFields};
+    return { rule: testedRule, output: nextNode.data.outputFields };
   } else {
     return evaluateNodes(
       nextNode,
@@ -926,7 +993,7 @@ export const testing = async (req, res, next) => {
     return res.json({
       rule: rule,
       versions: versionValues,
-      output: testedRule?.output ? testedRule.output : null 
+      output: testedRule?.output ? testedRule.output : null
     });
   } catch (error) {
     return next(createError(error.status, error.message));
