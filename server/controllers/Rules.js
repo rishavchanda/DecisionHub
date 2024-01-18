@@ -4,6 +4,8 @@ import { Op } from "sequelize";
 import OpenAI from "openai";
 import { createRuleRequest } from "../utils/prompt.js";
 import * as dotenv from "dotenv";
+import xlsx from 'xlsx';
+import path from 'path';
 dotenv.config();
 
 const openai = new OpenAI({
@@ -372,6 +374,91 @@ export const deleteRule = async (req, res, next) => {
   }
 };
 
+export const testingExcel = async (req, res, next) => {
+  const storagePath = "FILES_STORAGE/";
+  const userId = req.user.id;
+  const {id, version} = req.params;
+  try {
+    const user = await User.findOne({ where: { id: userId } });
+    if (!user) {
+      return next(createError(404, "User not found"));
+    }
+    const rule = await Rule.findOne({ where: { id: id } });
+    if (!rule) {
+      return next(createError(404, "No rule with that id"));
+    }
+    //check if user is owner of this rule
+    const userRules = await user.getRules();
+    const ruleIds = userRules.map((rule) => rule.id);
+    if (!ruleIds.includes(id)) {
+      return next(createError(403, "You are not owner of this rule"));
+    }
+    const file = req.file;
+
+    if (!file) {
+      return res.status(400).json({ error: 'No file uploaded' });
+    }
+
+    const filePath = path.join(storagePath, file.filename);
+    let workbook = xlsx.readFile(filePath);
+    let sheet_name_list = workbook.SheetNames;
+    console.log(sheet_name_list);
+
+    sheet_name_list.forEach(function (y) {
+      var worksheet = workbook.Sheets[y];
+      // getting the complete sheet
+      var headers = {};
+      var data = [];
+      for (let z in worksheet) {
+        if (z[0] === "!") continue;
+        // parse out the column, row, and value
+        var col = z.substring(0, 1);
+        var row = parseInt(z.substring(1));
+        var value = worksheet[z].v;
+        // store header names
+        if (row == 1) {
+          headers[col] = value;
+          // storing the header names
+          continue;
+        }
+        if (!data[row]) data[row] = {};
+        data[row][headers[col]] = value;
+      }
+      // drop those first two rows which are empty
+      data.shift();
+      data.shift();
+
+      // Add "output" field with a value of 0 to each row
+      data.forEach(row => {
+        row['output'] = 0;
+      });
+
+      var newWorkbook = xlsx.utils.book_new();
+      var newWorksheet = xlsx.utils.json_to_sheet(data);
+
+      // Add the worksheet to the new workbook
+      xlsx.utils.book_append_sheet(newWorkbook, newWorksheet, 'Sheet 1');
+
+      // Specify the path for the output file in the FILES_STORAGE directory
+      const outputFilePath = path.join(storagePath, 'output.xlsx');
+
+      // Write the new workbook to the specified path
+      xlsx.writeFile(newWorkbook, outputFilePath);
+    });
+    await Rule.update(
+      { ...rule, tested: true },
+      {
+        where: {
+          id: id,
+        },
+      }
+    );
+    res.json({ success: true, message: 'File processed and saved successfully' });
+  } catch (error) {
+    return next(createError(error.status, error.message));
+  }
+};
+
 export const createRuleWithText = async (req, res, next) => {
   const userId = req.user.id;
   const ruleId = req.params.id;
@@ -399,14 +486,12 @@ export const createRuleWithText = async (req, res, next) => {
       condition: JSON.parse(rule.dataValues.condition),
     };
     const prompt = createRuleRequest(conditions, JSON.stringify(parsedRule));
-    // const completion = await openai.chat.completions.create({
-    //   messages: [{ role: "user", content: prompt }],
-    //   model: "gpt-3.5-turbo",
-    // });
+    const completion = await openai.chat.completions.create({
+      messages: [{ role: "user", content: prompt }],
+      model: "gpt-3.5-turbo",
+    });
 
-    // const ruleResponse = await completion?.choices[0]?.message?.content
-
-    // console.log(completion?.choices[0]?.message?.content);
+    const newCondition = JSON.parse(completion.choices[0].message.content).condition;
 
     if (rule.version === version) {
       await Rule.update(
@@ -416,7 +501,7 @@ export const createRuleWithText = async (req, res, next) => {
           inputAttributes: rule.inputAttributes,
           outputAttributes: rule.outputAttributes,
           version: rule.version,
-          condition: JSON.stringify(ruleResponse.condition),
+          condition: JSON.stringify(newCondition),
         },
         {
           where: {
@@ -434,7 +519,7 @@ export const createRuleWithText = async (req, res, next) => {
           inputAttributes: updateRule.inputAttributes,
           outputAttributes: updateRule.outputAttributes,
           version: updateRule.version,
-          condition: updatedRule.condition,
+          condition: updateRule.condition,
         },
         {
           where: {
@@ -466,7 +551,7 @@ export const createRuleWithText = async (req, res, next) => {
           inputAttributes: ruleVersion.inputAttributes,
           outputAttributes: ruleVersion.outputAttributes,
           version: ruleVersion.version,
-          condition: JSON.stringify(ruleResponse.condition),
+          condition: JSON.stringify(newCondition),
         },
         {
           where: {
