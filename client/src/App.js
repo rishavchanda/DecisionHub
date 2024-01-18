@@ -15,6 +15,7 @@ import RulesDetails from "./pages/RulesDetails";
 import TestDetails from "./pages/TestDetails";
 import { ReactFlowProvider } from "reactflow";
 import ToastMessage from "./components/ToastMessage";
+import Profile from "./pages/Profile";
 
 const Container = styled.div`
   width: 100%;
@@ -89,6 +90,7 @@ function App() {
                   <Route path="/rules/:id" exact element={<RulesDetails />} />
                   <Route path="/test" exact element={<Test />} />
                   <Route path="/test/:id" exact element={<TestDetails />} />
+                  <Route path="/profile" exact element={<Profile />} />
                 </Routes>
                 {openNewRule && (
                   <NewRuleForm
