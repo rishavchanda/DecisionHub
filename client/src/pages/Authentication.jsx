@@ -13,7 +13,7 @@ const OuterContainer = styled.div`
 `;
 
 const Container = styled.div`
-  padding: 20px 150px;
+  padding: 0px 150px;
   height: 100%;
   overflow: hidden;
   @media (max-width: 768px) {
@@ -25,6 +25,8 @@ const Container = styled.div`
   background-size: contain;
   background-position: center;
   background-attachment: fixed;
+  display: flex;
+  align-items: center;
 `;
 
 const Wrapper = styled.div`
