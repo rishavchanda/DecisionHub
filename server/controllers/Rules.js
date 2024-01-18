@@ -4,8 +4,8 @@ import { Op } from "sequelize";
 import OpenAI from "openai";
 import { createRuleRequest } from "../utils/prompt.js";
 import * as dotenv from "dotenv";
-import xlsx from 'xlsx';
-import path from 'path';
+import xlsx from "xlsx";
+import path from "path";
 dotenv.config();
 
 const openai = new OpenAI({
@@ -377,7 +377,7 @@ export const deleteRule = async (req, res, next) => {
 export const testingExcel = async (req, res, next) => {
   const storagePath = "FILES_STORAGE/";
   const userId = req.user.id;
-  const {id, version} = req.params;
+  const { id, version } = req.params;
   try {
     const user = await User.findOne({ where: { id: userId } });
     if (!user) {
@@ -396,7 +396,7 @@ export const testingExcel = async (req, res, next) => {
     const file = req.file;
 
     if (!file) {
-      return res.status(400).json({ error: 'No file uploaded' });
+      return res.status(400).json({ error: "No file uploaded" });
     }
 
     const filePath = path.join(storagePath, file.filename);
@@ -429,18 +429,18 @@ export const testingExcel = async (req, res, next) => {
       data.shift();
 
       // Add "output" field with a value of 0 to each row
-      data.forEach(row => {
-        row['output'] = 0;
+      data.forEach((row) => {
+        row["output"] = 0;
       });
 
       var newWorkbook = xlsx.utils.book_new();
       var newWorksheet = xlsx.utils.json_to_sheet(data);
 
       // Add the worksheet to the new workbook
-      xlsx.utils.book_append_sheet(newWorkbook, newWorksheet, 'Sheet 1');
+      xlsx.utils.book_append_sheet(newWorkbook, newWorksheet, "Sheet 1");
 
       // Specify the path for the output file in the FILES_STORAGE directory
-      const outputFilePath = path.join(storagePath, 'output.xlsx');
+      const outputFilePath = path.join(storagePath, "output.xlsx");
 
       // Write the new workbook to the specified path
       xlsx.writeFile(newWorkbook, outputFilePath);
@@ -453,7 +453,10 @@ export const testingExcel = async (req, res, next) => {
         },
       }
     );
-    res.json({ success: true, message: 'File processed and saved successfully' });
+    res.json({
+      success: true,
+      message: "File processed and saved successfully",
+    });
   } catch (error) {
     return next(createError(error.status, error.message));
   }
@@ -491,7 +494,9 @@ export const createRuleWithText = async (req, res, next) => {
       model: "gpt-3.5-turbo",
     });
 
-    const newCondition = JSON.parse(completion.choices[0].message.content).condition;
+    const newCondition = JSON.parse(
+      completion.choices[0].message.content
+    ).condition;
 
     if (rule.version === version) {
       await Rule.update(
@@ -971,7 +976,7 @@ function evaluateExpression(expression, inputData) {
           sideValue -= parseFloat(operand.op2);
           break;
         default:
-          sideValue = sideValue;
+          sideValue = parseFloat(sideValue);
           break;
       }
 
