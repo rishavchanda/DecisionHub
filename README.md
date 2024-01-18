@@ -4,37 +4,25 @@ A Rule Builder application “Decision Hub” that empowers Business Analysts to
 
 #### Web Link: https://decisionhub.netlify.app/
 
-| Login Credentials |
-| ----------------- |
-| Email :           |
-| Password :        |
+| Dashboard                         |
+| --------------------------------- |
+| ![Image1](./assets/dashboard.jpg) |
 
-| Login                                                                                                         |
-| ------------------------------------------------------------------------------------------------------------- |
-| ![Login_Image](https://github.com/rishavchanda/Trackify/assets/64485885/b8aae2e1-cb85-4d37-93f8-ca95e8141367) |
+| Rules                          |
+| ------------------------------ |
+| ![Image4](./assets/rules3.jpg) |
+| ![Image3](./assets/rules2.jpg) |
+| ![Image2](./assets/rules.jpg)  |
 
-|SignUp
-|--|
-|![SignUp_Image]()
-
-| Dashboard                                                                                                 |
-| --------------------------------------------------------------------------------------------------------- |
-| ![Image 3](https://github.com/rishavchanda/Trackify/assets/64485885/e1f89b04-2788-45b0-abc2-9dec616669e2) |
-| ![Image 4](https://github.com/rishavchanda/Trackify/assets/64485885/27fce475-a52f-4f1f-91f4-228a5a4b08ab) |
-| ![Image 5](https://github.com/rishavchanda/Trackify/assets/64485885/39f9083d-61cb-462d-ba85-040679f598b3) |
-| ![Image 6](https://github.com/rishavchanda/Trackify/assets/64485885/80df62ef-02f0-4edc-8019-666a29a26a7c) |
-| ![Image 7](https://github.com/rishavchanda/Trackify/assets/64485885/d9dd8674-6bc0-4e8a-a9fd-46fb721a4e62) |
-| ![Image 8](https://github.com/rishavchanda/Trackify/assets/64485885/c951188e-20d4-4ce8-98ce-8c11f4dd507e) |
-| ![Image 9](https://github.com/rishavchanda/Trackify/assets/64485885/abcf8e67-27ac-4691-a856-b76b3ae3e9db) |
-
-| Rules |
-| ----- |
-
-| Debug / Test Rules |
-| ------------------ |
-
-| Profile |
-| ------- |
+| Debug / Test Rules                 |
+| ---------------------------------- |
+| ![Image5](./assets/testRule.jpg)   |
+| ![Image6](./assets/testRule2.jpg)  |
+| ![Image7](./assets/testRule3.jpg)  |
+| ![Image8](./assets/testRule4.jpg)  |
+| ![Image9](./assets/testRule5.jpg)  |
+| ![Image10](./assets/testRule6.jpg) |
+| ![Image11](./assets/testRule7.jpg) |
 
 ## Features
 
@@ -44,6 +32,8 @@ A Rule Builder application “Decision Hub” that empowers Business Analysts to
   - Add Rules : Users can create rules for more than one database, including rule description, input attributes, output attributes
   - Create Conditions : Users can either create conditions or generate one using AI for a rule
   - Versions : Users can store multiple versions of a rule
+- AI:
+  - Leverages the power of AI to create rules based on User prompt
 - Debug and Testing
   - Debug & Testing : User can debug and test rule with various input to get the desired result.
 - Graphical Information:
@@ -53,8 +43,7 @@ A Rule Builder application “Decision Hub” that empowers Business Analysts to
 
 ### Pre-requisites
 
-1. Install [Docker](https://docs.docker.com/get-docker/) and [Docker Compose](https://docs.docker.com/compose/install/).
-2. Create a [Render](https://dashboard.render.com/) account and set up a new PostgreSQL database.
+1. Create a [Render](https://dashboard.render.com/) account and set up a new PostgreSQL database.
 
 ### Clone the repository
 
@@ -63,17 +52,12 @@ A Rule Builder application “Decision Hub” that empowers Business Analysts to
 ### Configure the client
 
 1. Navigate to client folder: `cd client`
-2. Build the docker image for the client in dev mode: `docker build -f Dockerfile.dev -t trackify-react-image .`
-3. Set up and configure the environment variables, create a `.env` file in the client folder and add the following environment variables:
-
-```
-REACT_APP_API_URL = http://localhost:8800/api
-```
+2. Install required packages: `npm i`
 
 ### Configure the server
 
 1. Navigate to server folder: `cd server`
-2. Build the docker image for the server in dev mode: `docker build -f Dockerfile.dev -t trackify-server-image .`
+2. Install required packages: `npm i`
 3. Set up the database and configure the environment variables by following the instructions in the next steps.
 
 ### Set up the database
@@ -84,7 +68,7 @@ REACT_APP_API_URL = http://localhost:8800/api
 ```
 PORT= <port_to_run_node_server>
 DATABASE_URL= <postgres_connection_string>
-JWT= <JWT_token>
+JWT= <JWT_secret>
 EMAIL_USERNAME= <decision_hub_gmail_username>
 EMAIL_PASSWORD= <decision_hub_gmail_password>
 OPENAI_API_KEY= <openai_api_key>
@@ -92,11 +76,17 @@ OPENAI_API_KEY= <openai_api_key>
 
 ### Run the application
 
-1. Navigate to the root folder: `cd ..`
-2. Run the docker-compose file: `docker-compose -f docker-compose.yml -f docker-compose-dev.yml  up --build`
+#### Run the client
+
+1. Navigate to server folder: `cd client`
+2. Start Client : `npm start`
 3. Open the application in your browser at `http://localhost:3000`
-4. Server will be running at `http://localhost:8800`
-5. To stop the application, press `Ctrl + C` in the terminal.
+
+#### Run the server
+
+1. Navigate to server folder: `cd server`
+2. Start Client : `npm start`
+3. Server will be running at `http://localhost:8080`
 
 ## Technologies Used
 
