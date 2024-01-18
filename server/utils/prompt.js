@@ -21,7 +21,7 @@ export const createRuleRequest = (condition, rule) => {
                         ],
                         "outputFields": [
                             {
-                                "field": "",
+                                "field": "c",
                                 "value": "9"
                             }
                         ]

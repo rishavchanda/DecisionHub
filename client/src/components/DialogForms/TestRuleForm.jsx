@@ -89,6 +89,7 @@ const TestRuleForm = ({
   loading,
   submitTestData,
   excelLoading,
+  dbLoading,
   submitExcelData,
   output,
 }) => {
@@ -225,6 +226,20 @@ const TestRuleForm = ({
             onChange={handleFileChange}
             style={{ display: "none" }}
           />
+          <Button
+            style={{
+              backgroundColor: theme.primary,
+              color: theme.white,
+            }}
+          >
+            {dbLoading ? (
+              <>
+                <CircularProgress size={18} color="inherit" />
+              </>
+            ) : (
+              "Run On Database"
+            )}
+          </Button>
         </Container>
       </Popover>
     </div>

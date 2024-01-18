@@ -232,15 +232,11 @@ const AttributeNode = ({ id, data }) => {
     setLoading(true);
     console.log(path[2]);
     const token = localStorage.getItem("decisionhub-token-auth-x4");
-    await createRuleWithText(
-      path[2],
-      { conditions: prompt, version: "1" },
-      token
-    )
+    await createRuleWithText(path[2], { conditions: prompt, version: 1 }, token)
       .then((res) => {
         dispatch(
           openSnackbar({
-            message: "Created new rule with AI!",
+            message: "Created new rule with AI! Please refresh.",
             severity: "success",
           })
         );

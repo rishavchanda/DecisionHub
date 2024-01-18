@@ -21,7 +21,7 @@ router.patch("/ruleWithText/:id", verifyToken, createRuleWithText);
 router.post("/", verifyToken, createRule);
 router.get("/", verifyToken, getRules);
 router.post("/testing/:id/:version", verifyToken, testing);
-router.post("/testingWithData/:id/:version", verifyToken, uploadMiddleware, testingExcel);
+router.post("/testingWithData/:id", verifyToken, uploadMiddleware, testingExcel);
 router.post("/testingWithDb/:id", verifyToken, testWithDb);
 router.post("/:id", verifyToken, getRuleByIdAndVersion);
 router.get("/searchRule", verifyToken, searchRule);

@@ -16,11 +16,12 @@ import styled, { useTheme } from "styled-components";
 import { CircularProgress, MenuItem, Select } from "@mui/material";
 import { ArrowBackRounded, EditRounded } from "@mui/icons-material";
 import { useNavigate, useParams, useLocation } from "react-router-dom";
-import { getRuleById, testRule } from "../api";
+import { getRuleById, testRule, uploadExcel } from "../api";
 import { useDispatch, useSelector } from "react-redux";
 import { openSnackbar } from "../redux/reducers/snackbarSlice";
 import { ruleReload } from "../redux/reducers/rulesSlice";
 import TestRuleForm from "../components/DialogForms/TestRuleForm";
+import ResultDialog from "../components/ResultDialog";
 
 const FlexDisplay = styled.div`
   display: flex;
@@ -101,6 +102,8 @@ const TestDetails = () => {
   const [loading, setLoading] = useState(true);
   const [submitLoading, setSubmitLoading] = useState(false);
   const [excelLoading, setExcelLoading] = useState(false);
+  const [dbLoading, setDbLoading] = useState(false);
+  const [showResult, setShowResult] = useState({ open: false, result: [] });
 
   //Functions
 
@@ -172,10 +175,26 @@ const TestDetails = () => {
     getTestedRule(testData);
   };
 
-  const handelExcelSubmit = (excelData) => {
-    console.log(excelData);
+  const handelExcelSubmit = async (excelData) => {
+    var formData = new FormData();
+    formData.append("file", excelData);
+    const token = localStorage.getItem("decisionhub-token-auth-x4");
     setExcelLoading(true);
-    // getTestedRule(excelData);
+    await uploadExcel(formData, id, token)
+      .then((res) => {
+        console.log(res.data);
+        setShowResult({ open: true, result: res.data });
+        setExcelLoading(false);
+      })
+      .catch((err) => {
+        dispath(
+          openSnackbar({
+            message: err.response.data.message,
+            severity: "error",
+          })
+        );
+        setExcelLoading(false);
+      });
   };
 
   useEffect(() => {
@@ -257,6 +276,9 @@ const TestDetails = () => {
           </Panel>
           <Panel position="bottom-right"></Panel>
         </ReactFlow>
+      )}
+      {showResult.open && (
+        <ResultDialog result={showResult.result} setResult={setShowResult} />
       )}
     </div>
   );
