@@ -46,7 +46,7 @@ const Container = styled.div`
   position: relative;
   outline: none;
   ::-webkit-scrollbar {
-    display: none;
+    height: 2px;
   }
   @media (max-width: 600px) {
     padding: 22px 20px 30px 20px;

@@ -93,3 +93,11 @@ export const testRule = async (id, version, testData, token) =>
   await API.post(`/rule/testing/${id}/${version}`, testData, {
     headers: { Authorization: `Bearer ${token}` },
   });
+
+export const uploadExcel = async (data, id, token) =>
+  await API.post(`/rule/testingWithData/${id}`, data, {
+    headers: {
+      Authorization: `Bearer ${token}`,
+      "Content-Type": "multipart/form-data",
+    },
+  });

@@ -13,6 +13,8 @@ import {
   SubtitlesRounded,
   BubbleChartRounded,
   DeleteOutlineRounded,
+  ExpandMoreRounded,
+  ExpandLessRounded,
 } from "@mui/icons-material";
 import Conditions from "./Conditions";
 import { checkConditionType, logicalOperations } from "../../utils/data";
@@ -21,6 +23,7 @@ import { ruleUpdated } from "../../redux/reducers/rulesSlice";
 
 const Wrapper = styled.div`
   cursor: pointer !important;
+  min-width: 250px;
   display: flex;
   flex-direction: row;
   justify-content: center;
@@ -71,6 +74,8 @@ const NodeHeader = styled.div`
 `;
 
 const NodeTitle = styled.input`
+  width: 100%;
+  min-width: 300px;
   flex: 1;
   font-size: 14px;
   font-weight: 500;
@@ -620,6 +625,7 @@ function ConditionalNode({ id, data }) {
   const theme = useTheme();
   const dispatch = useDispatch();
   const reactFlow = useReactFlow();
+  const [expanded, setExpanded] = useState(true);
   const { updated } = useSelector((state) => state.rule);
   const [noOfEdgesParent, setNoOfEdgesParent] = useState(0);
 
@@ -929,98 +935,108 @@ function ConditionalNode({ id, data }) {
               />
               Delete
             </OutlineWrapper>
+            {expanded ? (
+              <ExpandLessRounded
+                sx={{
+                  fontSize: "16px",
+                  color: theme.text_primary,
+                  cursor: "pointer",
+                }}
+                onClick={() => setExpanded(!expanded)}
+              />
+            ) : (
+              <ExpandMoreRounded
+                sx={{
+                  fontSize: "16px",
+                  color: theme.text_primary,
+                  cursor: "pointer",
+                }}
+                onClick={() => setExpanded(!expanded)}
+              />
+            )}
           </NodeHeader>
-          <Hr />
-          <NodeBody>
-            {data.conditions?.map((condition, index) => (
-              <div key={index}>
-                <Conditions
-                  nodeId={id}
-                  condition={condition}
-                  conditionIndex={index}
-                  inputAttribute={data.inputAttributes}
-                  resultAttribute={data.outputAttributes}
-                  withBoolean={condition.boolean}
-                  booleanDisabled={index === data.conditions.length - 1}
-                  deleteCondition={deleteCondition}
-                  addBooleanCondition={addBooleanCondition}
-                  result={data?.result}
-                  index={index}
-                />
-                {condition.boolean && (
-                  <BooleanCondition>
-                    <VR
-                      style={{
-                        height: "10px",
-                        margin: "0px 20px",
-                        width: "2px",
-                        background: theme.secondary,
-                      }}
+          {expanded && (
+            <>
+              <Hr />
+              <NodeBody>
+                {data.conditions?.map((condition, index) => (
+                  <div key={index}>
+                    <Conditions
+                      nodeId={id}
+                      condition={condition}
+                      conditionIndex={index}
+                      inputAttribute={data.inputAttributes}
+                      resultAttribute={data.outputAttributes}
+                      withBoolean={condition.boolean}
+                      booleanDisabled={index === data.conditions.length - 1}
+                      deleteCondition={deleteCondition}
+                      addBooleanCondition={addBooleanCondition}
+                      result={data?.result}
+                      index={index}
                     />
-                    <OutlineWrapper
-                      style={{
-                        borderColor: theme.secondary,
-                        width: "fit-content",
-                      }}
-                    >
-                      <Select
-                        value={condition.boolean}
-                        onChange={(e) => {
-                          handelBooleanChange(index, e);
-                        }}
-                      >
-                        {logicalOperations.map((item) => (
-                          <option value={item.value}>{item.name}</option>
-                        ))}
-                      </Select>
-                      <DeleteOutlineRounded
-                        sx={{
-                          fontSize: "16px",
-                          color: theme.text_secondary,
-                          cursor: "pointer",
-                        }}
-                        onClick={() => deleteBoolean(index)}
-                      />
-                    </OutlineWrapper>
-                    <VR
-                      style={{
-                        height: "10px",
-                        margin: "0px 20px",
-                        width: "2px",
-                        background: theme.secondary,
-                      }}
-                    />
-                  </BooleanCondition>
-                )}
-              </div>
-            ))}
-          </NodeBody>
-          <Hr />
-          <NodeFooter>
-            <Button onClick={() => addCondition()}>
-              <AddRounded sx={{ fontSize: "16px", color: theme.primary }} />
-              Add Condition
-            </Button>
-          </NodeFooter>
+                    {condition.boolean && (
+                      <BooleanCondition>
+                        <VR
+                          style={{
+                            height: "10px",
+                            margin: "0px 20px",
+                            width: "2px",
+                            background: theme.secondary,
+                          }}
+                        />
+                        <OutlineWrapper
+                          style={{
+                            borderColor: theme.secondary,
+                            width: "fit-content",
+                          }}
+                        >
+                          <Select
+                            value={condition.boolean}
+                            onChange={(e) => {
+                              handelBooleanChange(index, e);
+                            }}
+                          >
+                            {logicalOperations.map((item) => (
+                              <option value={item.value}>{item.name}</option>
+                            ))}
+                          </Select>
+                          <DeleteOutlineRounded
+                            sx={{
+                              fontSize: "16px",
+                              color: theme.text_secondary,
+                              cursor: "pointer",
+                            }}
+                            onClick={() => deleteBoolean(index)}
+                          />
+                        </OutlineWrapper>
+                        <VR
+                          style={{
+                            height: "10px",
+                            margin: "0px 20px",
+                            width: "2px",
+                            background: theme.secondary,
+                          }}
+                        />
+                      </BooleanCondition>
+                    )}
+                  </div>
+                ))}
+              </NodeBody>
+              <Hr />
+              <NodeFooter>
+                <Button onClick={() => addCondition()}>
+                  <AddRounded sx={{ fontSize: "16px", color: theme.primary }} />
+                  Add Condition
+                </Button>
+              </NodeFooter>
+            </>
+          )}
         </Node>
         <FlexDisplay>
           <YesNode id={id} data={data} />
           {noOfEdgesParent <= 1 && <NoNode id={id} data={data} />}
         </FlexDisplay>
       </FlexRight>
-
-      {/* {noOfEdgesParent <= 1 && (
-        <>
-          <Hr
-            style={{
-              height: "3px",
-              background: data?.computed === "no" ? data?.color : theme.arrow,
-              width: "100px",
-            }}
-          />
-          <NoNode id={id} data={data} />
-        </>
-      )} */}
     </Wrapper>
   );
 }
