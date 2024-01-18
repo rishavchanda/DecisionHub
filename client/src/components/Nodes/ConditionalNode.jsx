@@ -242,13 +242,23 @@ const addNewConditionalNode = (
       conditions: [
         {
           multiple: false,
-          expression: [
-            {
-              inputAttribute: "",
-              operator: "",
-              value: "",
-            },
-          ],
+          expression: {
+            lhs: [
+              {
+                op1: "",
+                operator: null,
+                op2: null,
+              },
+            ],
+            comparator: "",
+            rhs: [
+              {
+                op1: "",
+                operator: null,
+                op2: null,
+              },
+            ],
+          },
         },
       ],
     },

@@ -408,7 +408,6 @@ export const createRuleWithText = async (req, res, next) => {
 
     // console.log(completion?.choices[0]?.message?.content);
 
-
     if (rule.version === version) {
       await Rule.update(
         {
@@ -513,19 +512,19 @@ const setEdgeColor = (condition, node, traversalNodes, color, result) => {
     condition.edges = condition.edges.map((e) =>
       e.id === targetEdges[index].id
         ? {
-          ...e,
-          animated: true,
-          markerEnd: {
-            type: "arrowclosed",
-            width: 12,
-            height: 12,
-            color: color,
-          },
-          style: {
-            strokeWidth: 5,
-            stroke: color,
-          },
-        }
+            ...e,
+            animated: true,
+            markerEnd: {
+              type: "arrowclosed",
+              width: 12,
+              height: 12,
+              color: color,
+            },
+            style: {
+              strokeWidth: 5,
+              stroke: color,
+            },
+          }
         : e
     );
   });
@@ -554,14 +553,14 @@ const setNodeColor = (
   condition.nodes = condition.nodes.map((n) =>
     n.id === targetNode.id
       ? {
-        ...n,
-        data: {
-          ...n.data,
-          computed: computed,
-          color: color,
-          result: result,
-        },
-      }
+          ...n,
+          data: {
+            ...n.data,
+            computed: computed,
+            color: color,
+            result: result,
+          },
+        }
       : n
   );
 
@@ -669,19 +668,19 @@ const evaluateNodes = async (
           condition.edges = condition.edges.map((e) =>
             e.id === targetEdges[index].id
               ? {
-                ...e,
-                animated: true,
-                markerEnd: {
-                  type: "arrowclosed",
-                  width: 12,
-                  height: 12,
-                  color: "#FF0072",
-                },
-                style: {
-                  strokeWidth: 5,
-                  stroke: "#FF0072",
-                },
-              }
+                  ...e,
+                  animated: true,
+                  markerEnd: {
+                    type: "arrowclosed",
+                    width: 12,
+                    height: 12,
+                    color: "#FF0072",
+                  },
+                  style: {
+                    strokeWidth: 5,
+                    stroke: "#FF0072",
+                  },
+                }
               : e
           );
         });
@@ -843,67 +842,82 @@ export const testing = async (req, res, next) => {
     return next(createError(error.status, error.message));
   }
 };
+function evaluateExpression(expression, inputData) {
+  const { lhs, comparator, rhs } = expression;
 
-function evaluateExpression(result, expression, inputData) {
-  let { inputAttribute, operator, value } = expression;
-  let inputValue;
-  if (operator === "==" || operator === "!=") {
-    inputValue = inputData[value]
-      ? String(inputData[value]).toLowerCase()
-      : String(inputData).toLowerCase();
-  } else {
-    inputValue = inputData[value]
-      ? parseInt(inputData[value])
-      : parseInt(value);
+  const evaluateSide = (side, inputData) => {
+    const sideResults = []; // Array to store results of each operand
+    const getComparisonValue = (attribute, inputData) => {
+      const attributeValue =
+        inputData[attribute] !== undefined
+          ? String(inputData[attribute]).toLowerCase()
+          : String(attribute).toLowerCase();
+
+      return attributeValue;
+    };
+    side.forEach((operand) => {
+      let sideValue = 0;
+
+      if (operand.op1 === null) {
+        // Use the result of the previous evaluation
+        if (sideResults.length > 0) {
+          sideValue = sideResults[sideResults.length - 1];
+        } else {
+          // Handle if no previous result is available
+          sideValue = 0;
+        }
+      } else if (checkSpecialFunction(operand.op1.split(",")[0])) {
+        sideValue = evaluateSpecialFunction(operand.op1, inputData);
+      } else {
+        sideValue = getComparisonValue(operand.op1, inputData);
+      }
+
+      switch (operand.operator) {
+        case "/":
+          sideValue /= parseFloat(operand.op2);
+          break;
+        case "*":
+          sideValue *= parseFloat(operand.op2);
+          break;
+        case "+":
+          sideValue += parseFloat(operand.op2);
+          break;
+        case "-":
+          sideValue -= parseFloat(operand.op2);
+          break;
+        default:
+          sideValue = sideValue;
+          break;
+      }
+
+      // Store the result of the current operand in the array
+      sideResults.push(sideValue);
+    });
+
+    // Return the final result of the last operand
+    return sideResults.length > 0 ? sideResults[sideResults.length - 1] : 0;
+  };
+  const leftSideValue = evaluateSide(lhs, inputData);
+  console.log(leftSideValue);
+  const rightSideValue = evaluateSide(rhs, inputData);
+  console.log(rightSideValue);
+
+  switch (comparator) {
+    case ">":
+      return leftSideValue > rightSideValue;
+    case "<":
+      return leftSideValue < rightSideValue;
+    case "==":
+      return leftSideValue == rightSideValue;
+    case "!=":
+      return leftSideValue !== rightSideValue;
+    case ">=":
+      return leftSideValue >= rightSideValue;
+    case "<=":
+      return leftSideValue <= rightSideValue;
+    default:
+      return false;
   }
-
-  const getComparisonValue = (attribute) => {
-    if (operator === "==" || operator === "!=") {
-      return attribute === null
-        ? String(result).toLowerCase()
-        : String(inputData[attribute]).toLowerCase();
-    } else {
-      return attribute === null ? result : inputData[attribute];
-    }
-  };
-
-  const performComparison = (attribute) => {
-    let attributeValue = 0;
-    if (checkSpecialFunction(attribute?.split(",")[0])) {
-      attributeValue = evaluateSpecialFunction(attribute, inputData);
-    } else {
-      attributeValue = getComparisonValue(attribute);
-    }
-    console.log(attributeValue, inputData);
-    switch (operator) {
-      case ">":
-        return attributeValue > inputValue;
-      case "<":
-        return attributeValue < inputValue;
-      case "==":
-        return attributeValue == inputValue;
-      case "!=":
-        return attributeValue !== inputValue;
-      case ">=":
-        return attributeValue >= inputValue;
-      case "<=":
-        return attributeValue <= inputValue;
-      case "/":
-        return attributeValue / inputValue;
-      case "*":
-        return attributeValue * inputValue;
-      case "+":
-        return attributeValue + inputValue;
-      case "-":
-        return attributeValue - inputValue;
-      case "%":
-        return attributeValue % inputValue;
-      default:
-        return false;
-    }
-  };
-
-  return performComparison(inputAttribute);
 }
 
 function checkSpecialFunction(func) {
@@ -984,13 +998,10 @@ function evaluateCondition(condition, inputData) {
   const { expression, boolean } = condition;
   // Evaluate the first expression
   let result = [];
-  result.push(evaluateExpression(null, expression[0], inputData));
-  // If there are more expressions, combine the results using boolean logic
-  for (let i = 1; i < expression.length; i++) {
-    result.push(evaluateExpression(result[i - 1], expression[i], inputData));
-  }
+  result.push(evaluateExpression(expression, inputData));
   return result[result.length - 1];
 }
+
 function evaluateConditions(conditions, rule, inputAttributes) {
   let result = [];
   const eachConditionResult = [];
@@ -999,6 +1010,7 @@ function evaluateConditions(conditions, rule, inputAttributes) {
   for (const condition of conditions) {
     const conditionResult = evaluateCondition(condition, inputAttributes);
     eachConditionResult.push(conditionResult);
+
     if (logicalOperator) {
       // If a logical operator is present, combine the previous result with the current result
       result[result.length - 1] = performLogicalOperation(
@@ -1019,14 +1031,13 @@ function evaluateConditions(conditions, rule, inputAttributes) {
   }
 
   if (rule === "Any") {
-    if (result.includes(true)) return [true, eachConditionResult];
+    return [result.includes(true), eachConditionResult];
   } else if (rule === "All") {
-    if (result.includes(false)) return [false, eachConditionResult];
+    return [result.every(Boolean), eachConditionResult];
   }
 
   return [result[0], eachConditionResult];
 }
-
 // Helper function to perform logical operations
 function performLogicalOperation(operand1, operator, operand2) {
   switch (operator) {
@@ -1035,6 +1046,6 @@ function performLogicalOperation(operand1, operator, operand2) {
     case "||":
       return operand1 || operand2;
     default:
-      return false; // Default to false if an invalid operator is provided
+      return false;
   }
 }

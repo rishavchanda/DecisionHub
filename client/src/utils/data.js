@@ -19,6 +19,9 @@ export const arithmeticOperations = [
     name: "Modulus '%'",
     value: "%",
   },
+];
+
+export const comparisonOperations = [
   {
     name: "Greater than '>'",
     value: ">",
