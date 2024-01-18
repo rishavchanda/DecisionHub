@@ -16,8 +16,14 @@ const User = db.user;
 const Version = db.version;
 
 export const createRule = async (req, res, next) => {
-  const { title, description, inputAttributes, outputAttributes, condition } =
-    req.body;
+  const {
+    title,
+    description,
+    tables,
+    inputAttributes,
+    outputAttributes,
+    condition,
+  } = req.body;
   const test = JSON.parse(req.body.condition);
   const userId = req.user.id;
   try {
@@ -28,6 +34,7 @@ export const createRule = async (req, res, next) => {
     const rule = await Rule.create({
       title,
       description,
+      tables,
       inputAttributes,
       outputAttributes,
       condition,
@@ -36,6 +43,7 @@ export const createRule = async (req, res, next) => {
     const version = await Version.create({
       title: rule.title,
       description: rule.description,
+      tables: rule.tables,
       inputAttributes: rule.inputAttributes,
       outputAttributes: rule.outputAttributes,
       condition: rule.condition,
@@ -163,6 +171,7 @@ export const updateRule = async (req, res, next) => {
         {
           title: newRule.title,
           description: newRule.description,
+          tables: newRule.tables,
           inputAttributes: newRule.inputAttributes,
           outputAttributes: newRule.outputAttributes,
           condition: newRule.condition,
@@ -179,6 +188,7 @@ export const updateRule = async (req, res, next) => {
         {
           title: newRule.title,
           description: newRule.description,
+          tables: newRule.tables,
           inputAttributes: newRule.inputAttributes,
           outputAttributes: newRule.outputAttributes,
           condition: newRule.condition,
@@ -211,6 +221,7 @@ export const updateRule = async (req, res, next) => {
         {
           title: newRule.title,
           description: newRule.description,
+          tables: newRule.tables,
           inputAttributes: newRule.inputAttributes,
           outputAttributes: newRule.outputAttributes,
           condition: newRule.condition,
@@ -271,6 +282,7 @@ export const updateRuleWithVersion = async (req, res, next) => {
     const version = await Version.create({
       title: updatedRule.title,
       description: updatedRule.description,
+      tables: updatedRule.tables,
       inputAttributes: updatedRule.inputAttributes,
       outputAttributes: updatedRule.outputAttributes,
       condition: updatedRule.condition,
@@ -338,6 +350,7 @@ export const deleteRule = async (req, res, next) => {
           {
             title: latestVersion.title,
             description: latestVersion.description,
+            tables: latestVersion.tables,
             inputAttributes: latestVersion.inputAttributes,
             outputAttributes: latestVersion.outputAttributes,
             condition: latestVersion.condition,
@@ -377,6 +390,7 @@ export const testingExcel = async (req, res, next) => {
   const storagePath = "FILES_STORAGE/";
   const userId = req.user.id;
   const { id, version } = req.params;
+  let data = [];
   try {
     const user = await User.findOne({ where: { id: userId } });
     if (!user) {
@@ -397,16 +411,15 @@ export const testingExcel = async (req, res, next) => {
     if (!file) {
       return res.status(400).json({ error: "No file uploaded" });
     }
- 
+
     const filePath = path.join(storagePath, file.filename);
     let workbook = xlsx.readFile(filePath);
     let sheet_name_list = workbook.SheetNames;
 
-    sheet_name_list.forEach(function (y) {
+    sheet_name_list.forEach(async function (y) {
       var worksheet = workbook.Sheets[y];
       // getting the complete sheet
-      var headers = {};
-      var data = [];
+      let headers = {};
       for (let z in worksheet) {
         if (z[0] === "!") continue;
         // parse out the column, row, and value
@@ -425,8 +438,7 @@ export const testingExcel = async (req, res, next) => {
       // drop those first two rows which are empty
       data.shift();
       data.shift();
-
-      data.forEach(async (inputData, index) => {
+      await data.map(async (inputData, index) => {
         const condition = JSON.parse(rule.condition);
         let testedRule;
         const attributeNode = condition.nodes.find(
@@ -447,7 +459,7 @@ export const testingExcel = async (req, res, next) => {
             condition.nodes.forEach((node, index) => {
               if (node.type === "attributeNode") {
                 condition.nodes[index] = {
-                  ...node, 
+                  ...node,
                   data: {
                     ...node.data,
                     computed: "yes",
@@ -488,18 +500,18 @@ export const testingExcel = async (req, res, next) => {
               inputData,
               { condition: JSON.stringify(condition) }
             );
-            testedRule.output.forEach((attribute) => {
-              const field = attribute.field;
-              const value = attribute.value;
-              inputData[field] = value;
-              data[index] = inputData
-            });
-            rule.condition = testedRule.rule.condition;
+            // testedRule?.output?.forEach((attribute) => {
+            //   const field = attribute.field;
+            //   const value = attribute.value;
+            //   inputData[field] = value;
+            //   data[index] = inputData;
+            // });
+            inputData[index] = testedRule?.output[index].field;
+            rule.condition = testedRule?.rule?.condition;
           }
         }
       })
 
-      console.log(data)
 
       var newWorkbook = xlsx.utils.book_new();
       var newWorksheet = xlsx.utils.json_to_sheet(data);
@@ -524,6 +536,7 @@ export const testingExcel = async (req, res, next) => {
     res.json({
       success: true,
       message: "File processed and saved successfully",
+      data: data
     });
   } catch (error) {
     return next(createError(error.status, error.message));
@@ -993,7 +1006,7 @@ export const testing = async (req, res, next) => {
     return res.json({
       rule: rule,
       versions: versionValues,
-      output: testedRule?.output ? testedRule.output : null
+      output: testedRule?.output ? testedRule.output : null,
     });
   } catch (error) {
     return next(createError(error.status, error.message));
@@ -1059,9 +1072,7 @@ function evaluateExpression(expression, inputData) {
     return sideResults.length > 0 ? sideResults[sideResults.length - 1] : 0;
   };
   const leftSideValue = evaluateSide(lhs, inputData);
-  console.log(leftSideValue);
   const rightSideValue = evaluateSide(rhs, inputData);
-  console.log(rightSideValue);
 
   switch (comparator) {
     case ">":

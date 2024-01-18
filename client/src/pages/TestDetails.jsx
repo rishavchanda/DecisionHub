@@ -93,6 +93,7 @@ const TestDetails = () => {
   const [nodes, setNodes, onNodesChange] = useNodesState();
   const [edges, setEdges, onEdgesChange] = useEdgesState();
   const [rule, setRule] = useState();
+  const [output, setOutput] = useState([]);
   const [versions, setVersions] = useState([]);
   const [version, setVersion] = useState();
 
@@ -150,7 +151,7 @@ const TestDetails = () => {
     await testRule(id, rule?.version, testData, token)
       .then(async (res) => {
         await setRule(res.data?.rule);
-        console.log(res.data?.output);
+        await setOutput(res.data?.output);
         await setInputAttributes(res.data?.rule?.inputAttributes);
         await createFlow(res.data?.rule);
         setSubmitLoading(false);
@@ -168,6 +169,11 @@ const TestDetails = () => {
 
   const handelSubmitTestData = (testData) => {
     getTestedRule(testData);
+  };
+
+  const handelExcelSubmit = (excelData) => {
+    console.log(excelData);
+    // getTestedRule(excelData);
   };
 
   useEffect(() => {
@@ -238,6 +244,7 @@ const TestDetails = () => {
                 attributes={inputAttributes}
                 loading={submitLoading}
                 submitTestData={(testData) => handelSubmitTestData(testData)}
+                output={output}
               />
               <Button onClick={() => navigate(`/rules/${path[2]}`)}>
                 <EditRounded style={{ fontSize: "12px" }} /> Edit Rule
