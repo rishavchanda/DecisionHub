@@ -100,6 +100,7 @@ const TestDetails = () => {
   //loader
   const [loading, setLoading] = useState(true);
   const [submitLoading, setSubmitLoading] = useState(false);
+  const [excelLoading, setExcelLoading] = useState(false);
 
   //Functions
 
@@ -173,6 +174,7 @@ const TestDetails = () => {
 
   const handelExcelSubmit = (excelData) => {
     console.log(excelData);
+    setExcelLoading(true);
     // getTestedRule(excelData);
   };
 
@@ -245,6 +247,8 @@ const TestDetails = () => {
                 loading={submitLoading}
                 submitTestData={(testData) => handelSubmitTestData(testData)}
                 output={output}
+                excelLoading={excelLoading}
+                submitExcelData={(excelData) => handelExcelSubmit(excelData)}
               />
               <Button onClick={() => navigate(`/rules/${path[2]}`)}>
                 <EditRounded style={{ fontSize: "12px" }} /> Edit Rule

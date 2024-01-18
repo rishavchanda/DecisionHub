@@ -100,6 +100,13 @@ const Hr = styled.div`
   border-radius: 8px;
 `;
 
+const FlexDisplay = styled.div`
+  width: max-content;
+  display: flex;
+  flex-direction: row;
+  gap: 40px;
+`;
+
 const Flex = styled.div`
   width: max-content;
   display: flex;
@@ -170,7 +177,6 @@ const No = styled.div`
   flex-direction: column;
   align-items: center;
   position: relative;
-  font-size: 10px;
 `;
 
 const Yes = styled.div`
@@ -181,10 +187,6 @@ const Yes = styled.div`
 `;
 
 const NodeButtons = styled.div`
-  position: absolute;
-  top: 250%;
-  left: -55%;
-  transform: translate(0, -50%);
   display: flex;
   flex-direction: column;
   justify-content: center;
@@ -353,8 +355,8 @@ const calculateNodePosition = (
 ) => {
   const offsetX =
     sourceHandle === "no"
-      ? currentNode.position.x + width / 3 + 600 + 1200 * neighbourOffset
-      : currentNode.position.x + width / 3 - 600 - 1200 * neighbourOffset; // Adjust as needed
+      ? currentNode.position.x + width / 3 + 600 + 1000 * neighbourOffset
+      : currentNode.position.x + width / 3 - 600 - 1000 * neighbourOffset; // Adjust as needed
   const offsetY = 200; // Adjust as needed
   const x = offsetX;
   const y = depth + offsetY;
@@ -384,7 +386,7 @@ const YesNode = ({ id, data }) => {
     <Yes>
       <VR
         style={{
-          height: "60px",
+          minHeight: "60px",
           background: data?.computed === "yes" ? data?.color : theme.arrow,
           width: "3px",
         }}
@@ -406,7 +408,7 @@ const YesNode = ({ id, data }) => {
       </OutlineWrapper>
 
       {yesEdges.length === 0 ? (
-        <NodeButtons style={{ top: "170%", left: "-55%" }}>
+        <NodeButtons>
           <AddNoNode>
             <AddRounded sx={{ fontSize: "14px" }} />
           </AddNoNode>
@@ -510,18 +512,24 @@ const NoNode = ({ id, data }) => {
 
   return (
     <No>
+      <VR
+        style={{
+          minHeight: "60px",
+          background: data?.computed === "no" ? data?.color : theme.arrow,
+          width: "3px",
+        }}
+      />
       <OutlineWrapper
         style={{
           borderColor: data?.computed === "no" ? data?.color : theme.arrow,
           color: data?.computed === "no" && data?.color,
-          borderWidth: "3px",
           width: "100px",
+          borderWidth: "3px",
           height: "40px",
           display: "flex",
           justifyContent: "center",
           alignItems: "center",
-          fontSize: "20px",
-          marginTop: noEdges.length === 0 ? "0px" : "30px",
+          fontSize: "18px",
         }}
       >
         No
@@ -598,7 +606,7 @@ const NoNode = ({ id, data }) => {
             dispatch(ruleUpdated());
           }}
         >
-          <AddRounded sx={{ fontSize: "14px", color: "inherit" }} />
+          <AddRounded sx={{ fontSize: "18px", color: "inherit" }} />
         </AddNoNode>
       )}
       <Handle id="no" type="source" position={Position.Bottom} />
@@ -993,10 +1001,13 @@ function ConditionalNode({ id, data }) {
             </Button>
           </NodeFooter>
         </Node>
-        <YesNode id={id} data={data} />
+        <FlexDisplay>
+          <YesNode id={id} data={data} />
+          {noOfEdgesParent <= 1 && <NoNode id={id} data={data} />}
+        </FlexDisplay>
       </FlexRight>
 
-      {noOfEdgesParent <= 1 && (
+      {/* {noOfEdgesParent <= 1 && (
         <>
           <Hr
             style={{
@@ -1007,7 +1018,7 @@ function ConditionalNode({ id, data }) {
           />
           <NoNode id={id} data={data} />
         </>
-      )}
+      )} */}
     </Wrapper>
   );
 }

@@ -312,8 +312,6 @@ const RulesDetails = () => {
           edges={edges}
           onNodesChange={onNodesChange}
           onEdgesChange={onEdgesChange}
-          nodesDraggable={true}
-          elementsSelectable={true}
           setNodes={setNodes}
           setEdges={setEdges}
           fitView={true}
