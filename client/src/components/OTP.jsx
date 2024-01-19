@@ -133,7 +133,7 @@ const OTP = ({ email, name, setOtpVerified, reason }) => {
 
   // Sends the otp to the user email id
   const sendOtp = async () => {
-    await generateOtp(email, name, reason)
+    await generateOtp(name, email, reason)
       .then((res) => {
         if (res.status === 200) {
           dispatch(
