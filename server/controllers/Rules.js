@@ -423,7 +423,7 @@ export const testingExcel = async (req, res, next) => {
     let workbook = xlsx.readFile(filePath);
     let sheet_name_list = workbook.SheetNames;
 
-    sheet_name_list.forEach(async function (y) {
+    sheet_name_list.forEach(async function (y) { 
       var worksheet = workbook.Sheets[y];
       // getting the complete sheet
       let headers = {};
@@ -507,7 +507,7 @@ export const testingExcel = async (req, res, next) => {
               inputData,
               { condition: JSON.stringify(condition) }
             );
-            if(testedRule.output){
+            if (testedRule.output) {
               inputData[testedRule?.output[0]?.field] = testedRule?.output[0]?.value;
             }
             data[index] = inputData;
@@ -525,7 +525,7 @@ export const testingExcel = async (req, res, next) => {
         },
       }
     );
-    res.json({
+    res.status(200).json({
       fields: Object.keys(data[0]),
       data: data,
     });
@@ -748,7 +748,7 @@ export const testWithDb = async (req, res, next) => {
     if (!ruleIds.includes(id)) {
       return next(createError(403, "You are not owner of this rule"));
     }
-    const sql = `SELECT * FROM ${tableName}`; 
+    const sql = `SELECT * FROM ${tableName}`;
     const [rows] = await sequelize.query(sql, { type: sequelize.QueryTypes.SELECT });
     return res.json(rows);
   } catch (error) {
@@ -906,7 +906,7 @@ const evaluateNodes = async (
   }
 };
 
-export const testing = async (req, res, next) => { 
+export const testing = async (req, res, next) => {
   const inputAttributes = req.body;
   const { id, version } = req.params;
   const userId = req.user.id;
