@@ -21,6 +21,13 @@ export const arithmeticOperations = [
   },
 ];
 
+export const ArithmeticOperations = ["+", "-", "*", "/", "%"];
+export const ComparisonOperations = [">", "<", "==", ">=", "<=", "!="];
+export const specialFunctionsList = ["date_diff", "time_diff"];
+export const specialAttributesList = ["current_date", "current_time"];
+export const DateUnits = ["days", "months", "years"];
+export const TimeUnits = ["seconds", "minutes", "hours"];
+
 export const comparisonOperations = [
   {
     name: "Greater than '>'",

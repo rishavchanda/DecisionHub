@@ -4,10 +4,9 @@ import {
   ArrowDropUpRounded,
   DeleteOutlineRounded,
 } from "@mui/icons-material";
-import React from "react";
+import React, { useEffect, useState } from "react";
 import styled, { useTheme } from "styled-components";
 import {
-  arithmeticOperations,
   comparisonOperations,
   dateUnits,
   specialAttributes,
@@ -15,6 +14,7 @@ import {
   timeUnits,
 } from "../../utils/data";
 import { useReactFlow } from "reactflow";
+import { Autocomplete, TextField } from "@mui/material";
 
 const Wrapper = styled.div`
   width: fit-content;
@@ -22,7 +22,7 @@ const Wrapper = styled.div`
 
 const Condition = styled.div`
   draggable: true;
-  height: 46px;
+  height: 70px;
   display: flex;
   flex-direction: row;
   justify-content: space-between;
@@ -145,8 +145,8 @@ const Conditions = ({
   const test = result ? result[index] : null;
 
   // update the expression
-  const handleSelectChange = (part, field, expressionIndex, event) => {
-    console.log(event.target.value);
+  const handleSelectChange = (part, field, expressionIndex, value) => {
+    console.log(value);
     const updatedNodes = reactFlow.getNodes().map((node) => {
       if (node.id === nodeId) {
         const updatedData = {
@@ -160,32 +160,28 @@ const Conditions = ({
                     if (
                       field === "op1" &&
                       expr.op1 !== null &&
-                      specialFunctions?.find(
-                        (func) => func.value === event.target.value
-                      )
+                      specialFunctions?.find((func) => func.value === value)
                     ) {
                       return {
                         ...expr,
-                        op1: event.target.value + ",null,null,null",
+                        op1: value + ",null,null,null",
                       };
                     } else if (
                       field === "op2" &&
                       expr.op2 !== null &&
-                      specialFunctions?.find(
-                        (func) => func.value === event.target.value
-                      )
+                      specialFunctions?.find((func) => func.value === value)
                     ) {
                       return {
                         ...expr,
-                        op2: event.target.value + ",null,null,null",
+                        op2: value + ",null,null,null",
                       };
                     } else if (field === "op1" && expr.op1 !== null) {
-                      return { ...expr, op1: event.target.value };
+                      return { ...expr, op1: value };
                     } else if (field === "operator") {
-                      return { ...expr, operator: event.target.value };
+                      return { ...expr, operator: value };
                     } else if (field === "op2") {
-                      console.log(event.target.value);
-                      return { ...expr, op2: event.target.value };
+                      console.log(value);
+                      return { ...expr, op2: value };
                     }
                   }
                   return expr;
@@ -213,7 +209,7 @@ const Conditions = ({
   };
 
   // handel chnage for comparator
-  const handleComparatorChange = (event) => {
+  const handleComparatorChange = (value) => {
     const updatedNodes = reactFlow.getNodes().map((node) => {
       if (node.id === nodeId) {
         const updatedData = {
@@ -224,7 +220,7 @@ const Conditions = ({
                 ...condition,
                 expression: {
                   ...condition.expression,
-                  comparator: event.target.value,
+                  comparator: value,
                 },
               };
             }
@@ -249,7 +245,7 @@ const Conditions = ({
   const handleFunctionInputAttributeChange = (
     field,
     expressionIndex,
-    event
+    value
   ) => {
     const updatedNodes = reactFlow.getNodes().map((node) => {
       if (node.id === nodeId) {
@@ -266,7 +262,7 @@ const Conditions = ({
                         return {
                           ...lhsItem,
                           op1:
-                            event.target.value +
+                            value +
                             "," +
                             getInputAttribute(lhsItem.op1, 1) +
                             "," +
@@ -280,7 +276,7 @@ const Conditions = ({
                           op1:
                             getInputAttribute(lhsItem.op1, 0) +
                             "," +
-                            event.target.value +
+                            value +
                             "," +
                             getInputAttribute(lhsItem.op1, 2) +
                             "," +
@@ -294,7 +290,7 @@ const Conditions = ({
                             "," +
                             getInputAttribute(lhsItem.op1, 1) +
                             "," +
-                            event.target.value +
+                            value +
                             "," +
                             getInputAttribute(lhsItem.op1, 3),
                         };
@@ -308,7 +304,7 @@ const Conditions = ({
                             "," +
                             getInputAttribute(lhsItem.op1, 2) +
                             "," +
-                            event.target.value,
+                            value,
                         };
                       }
                     }
@@ -321,7 +317,7 @@ const Conditions = ({
                         return {
                           ...lhsItem,
                           op1:
-                            event.target.value +
+                            value +
                             "," +
                             getInputAttribute(lhsItem.op1, 1) +
                             "," +
@@ -335,7 +331,7 @@ const Conditions = ({
                           op1:
                             getInputAttribute(lhsItem.op1, 0) +
                             "," +
-                            event.target.value +
+                            value +
                             "," +
                             getInputAttribute(lhsItem.op1, 2) +
                             "," +
@@ -349,7 +345,7 @@ const Conditions = ({
                             "," +
                             getInputAttribute(lhsItem.op1, 1) +
                             "," +
-                            event.target.value +
+                            value +
                             "," +
                             getInputAttribute(lhsItem.op1, 3),
                         };
@@ -363,7 +359,7 @@ const Conditions = ({
                             "," +
                             getInputAttribute(lhsItem.op1, 2) +
                             "," +
-                            event.target.value,
+                            value,
                         };
                       }
                     }
@@ -544,6 +540,23 @@ const Conditions = ({
     return ruleString;
   }
 
+  const [attributesWithSpecial, setAttributesWithSpecial] = useState([
+    ...inputAttribute,
+    "current_date",
+    "current_time",
+  ]);
+  const [attributesWithSpecialFunctions, setAttributesWithSpecialFunctions] =
+    useState([
+      ...inputAttribute,
+      "date_diff",
+      "time_diff",
+      "current_date",
+      "current_time",
+    ]);
+  let arithmeticOperations = ["+", "-", "*", "/", "%"];
+  let comparators = [">", "<", "==", ">=", "<=", "!="];
+  let dateUnit = ["days", "months", "years", "seconds", "minutes", "hours"];
+
   return (
     <Wrapper>
       <Condition result={result} color={test}>
@@ -603,50 +616,85 @@ const Conditions = ({
             <ConditionBody key={index}>
               {item?.op1 !== null && (
                 <OutlineWrapper>
-                  <Select
+                  <Autocomplete
+                    disablePortal
+                    fullWidth
+                    isOptionEqualToValue={(option, value) => option === value}
                     value={getInputAttribute(item?.op1, 0)}
-                    onChange={(e) => handleSelectChange("lhs", "op1", index, e)}
-                  >
-                    <option selected hidden>
-                      Select
-                    </option>
-                    {inputAttribute?.map((item, index) => (
-                      <option key={index} value={item}>
-                        {item}
-                      </option>
-                    ))}
-                    {specialAttributes?.map((item) => (
-                      <option key={item.name} value={item.value}>
-                        {item.name}
-                      </option>
-                    ))}
-                    <Hr />
-                    {specialFunctions?.map((item) => (
-                      <option key={item.name} value={item.value}>
-                        {item.name}
-                      </option>
-                    ))}
-                    <option value="">Custom Value</option>
-                  </Select>
+                    onChange={(e, v) =>
+                      handleSelectChange("lhs", "op1", index, v)
+                    }
+                    options={attributesWithSpecialFunctions}
+                    fontSize="12px"
+                    sx={{
+                      width: "200px",
+                      color: theme.text_primary,
+                      border: "none",
+                      outline: "none",
+                      "&.Mui-focused .MuiOutlinedInput-notchedOutline": {
+                        border: "none",
+                      },
+                      "& .MuiOutlinedInput-root": {
+                        border: "none",
+                        padding: 0,
+                      },
+                      "& .MuiOutlinedInput-root .MuiOutlinedInput-notchedOutline":
+                        {
+                          border: "none",
+                          padding: 0,
+                        },
+                    }}
+                    renderInput={(params) => (
+                      <TextField
+                        sx={{
+                          width: "200px",
+                          color: theme.text_primary,
+                          input: {
+                            color: theme.text_primary,
+                            borderColor: `${theme.text_secondary} !important`,
+                            fontSize: "12px",
+                          },
+                          borderColor: `${theme.text_secondary} !important`,
+                          borderRadius: "8px",
+                          padding: "0px",
+                          fontSize: "8px",
+                          ".MuiSvgIcon-root ": {
+                            fill: `${theme.text_secondary} !important`,
+                          },
+                          "&.Mui-focused .MuiOutlinedInput-notchedOutline": {
+                            border: "none",
+                          },
+                          "& .MuiOutlinedInput-root": {
+                            border: "none",
+                            padding: 0,
+                          },
+                          "& .MuiOutlinedInput-root .MuiOutlinedInput-notchedOutline":
+                            {
+                              border: "none",
+                              padding: 0,
+                            },
+                        }}
+                        fullWidth
+                        {...params}
+                        placeholder="Select"
+                        value={getInputAttribute(item?.op1, 0)}
+                        onChange={(e) =>
+                          handleSelectChange(
+                            "lhs",
+                            "op1",
+                            index,
+                            e.target.value
+                          )
+                        }
+                      />
+                    )}
+                  />
 
                   {(item?.op1 === "__custom__" ||
                     !inputAttribute?.includes(
                       getInputAttribute(item?.op1, 0)
                     )) && (
                     <>
-                      {(item?.op1 === "__custom__" ||
-                        !specialFunctions?.find(
-                          (func) =>
-                            func.value === getInputAttribute(item?.op1, 0)
-                        )) && (
-                        <Input
-                          value={item?.op1}
-                          onChange={(e) =>
-                            handleSelectChange("lhs", "op1", index, e)
-                          }
-                          placeholder="Enter Value"
-                        />
-                      )}
                       {
                         // if the selected input attribute is a special function
                         specialFunctions?.find(
@@ -655,85 +703,248 @@ const Conditions = ({
                         ) && (
                           <>
                             (
-                            <Select
+                            <Autocomplete
+                              disablePortal
+                              fullWidth
+                              isOptionEqualToValue={(option, value) =>
+                                option === value
+                              }
                               value={getInputAttribute(item?.op1, 1)}
-                              onChange={(e) =>
+                              onChange={(e, v) =>
                                 handleFunctionInputAttributeChange(
                                   "val1",
                                   index,
-                                  e
+                                  v
                                 )
                               }
-                            >
-                              <option selected hidden>
-                                Select
-                              </option>
-                              {inputAttribute?.map((item) => (
-                                <option key={item} value={item}>
-                                  {item}
-                                </option>
-                              ))}
-                              {specialAttributes?.map((item) => (
-                                <option key={item.name} value={item.value}>
-                                  {item.name}
-                                </option>
-                              ))}
-                            </Select>
+                              options={attributesWithSpecial}
+                              fontSize="12px"
+                              sx={{
+                                width: "200px",
+                                color: theme.text_primary,
+                                border: "none",
+                                outline: "none",
+                                "&.Mui-focused .MuiOutlinedInput-notchedOutline":
+                                  {
+                                    border: "none",
+                                  },
+                                "& .MuiOutlinedInput-root": {
+                                  border: "none",
+                                  padding: 0,
+                                },
+                                "& .MuiOutlinedInput-root .MuiOutlinedInput-notchedOutline":
+                                  {
+                                    border: "none",
+                                    padding: 0,
+                                  },
+                              }}
+                              renderInput={(params) => (
+                                <TextField
+                                  sx={{
+                                    width: "200px",
+                                    color: theme.text_primary,
+                                    input: {
+                                      color: theme.text_primary,
+                                      borderColor: `${theme.text_secondary} !important`,
+                                      fontSize: "12px",
+                                    },
+                                    borderColor: `${theme.text_secondary} !important`,
+                                    borderRadius: "8px",
+                                    padding: "0px",
+                                    fontSize: "8px",
+                                    ".MuiSvgIcon-root ": {
+                                      fill: `${theme.text_secondary} !important`,
+                                    },
+                                    "&.Mui-focused .MuiOutlinedInput-notchedOutline":
+                                      {
+                                        border: "none",
+                                      },
+                                    "& .MuiOutlinedInput-root": {
+                                      border: "none",
+                                      padding: 0,
+                                    },
+                                    "& .MuiOutlinedInput-root .MuiOutlinedInput-notchedOutline":
+                                      {
+                                        border: "none",
+                                        padding: 0,
+                                      },
+                                  }}
+                                  fullWidth
+                                  {...params}
+                                  placeholder="Select"
+                                  value={getInputAttribute(item?.op1, 1)}
+                                  onChange={(e) =>
+                                    handleFunctionInputAttributeChange(
+                                      "val1",
+                                      index,
+                                      e.target.value
+                                    )
+                                  }
+                                />
+                              )}
+                            />
                             ,
-                            <Select
+                            <Autocomplete
+                              disablePortal
+                              fullWidth
+                              isOptionEqualToValue={(option, value) =>
+                                option === value
+                              }
                               value={getInputAttribute(item?.op1, 2)}
-                              onChange={(e) =>
+                              onChange={(e, v) =>
                                 handleFunctionInputAttributeChange(
                                   "val2",
                                   index,
-                                  e
+                                  v
                                 )
                               }
-                            >
-                              <option selected hidden>
-                                Select
-                              </option>
-                              {inputAttribute?.map((item) => (
-                                <option key={item} value={item}>
-                                  {item}
-                                </option>
-                              ))}
-                            </Select>
+                              options={attributesWithSpecial}
+                              fontSize="12px"
+                              sx={{
+                                width: "200px",
+                                color: theme.text_primary,
+                                border: "none",
+                                outline: "none",
+                                "&.Mui-focused .MuiOutlinedInput-notchedOutline":
+                                  {
+                                    border: "none",
+                                  },
+                                "& .MuiOutlinedInput-root": {
+                                  border: "none",
+                                  padding: 0,
+                                },
+                                "& .MuiOutlinedInput-root .MuiOutlinedInput-notchedOutline":
+                                  {
+                                    border: "none",
+                                    padding: 0,
+                                  },
+                              }}
+                              renderInput={(params) => (
+                                <TextField
+                                  sx={{
+                                    width: "200px",
+                                    color: theme.text_primary,
+                                    input: {
+                                      color: theme.text_primary,
+                                      borderColor: `${theme.text_secondary} !important`,
+                                      fontSize: "12px",
+                                    },
+                                    borderColor: `${theme.text_secondary} !important`,
+                                    borderRadius: "8px",
+                                    padding: "0px",
+                                    fontSize: "8px",
+                                    ".MuiSvgIcon-root ": {
+                                      fill: `${theme.text_secondary} !important`,
+                                    },
+                                    "&.Mui-focused .MuiOutlinedInput-notchedOutline":
+                                      {
+                                        border: "none",
+                                      },
+                                    "& .MuiOutlinedInput-root": {
+                                      border: "none",
+                                      padding: 0,
+                                    },
+                                    "& .MuiOutlinedInput-root .MuiOutlinedInput-notchedOutline":
+                                      {
+                                        border: "none",
+                                        padding: 0,
+                                      },
+                                  }}
+                                  fullWidth
+                                  {...params}
+                                  placeholder="Select"
+                                  value={getInputAttribute(item?.op1, 2)}
+                                  onChange={(e) =>
+                                    handleFunctionInputAttributeChange(
+                                      "val2",
+                                      index,
+                                      e.target.value
+                                    )
+                                  }
+                                />
+                              )}
+                            />
                             ,
-                            <Select
+                            <Autocomplete
+                              disablePortal
+                              fullWidth
+                              isOptionEqualToValue={(option, value) =>
+                                option === value
+                              }
                               value={getInputAttribute(item?.op1, 3)}
-                              onChange={(e) =>
+                              onChange={(e, v) =>
                                 handleFunctionInputAttributeChange(
                                   "val3",
                                   index,
-                                  e
+                                  v
                                 )
                               }
-                            >
-                              <option selected hidden>
-                                Unit
-                              </option>
-                              {getInputAttribute(item?.op1, 0) ===
-                                "date_diff" && (
-                                <>
-                                  {dateUnits?.map((item, index) => (
-                                    <option key={index} value={item.value}>
-                                      {item.name}
-                                    </option>
-                                  ))}
-                                </>
+                              options={dateUnit}
+                              fontSize="12px"
+                              sx={{
+                                width: "200px",
+                                color: theme.text_primary,
+                                border: "none",
+                                outline: "none",
+                                "&.Mui-focused .MuiOutlinedInput-notchedOutline":
+                                  {
+                                    border: "none",
+                                  },
+                                "& .MuiOutlinedInput-root": {
+                                  border: "none",
+                                  padding: 0,
+                                },
+                                "& .MuiOutlinedInput-root .MuiOutlinedInput-notchedOutline":
+                                  {
+                                    border: "none",
+                                    padding: 0,
+                                  },
+                              }}
+                              renderInput={(params) => (
+                                <TextField
+                                  sx={{
+                                    width: "200px",
+                                    color: theme.text_primary,
+                                    input: {
+                                      color: theme.text_primary,
+                                      borderColor: `${theme.text_secondary} !important`,
+                                      fontSize: "12px",
+                                    },
+                                    borderColor: `${theme.text_secondary} !important`,
+                                    borderRadius: "8px",
+                                    padding: "0px",
+                                    fontSize: "8px",
+                                    ".MuiSvgIcon-root ": {
+                                      fill: `${theme.text_secondary} !important`,
+                                    },
+                                    "&.Mui-focused .MuiOutlinedInput-notchedOutline":
+                                      {
+                                        border: "none",
+                                      },
+                                    "& .MuiOutlinedInput-root": {
+                                      border: "none",
+                                      padding: 0,
+                                    },
+                                    "& .MuiOutlinedInput-root .MuiOutlinedInput-notchedOutline":
+                                      {
+                                        border: "none",
+                                        padding: 0,
+                                      },
+                                  }}
+                                  fullWidth
+                                  {...params}
+                                  placeholder="Select"
+                                  value={getInputAttribute(item?.op1, 3)}
+                                  onChange={(e) =>
+                                    handleFunctionInputAttributeChange(
+                                      "val3",
+                                      index,
+                                      e.target.value
+                                    )
+                                  }
+                                />
                               )}
-                              {getInputAttribute(item?.op1, 0) ===
-                                "time_diff" && (
-                                <>
-                                  {timeUnits?.map((item, index) => (
-                                    <option key={index} value={item.value}>
-                                      {item.name}
-                                    </option>
-                                  ))}
-                                </>
-                              )}
-                            </Select>
+                            />
                             )
                           </>
                         )
@@ -744,57 +955,417 @@ const Conditions = ({
               )}
               {item.operator != null && (
                 <OutlineWrapper>
-                  <Select
+                  <Autocomplete
+                    disablePortal
+                    fullWidth
+                    isOptionEqualToValue={(option, value) => option === value}
                     value={item?.operator}
-                    onChange={(e) =>
-                      handleSelectChange("lhs", "operator", index, e)
+                    onChange={(e, v) =>
+                      handleSelectChange("lhs", "operator", index, v)
                     }
-                  >
-                    <option selected hidden>
-                      Select
-                    </option>
-                    {arithmeticOperations?.map((item) => (
-                      <option key={item.name} value={item.value}>
-                        {item.name}
-                      </option>
-                    ))}
-                  </Select>
+                    options={arithmeticOperations}
+                    fontSize="12px"
+                    sx={{
+                      width: "200px",
+                      color: theme.text_primary,
+                      border: "none",
+                      outline: "none",
+                      "&.Mui-focused .MuiOutlinedInput-notchedOutline": {
+                        border: "none",
+                      },
+                      "& .MuiOutlinedInput-root": {
+                        border: "none",
+                        padding: 0,
+                      },
+                      "& .MuiOutlinedInput-root .MuiOutlinedInput-notchedOutline":
+                        {
+                          border: "none",
+                          padding: 0,
+                        },
+                    }}
+                    renderInput={(params) => (
+                      <TextField
+                        sx={{
+                          width: "200px",
+                          color: theme.text_primary,
+                          input: {
+                            color: theme.text_primary,
+                            borderColor: `${theme.text_secondary} !important`,
+                            fontSize: "12px",
+                          },
+                          borderColor: `${theme.text_secondary} !important`,
+                          borderRadius: "8px",
+                          padding: "0px",
+                          fontSize: "8px",
+                          ".MuiSvgIcon-root ": {
+                            fill: `${theme.text_secondary} !important`,
+                          },
+                          "&.Mui-focused .MuiOutlinedInput-notchedOutline": {
+                            border: "none",
+                          },
+                          "& .MuiOutlinedInput-root": {
+                            border: "none",
+                            padding: 0,
+                          },
+                          "& .MuiOutlinedInput-root .MuiOutlinedInput-notchedOutline":
+                            {
+                              border: "none",
+                              padding: 0,
+                            },
+                        }}
+                        fullWidth
+                        {...params}
+                        placeholder="Select"
+                        value={item?.operator}
+                        onChange={(e) =>
+                          handleSelectChange(
+                            "lhs",
+                            "operator",
+                            index,
+                            e.target.value
+                          )
+                        }
+                      />
+                    )}
+                  />
                 </OutlineWrapper>
               )}
               {item?.op2 !== null && (
                 <OutlineWrapper>
-                  <Select
-                    value={
-                      inputAttribute?.includes(item?.op2)
-                        ? item.op2
-                        : "__custom__"
+                  <Autocomplete
+                    disablePortal
+                    fullWidth
+                    isOptionEqualToValue={(option, value) => option === value}
+                    value={getInputAttribute(item?.op2, 0)}
+                    onChange={(e, v) =>
+                      handleSelectChange("lhs", "op2", index, v)
                     }
-                    onChange={(e) => handleSelectChange("lhs", "op2", index, e)}
-                  >
-                    <option selected hidden>
-                      Select
-                    </option>
-                    {inputAttribute?.map((item) => (
-                      <option key={item} value={item}>
-                        {item}
-                      </option>
-                    ))}
-                    {specialAttributes?.map((item) => (
-                      <option key={item.name} value={item.value}>
-                        {item.name}
-                      </option>
-                    ))}
-                    <option value="">Custom Value</option>
-                  </Select>
+                    options={attributesWithSpecialFunctions}
+                    fontSize="12px"
+                    sx={{
+                      width: "200px",
+                      color: theme.text_primary,
+                      border: "none",
+                      outline: "none",
+                      "&.Mui-focused .MuiOutlinedInput-notchedOutline": {
+                        border: "none",
+                      },
+                      "& .MuiOutlinedInput-root": {
+                        border: "none",
+                        padding: 0,
+                      },
+                      "& .MuiOutlinedInput-root .MuiOutlinedInput-notchedOutline":
+                        {
+                          border: "none",
+                          padding: 0,
+                        },
+                    }}
+                    renderInput={(params) => (
+                      <TextField
+                        sx={{
+                          width: "200px",
+                          color: theme.text_primary,
+                          input: {
+                            color: theme.text_primary,
+                            borderColor: `${theme.text_secondary} !important`,
+                            fontSize: "12px",
+                          },
+                          borderColor: `${theme.text_secondary} !important`,
+                          borderRadius: "8px",
+                          padding: "0px",
+                          fontSize: "8px",
+                          ".MuiSvgIcon-root ": {
+                            fill: `${theme.text_secondary} !important`,
+                          },
+                          "&.Mui-focused .MuiOutlinedInput-notchedOutline": {
+                            border: "none",
+                          },
+                          "& .MuiOutlinedInput-root": {
+                            border: "none",
+                            padding: 0,
+                          },
+                          "& .MuiOutlinedInput-root .MuiOutlinedInput-notchedOutline":
+                            {
+                              border: "none",
+                              padding: 0,
+                            },
+                        }}
+                        fullWidth
+                        {...params}
+                        placeholder="Select"
+                        value={getInputAttribute(item?.op2, 0)}
+                        onChange={(e) =>
+                          handleSelectChange(
+                            "lhs",
+                            "op2",
+                            index,
+                            e.target.value
+                          )
+                        }
+                      />
+                    )}
+                  />
+
                   {(item?.op2 === "__custom__" ||
-                    inputAttribute?.includes(item?.op2) === false) && (
-                    <Input
-                      value={item?.op2}
-                      onChange={(e) =>
-                        handleSelectChange("lhs", "op2", index, e)
+                    !inputAttribute?.includes(
+                      getInputAttribute(item?.op2, 0)
+                    )) && (
+                    <>
+                      {
+                        // if the selected input attribute is a special function
+                        specialFunctions?.find(
+                          (func) =>
+                            func.value === getInputAttribute(item?.op2, 0)
+                        ) && (
+                          <>
+                            (
+                            <Autocomplete
+                              disablePortal
+                              fullWidth
+                              isOptionEqualToValue={(option, value) =>
+                                option === value
+                              }
+                              value={getInputAttribute(item?.op2, 1)}
+                              onChange={(e, v) =>
+                                handleFunctionInputAttributeChange(
+                                  "val1",
+                                  index,
+                                  v
+                                )
+                              }
+                              options={attributesWithSpecial}
+                              fontSize="12px"
+                              sx={{
+                                width: "200px",
+                                color: theme.text_primary,
+                                border: "none",
+                                outline: "none",
+                                "&.Mui-focused .MuiOutlinedInput-notchedOutline":
+                                  {
+                                    border: "none",
+                                  },
+                                "& .MuiOutlinedInput-root": {
+                                  border: "none",
+                                  padding: 0,
+                                },
+                                "& .MuiOutlinedInput-root .MuiOutlinedInput-notchedOutline":
+                                  {
+                                    border: "none",
+                                    padding: 0,
+                                  },
+                              }}
+                              renderInput={(params) => (
+                                <TextField
+                                  sx={{
+                                    width: "200px",
+                                    color: theme.text_primary,
+                                    input: {
+                                      color: theme.text_primary,
+                                      borderColor: `${theme.text_secondary} !important`,
+                                      fontSize: "12px",
+                                    },
+                                    borderColor: `${theme.text_secondary} !important`,
+                                    borderRadius: "8px",
+                                    padding: "0px",
+                                    fontSize: "8px",
+                                    ".MuiSvgIcon-root ": {
+                                      fill: `${theme.text_secondary} !important`,
+                                    },
+                                    "&.Mui-focused .MuiOutlinedInput-notchedOutline":
+                                      {
+                                        border: "none",
+                                      },
+                                    "& .MuiOutlinedInput-root": {
+                                      border: "none",
+                                      padding: 0,
+                                    },
+                                    "& .MuiOutlinedInput-root .MuiOutlinedInput-notchedOutline":
+                                      {
+                                        border: "none",
+                                        padding: 0,
+                                      },
+                                  }}
+                                  fullWidth
+                                  {...params}
+                                  placeholder="Select"
+                                  value={getInputAttribute(item?.op2, 1)}
+                                  onChange={(e) =>
+                                    handleFunctionInputAttributeChange(
+                                      "val1",
+                                      index,
+                                      e.target.value
+                                    )
+                                  }
+                                />
+                              )}
+                            />
+                            ,
+                            <Autocomplete
+                              disablePortal
+                              fullWidth
+                              isOptionEqualToValue={(option, value) =>
+                                option === value
+                              }
+                              value={getInputAttribute(item?.op2, 2)}
+                              onChange={(e, v) =>
+                                handleFunctionInputAttributeChange(
+                                  "val2",
+                                  index,
+                                  v
+                                )
+                              }
+                              options={attributesWithSpecial}
+                              fontSize="12px"
+                              sx={{
+                                width: "200px",
+                                color: theme.text_primary,
+                                border: "none",
+                                outline: "none",
+                                "&.Mui-focused .MuiOutlinedInput-notchedOutline":
+                                  {
+                                    border: "none",
+                                  },
+                                "& .MuiOutlinedInput-root": {
+                                  border: "none",
+                                  padding: 0,
+                                },
+                                "& .MuiOutlinedInput-root .MuiOutlinedInput-notchedOutline":
+                                  {
+                                    border: "none",
+                                    padding: 0,
+                                  },
+                              }}
+                              renderInput={(params) => (
+                                <TextField
+                                  sx={{
+                                    width: "200px",
+                                    color: theme.text_primary,
+                                    input: {
+                                      color: theme.text_primary,
+                                      borderColor: `${theme.text_secondary} !important`,
+                                      fontSize: "12px",
+                                    },
+                                    borderColor: `${theme.text_secondary} !important`,
+                                    borderRadius: "8px",
+                                    padding: "0px",
+                                    fontSize: "8px",
+                                    ".MuiSvgIcon-root ": {
+                                      fill: `${theme.text_secondary} !important`,
+                                    },
+                                    "&.Mui-focused .MuiOutlinedInput-notchedOutline":
+                                      {
+                                        border: "none",
+                                      },
+                                    "& .MuiOutlinedInput-root": {
+                                      border: "none",
+                                      padding: 0,
+                                    },
+                                    "& .MuiOutlinedInput-root .MuiOutlinedInput-notchedOutline":
+                                      {
+                                        border: "none",
+                                        padding: 0,
+                                      },
+                                  }}
+                                  fullWidth
+                                  {...params}
+                                  placeholder="Select"
+                                  value={getInputAttribute(item?.op2, 2)}
+                                  onChange={(e) =>
+                                    handleFunctionInputAttributeChange(
+                                      "val2",
+                                      index,
+                                      e.target.value
+                                    )
+                                  }
+                                />
+                              )}
+                            />
+                            ,
+                            <Autocomplete
+                              disablePortal
+                              fullWidth
+                              isOptionEqualToValue={(option, value) =>
+                                option === value
+                              }
+                              value={getInputAttribute(item?.op2, 3)}
+                              onChange={(e, v) =>
+                                handleFunctionInputAttributeChange(
+                                  "val3",
+                                  index,
+                                  v
+                                )
+                              }
+                              options={dateUnit}
+                              fontSize="12px"
+                              sx={{
+                                width: "200px",
+                                color: theme.text_primary,
+                                border: "none",
+                                outline: "none",
+                                "&.Mui-focused .MuiOutlinedInput-notchedOutline":
+                                  {
+                                    border: "none",
+                                  },
+                                "& .MuiOutlinedInput-root": {
+                                  border: "none",
+                                  padding: 0,
+                                },
+                                "& .MuiOutlinedInput-root .MuiOutlinedInput-notchedOutline":
+                                  {
+                                    border: "none",
+                                    padding: 0,
+                                  },
+                              }}
+                              renderInput={(params) => (
+                                <TextField
+                                  sx={{
+                                    width: "200px",
+                                    color: theme.text_primary,
+                                    input: {
+                                      color: theme.text_primary,
+                                      borderColor: `${theme.text_secondary} !important`,
+                                      fontSize: "12px",
+                                    },
+                                    borderColor: `${theme.text_secondary} !important`,
+                                    borderRadius: "8px",
+                                    padding: "0px",
+                                    fontSize: "8px",
+                                    ".MuiSvgIcon-root ": {
+                                      fill: `${theme.text_secondary} !important`,
+                                    },
+                                    "&.Mui-focused .MuiOutlinedInput-notchedOutline":
+                                      {
+                                        border: "none",
+                                      },
+                                    "& .MuiOutlinedInput-root": {
+                                      border: "none",
+                                      padding: 0,
+                                    },
+                                    "& .MuiOutlinedInput-root .MuiOutlinedInput-notchedOutline":
+                                      {
+                                        border: "none",
+                                        padding: 0,
+                                      },
+                                  }}
+                                  fullWidth
+                                  {...params}
+                                  placeholder="Select"
+                                  value={getInputAttribute(item?.op2, 3)}
+                                  onChange={(e) =>
+                                    handleFunctionInputAttributeChange(
+                                      "val3",
+                                      index,
+                                      e.target.value
+                                    )
+                                  }
+                                />
+                              )}
+                            />
+                            )
+                          </>
+                        )
                       }
-                      placeholder="Enter Value"
-                    />
+                    </>
                   )}
                 </OutlineWrapper>
               )}
@@ -830,21 +1401,68 @@ const Conditions = ({
 
         {/* lhs */}
         <VR style={{ width: "2px" }} />
-
-        <Select
+        <Autocomplete
+          disablePortal
+          fullWidth
+          isOptionEqualToValue={(option, value) => option === value}
           value={condition?.expression?.comparator}
-          onChange={(e) => handleComparatorChange(e)}
-          style={{ fontSize: "12px" }}
-        >
-          <option selected hidden>
-            Select Boolean Operator
-          </option>
-          {comparisonOperations?.map((item) => (
-            <option key={item.name} value={item.value}>
-              {item.name}
-            </option>
-          ))}
-        </Select>
+          onChange={(e, v) => handleComparatorChange(v)}
+          options={comparators}
+          fontSize="12px"
+          sx={{
+            width: "200px",
+            color: theme.text_primary,
+            border: "none",
+            outline: "none",
+            "&.Mui-focused .MuiOutlinedInput-notchedOutline": {
+              border: "none",
+            },
+            "& .MuiOutlinedInput-root": {
+              border: "none",
+              padding: 0,
+            },
+            "& .MuiOutlinedInput-root .MuiOutlinedInput-notchedOutline": {
+              border: "none",
+              padding: 0,
+            },
+          }}
+          renderInput={(params) => (
+            <TextField
+              sx={{
+                width: "200px",
+                color: theme.text_primary,
+                input: {
+                  color: theme.text_primary,
+                  borderColor: `${theme.text_secondary} !important`,
+                  fontSize: "12px",
+                },
+                borderColor: `${theme.text_secondary} !important`,
+                borderRadius: "8px",
+                padding: "0px",
+                fontSize: "8px",
+                ".MuiSvgIcon-root ": {
+                  fill: `${theme.text_secondary} !important`,
+                },
+                "&.Mui-focused .MuiOutlinedInput-notchedOutline": {
+                  border: "none",
+                },
+                "& .MuiOutlinedInput-root": {
+                  border: "none",
+                  padding: 0,
+                },
+                "& .MuiOutlinedInput-root .MuiOutlinedInput-notchedOutline": {
+                  border: "none",
+                  padding: 0,
+                },
+              }}
+              fullWidth
+              {...params}
+              placeholder="Comparator"
+              value={condition?.expression?.comparator}
+              onChange={(e) => handleComparatorChange(e.target.value)}
+            />
+          )}
+        />
         <VR style={{ width: "2px" }} />
         {/* rhs */}
         {condition.expression?.rhs?.map((item, index) => (
@@ -852,50 +1470,85 @@ const Conditions = ({
             <ConditionBody key={index}>
               {item?.op1 !== null && (
                 <OutlineWrapper>
-                  <Select
+                  <Autocomplete
+                    disablePortal
+                    fullWidth
+                    isOptionEqualToValue={(option, value) => option === value}
                     value={getInputAttribute(item?.op1, 0)}
-                    onChange={(e) => handleSelectChange("rhs", "op1", index, e)}
-                  >
-                    <option selected hidden>
-                      Select
-                    </option>
-                    {inputAttribute?.map((item, index) => (
-                      <option key={index} value={item}>
-                        {item}
-                      </option>
-                    ))}
-                    {specialAttributes?.map((item) => (
-                      <option key={item.name} value={item.value}>
-                        {item.name}
-                      </option>
-                    ))}
-                    <Hr />
-                    {specialFunctions?.map((item) => (
-                      <option key={item.name} value={item.value}>
-                        {item.name}
-                      </option>
-                    ))}
-                    <option value="">Custom Value</option>
-                  </Select>
+                    onChange={(e, v) =>
+                      handleSelectChange("rhs", "op1", index, v)
+                    }
+                    options={attributesWithSpecialFunctions}
+                    fontSize="12px"
+                    sx={{
+                      width: "200px",
+                      color: theme.text_primary,
+                      border: "none",
+                      outline: "none",
+                      "&.Mui-focused .MuiOutlinedInput-notchedOutline": {
+                        border: "none",
+                      },
+                      "& .MuiOutlinedInput-root": {
+                        border: "none",
+                        padding: 0,
+                      },
+                      "& .MuiOutlinedInput-root .MuiOutlinedInput-notchedOutline":
+                        {
+                          border: "none",
+                          padding: 0,
+                        },
+                    }}
+                    renderInput={(params) => (
+                      <TextField
+                        sx={{
+                          width: "200px",
+                          color: theme.text_primary,
+                          input: {
+                            color: theme.text_primary,
+                            borderColor: `${theme.text_secondary} !important`,
+                            fontSize: "12px",
+                          },
+                          borderColor: `${theme.text_secondary} !important`,
+                          borderRadius: "8px",
+                          padding: "0px",
+                          fontSize: "8px",
+                          ".MuiSvgIcon-root ": {
+                            fill: `${theme.text_secondary} !important`,
+                          },
+                          "&.Mui-focused .MuiOutlinedInput-notchedOutline": {
+                            border: "none",
+                          },
+                          "& .MuiOutlinedInput-root": {
+                            border: "none",
+                            padding: 0,
+                          },
+                          "& .MuiOutlinedInput-root .MuiOutlinedInput-notchedOutline":
+                            {
+                              border: "none",
+                              padding: 0,
+                            },
+                        }}
+                        fullWidth
+                        {...params}
+                        placeholder="Select"
+                        value={getInputAttribute(item?.op1, 0)}
+                        onChange={(e) =>
+                          handleSelectChange(
+                            "rhs",
+                            "op1",
+                            index,
+                            e.target.value
+                          )
+                        }
+                      />
+                    )}
+                  />
 
                   {(item?.op1 === "__custom__" ||
                     !inputAttribute?.includes(
                       getInputAttribute(item?.op1, 0)
                     )) && (
                     <>
-                      {(item?.op1 === "__custom__" ||
-                        !specialFunctions?.find(
-                          (func) =>
-                            func.value === getInputAttribute(item?.op1, 0)
-                        )) && (
-                        <Input
-                          value={item?.op1}
-                          onChange={(e) =>
-                            handleSelectChange("rhs", "op1", index, e)
-                          }
-                          placeholder="Enter Value"
-                        />
-                      )}
                       {
                         // if the selected input attribute is a special function
                         specialFunctions?.find(
@@ -904,85 +1557,248 @@ const Conditions = ({
                         ) && (
                           <>
                             (
-                            <Select
+                            <Autocomplete
+                              disablePortal
+                              fullWidth
+                              isOptionEqualToValue={(option, value) =>
+                                option === value
+                              }
                               value={getInputAttribute(item?.op1, 1)}
-                              onChange={(e) =>
+                              onChange={(e, v) =>
                                 handleFunctionInputAttributeChange(
                                   "val1",
                                   index,
-                                  e
+                                  v
                                 )
                               }
-                            >
-                              <option selected hidden>
-                                Select
-                              </option>
-                              {inputAttribute?.map((item) => (
-                                <option key={item} value={item}>
-                                  {item}
-                                </option>
-                              ))}
-                              {specialAttributes?.map((item) => (
-                                <option key={item.name} value={item.value}>
-                                  {item.name}
-                                </option>
-                              ))}
-                            </Select>
+                              options={attributesWithSpecial}
+                              fontSize="12px"
+                              sx={{
+                                width: "200px",
+                                color: theme.text_primary,
+                                border: "none",
+                                outline: "none",
+                                "&.Mui-focused .MuiOutlinedInput-notchedOutline":
+                                  {
+                                    border: "none",
+                                  },
+                                "& .MuiOutlinedInput-root": {
+                                  border: "none",
+                                  padding: 0,
+                                },
+                                "& .MuiOutlinedInput-root .MuiOutlinedInput-notchedOutline":
+                                  {
+                                    border: "none",
+                                    padding: 0,
+                                  },
+                              }}
+                              renderInput={(params) => (
+                                <TextField
+                                  sx={{
+                                    width: "200px",
+                                    color: theme.text_primary,
+                                    input: {
+                                      color: theme.text_primary,
+                                      borderColor: `${theme.text_secondary} !important`,
+                                      fontSize: "12px",
+                                    },
+                                    borderColor: `${theme.text_secondary} !important`,
+                                    borderRadius: "8px",
+                                    padding: "0px",
+                                    fontSize: "8px",
+                                    ".MuiSvgIcon-root ": {
+                                      fill: `${theme.text_secondary} !important`,
+                                    },
+                                    "&.Mui-focused .MuiOutlinedInput-notchedOutline":
+                                      {
+                                        border: "none",
+                                      },
+                                    "& .MuiOutlinedInput-root": {
+                                      border: "none",
+                                      padding: 0,
+                                    },
+                                    "& .MuiOutlinedInput-root .MuiOutlinedInput-notchedOutline":
+                                      {
+                                        border: "none",
+                                        padding: 0,
+                                      },
+                                  }}
+                                  fullWidth
+                                  {...params}
+                                  placeholder="Select"
+                                  value={getInputAttribute(item?.op1, 1)}
+                                  onChange={(e) =>
+                                    handleFunctionInputAttributeChange(
+                                      "val1",
+                                      index,
+                                      e.target.value
+                                    )
+                                  }
+                                />
+                              )}
+                            />
                             ,
-                            <Select
+                            <Autocomplete
+                              disablePortal
+                              fullWidth
+                              isOptionEqualToValue={(option, value) =>
+                                option === value
+                              }
                               value={getInputAttribute(item?.op1, 2)}
-                              onChange={(e) =>
+                              onChange={(e, v) =>
                                 handleFunctionInputAttributeChange(
                                   "val2",
                                   index,
-                                  e
+                                  v
                                 )
                               }
-                            >
-                              <option selected hidden>
-                                Select
-                              </option>
-                              {inputAttribute?.map((item) => (
-                                <option key={item} value={item}>
-                                  {item}
-                                </option>
-                              ))}
-                            </Select>
+                              options={attributesWithSpecial}
+                              fontSize="12px"
+                              sx={{
+                                width: "200px",
+                                color: theme.text_primary,
+                                border: "none",
+                                outline: "none",
+                                "&.Mui-focused .MuiOutlinedInput-notchedOutline":
+                                  {
+                                    border: "none",
+                                  },
+                                "& .MuiOutlinedInput-root": {
+                                  border: "none",
+                                  padding: 0,
+                                },
+                                "& .MuiOutlinedInput-root .MuiOutlinedInput-notchedOutline":
+                                  {
+                                    border: "none",
+                                    padding: 0,
+                                  },
+                              }}
+                              renderInput={(params) => (
+                                <TextField
+                                  sx={{
+                                    width: "200px",
+                                    color: theme.text_primary,
+                                    input: {
+                                      color: theme.text_primary,
+                                      borderColor: `${theme.text_secondary} !important`,
+                                      fontSize: "12px",
+                                    },
+                                    borderColor: `${theme.text_secondary} !important`,
+                                    borderRadius: "8px",
+                                    padding: "0px",
+                                    fontSize: "8px",
+                                    ".MuiSvgIcon-root ": {
+                                      fill: `${theme.text_secondary} !important`,
+                                    },
+                                    "&.Mui-focused .MuiOutlinedInput-notchedOutline":
+                                      {
+                                        border: "none",
+                                      },
+                                    "& .MuiOutlinedInput-root": {
+                                      border: "none",
+                                      padding: 0,
+                                    },
+                                    "& .MuiOutlinedInput-root .MuiOutlinedInput-notchedOutline":
+                                      {
+                                        border: "none",
+                                        padding: 0,
+                                      },
+                                  }}
+                                  fullWidth
+                                  {...params}
+                                  placeholder="Select"
+                                  value={getInputAttribute(item?.op1, 2)}
+                                  onChange={(e) =>
+                                    handleFunctionInputAttributeChange(
+                                      "val2",
+                                      index,
+                                      e.target.value
+                                    )
+                                  }
+                                />
+                              )}
+                            />
                             ,
-                            <Select
+                            <Autocomplete
+                              disablePortal
+                              fullWidth
+                              isOptionEqualToValue={(option, value) =>
+                                option === value
+                              }
                               value={getInputAttribute(item?.op1, 3)}
-                              onChange={(e) =>
+                              onChange={(e, v) =>
                                 handleFunctionInputAttributeChange(
                                   "val3",
                                   index,
-                                  e
+                                  v
                                 )
                               }
-                            >
-                              <option selected hidden>
-                                Unit
-                              </option>
-                              {getInputAttribute(item?.op1, 0) ===
-                                "date_diff" && (
-                                <>
-                                  {dateUnits?.map((item, index) => (
-                                    <option key={index} value={item.value}>
-                                      {item.name}
-                                    </option>
-                                  ))}
-                                </>
+                              options={dateUnit}
+                              fontSize="12px"
+                              sx={{
+                                width: "200px",
+                                color: theme.text_primary,
+                                border: "none",
+                                outline: "none",
+                                "&.Mui-focused .MuiOutlinedInput-notchedOutline":
+                                  {
+                                    border: "none",
+                                  },
+                                "& .MuiOutlinedInput-root": {
+                                  border: "none",
+                                  padding: 0,
+                                },
+                                "& .MuiOutlinedInput-root .MuiOutlinedInput-notchedOutline":
+                                  {
+                                    border: "none",
+                                    padding: 0,
+                                  },
+                              }}
+                              renderInput={(params) => (
+                                <TextField
+                                  sx={{
+                                    width: "200px",
+                                    color: theme.text_primary,
+                                    input: {
+                                      color: theme.text_primary,
+                                      borderColor: `${theme.text_secondary} !important`,
+                                      fontSize: "12px",
+                                    },
+                                    borderColor: `${theme.text_secondary} !important`,
+                                    borderRadius: "8px",
+                                    padding: "0px",
+                                    fontSize: "8px",
+                                    ".MuiSvgIcon-root ": {
+                                      fill: `${theme.text_secondary} !important`,
+                                    },
+                                    "&.Mui-focused .MuiOutlinedInput-notchedOutline":
+                                      {
+                                        border: "none",
+                                      },
+                                    "& .MuiOutlinedInput-root": {
+                                      border: "none",
+                                      padding: 0,
+                                    },
+                                    "& .MuiOutlinedInput-root .MuiOutlinedInput-notchedOutline":
+                                      {
+                                        border: "none",
+                                        padding: 0,
+                                      },
+                                  }}
+                                  fullWidth
+                                  {...params}
+                                  placeholder="Select"
+                                  value={getInputAttribute(item?.op1, 3)}
+                                  onChange={(e) =>
+                                    handleFunctionInputAttributeChange(
+                                      "val3",
+                                      index,
+                                      e.target.value
+                                    )
+                                  }
+                                />
                               )}
-                              {getInputAttribute(item?.op1, 0) ===
-                                "time_diff" && (
-                                <>
-                                  {timeUnits?.map((item, index) => (
-                                    <option key={index} value={item.value}>
-                                      {item.name}
-                                    </option>
-                                  ))}
-                                </>
-                              )}
-                            </Select>
+                            />
                             )
                           </>
                         )
@@ -993,57 +1809,417 @@ const Conditions = ({
               )}
               {item?.operator != null && (
                 <OutlineWrapper>
-                  <Select
-                    value={item.operator}
-                    onChange={(e) =>
-                      handleSelectChange("rhs", "operator", index, e)
+                  <Autocomplete
+                    disablePortal
+                    fullWidth
+                    isOptionEqualToValue={(option, value) => option === value}
+                    value={item?.operator}
+                    onChange={(e, v) =>
+                      handleSelectChange("rhs", "operator", index, v)
                     }
-                  >
-                    <option selected hidden>
-                      Select
-                    </option>
-                    {arithmeticOperations?.map((item) => (
-                      <option key={item.name} value={item.value}>
-                        {item.name}
-                      </option>
-                    ))}
-                  </Select>
+                    options={arithmeticOperations}
+                    fontSize="12px"
+                    sx={{
+                      width: "200px",
+                      color: theme.text_primary,
+                      border: "none",
+                      outline: "none",
+                      "&.Mui-focused .MuiOutlinedInput-notchedOutline": {
+                        border: "none",
+                      },
+                      "& .MuiOutlinedInput-root": {
+                        border: "none",
+                        padding: 0,
+                      },
+                      "& .MuiOutlinedInput-root .MuiOutlinedInput-notchedOutline":
+                        {
+                          border: "none",
+                          padding: 0,
+                        },
+                    }}
+                    renderInput={(params) => (
+                      <TextField
+                        sx={{
+                          width: "200px",
+                          color: theme.text_primary,
+                          input: {
+                            color: theme.text_primary,
+                            borderColor: `${theme.text_secondary} !important`,
+                            fontSize: "12px",
+                          },
+                          borderColor: `${theme.text_secondary} !important`,
+                          borderRadius: "8px",
+                          padding: "0px",
+                          fontSize: "8px",
+                          ".MuiSvgIcon-root ": {
+                            fill: `${theme.text_secondary} !important`,
+                          },
+                          "&.Mui-focused .MuiOutlinedInput-notchedOutline": {
+                            border: "none",
+                          },
+                          "& .MuiOutlinedInput-root": {
+                            border: "none",
+                            padding: 0,
+                          },
+                          "& .MuiOutlinedInput-root .MuiOutlinedInput-notchedOutline":
+                            {
+                              border: "none",
+                              padding: 0,
+                            },
+                        }}
+                        fullWidth
+                        {...params}
+                        placeholder="Select"
+                        value={item?.operator}
+                        onChange={(e) =>
+                          handleSelectChange(
+                            "rhs",
+                            "operator",
+                            index,
+                            e.target.value
+                          )
+                        }
+                      />
+                    )}
+                  />
                 </OutlineWrapper>
               )}
               {item?.op2 !== null && (
                 <OutlineWrapper>
-                  <Select
-                    value={
-                      inputAttribute?.includes(item?.op2)
-                        ? item?.op2
-                        : "__custom__"
+                  <Autocomplete
+                    disablePortal
+                    fullWidth
+                    isOptionEqualToValue={(option, value) => option === value}
+                    value={getInputAttribute(item?.op2, 0)}
+                    onChange={(e, v) =>
+                      handleSelectChange("rhs", "op2", index, v)
                     }
-                    onChange={(e) => handleSelectChange("rhs", "op2", index, e)}
-                  >
-                    <option selected hidden>
-                      Select
-                    </option>
-                    {inputAttribute?.map((item) => (
-                      <option key={item} value={item}>
-                        {item}
-                      </option>
-                    ))}
-                    {specialAttributes?.map((item) => (
-                      <option key={item.name} value={item.value}>
-                        {item.name}
-                      </option>
-                    ))}
-                    <option value="">Custom Value</option>
-                  </Select>
+                    options={attributesWithSpecialFunctions}
+                    fontSize="12px"
+                    sx={{
+                      width: "200px",
+                      color: theme.text_primary,
+                      border: "none",
+                      outline: "none",
+                      "&.Mui-focused .MuiOutlinedInput-notchedOutline": {
+                        border: "none",
+                      },
+                      "& .MuiOutlinedInput-root": {
+                        border: "none",
+                        padding: 0,
+                      },
+                      "& .MuiOutlinedInput-root .MuiOutlinedInput-notchedOutline":
+                        {
+                          border: "none",
+                          padding: 0,
+                        },
+                    }}
+                    renderInput={(params) => (
+                      <TextField
+                        sx={{
+                          width: "200px",
+                          color: theme.text_primary,
+                          input: {
+                            color: theme.text_primary,
+                            borderColor: `${theme.text_secondary} !important`,
+                            fontSize: "12px",
+                          },
+                          borderColor: `${theme.text_secondary} !important`,
+                          borderRadius: "8px",
+                          padding: "0px",
+                          fontSize: "8px",
+                          ".MuiSvgIcon-root ": {
+                            fill: `${theme.text_secondary} !important`,
+                          },
+                          "&.Mui-focused .MuiOutlinedInput-notchedOutline": {
+                            border: "none",
+                          },
+                          "& .MuiOutlinedInput-root": {
+                            border: "none",
+                            padding: 0,
+                          },
+                          "& .MuiOutlinedInput-root .MuiOutlinedInput-notchedOutline":
+                            {
+                              border: "none",
+                              padding: 0,
+                            },
+                        }}
+                        fullWidth
+                        {...params}
+                        placeholder="Select"
+                        value={getInputAttribute(item?.op2, 0)}
+                        onChange={(e) =>
+                          handleSelectChange(
+                            "rhs",
+                            "op2",
+                            index,
+                            e.target.value
+                          )
+                        }
+                      />
+                    )}
+                  />
+
                   {(item?.op2 === "__custom__" ||
-                    inputAttribute?.includes(item?.op2) === false) && (
-                    <Input
-                      value={item?.op2}
-                      onChange={(e) =>
-                        handleSelectChange("rhs", "op2", index, e)
+                    !inputAttribute?.includes(
+                      getInputAttribute(item?.op2, 0)
+                    )) && (
+                    <>
+                      {
+                        // if the selected input attribute is a special function
+                        specialFunctions?.find(
+                          (func) =>
+                            func.value === getInputAttribute(item?.op2, 0)
+                        ) && (
+                          <>
+                            (
+                            <Autocomplete
+                              disablePortal
+                              fullWidth
+                              isOptionEqualToValue={(option, value) =>
+                                option === value
+                              }
+                              value={getInputAttribute(item?.op2, 1)}
+                              onChange={(e, v) =>
+                                handleFunctionInputAttributeChange(
+                                  "val1",
+                                  index,
+                                  v
+                                )
+                              }
+                              options={attributesWithSpecial}
+                              fontSize="12px"
+                              sx={{
+                                width: "200px",
+                                color: theme.text_primary,
+                                border: "none",
+                                outline: "none",
+                                "&.Mui-focused .MuiOutlinedInput-notchedOutline":
+                                  {
+                                    border: "none",
+                                  },
+                                "& .MuiOutlinedInput-root": {
+                                  border: "none",
+                                  padding: 0,
+                                },
+                                "& .MuiOutlinedInput-root .MuiOutlinedInput-notchedOutline":
+                                  {
+                                    border: "none",
+                                    padding: 0,
+                                  },
+                              }}
+                              renderInput={(params) => (
+                                <TextField
+                                  sx={{
+                                    width: "200px",
+                                    color: theme.text_primary,
+                                    input: {
+                                      color: theme.text_primary,
+                                      borderColor: `${theme.text_secondary} !important`,
+                                      fontSize: "12px",
+                                    },
+                                    borderColor: `${theme.text_secondary} !important`,
+                                    borderRadius: "8px",
+                                    padding: "0px",
+                                    fontSize: "8px",
+                                    ".MuiSvgIcon-root ": {
+                                      fill: `${theme.text_secondary} !important`,
+                                    },
+                                    "&.Mui-focused .MuiOutlinedInput-notchedOutline":
+                                      {
+                                        border: "none",
+                                      },
+                                    "& .MuiOutlinedInput-root": {
+                                      border: "none",
+                                      padding: 0,
+                                    },
+                                    "& .MuiOutlinedInput-root .MuiOutlinedInput-notchedOutline":
+                                      {
+                                        border: "none",
+                                        padding: 0,
+                                      },
+                                  }}
+                                  fullWidth
+                                  {...params}
+                                  placeholder="Select"
+                                  value={getInputAttribute(item?.op2, 1)}
+                                  onChange={(e) =>
+                                    handleFunctionInputAttributeChange(
+                                      "val1",
+                                      index,
+                                      e.target.value
+                                    )
+                                  }
+                                />
+                              )}
+                            />
+                            ,
+                            <Autocomplete
+                              disablePortal
+                              fullWidth
+                              isOptionEqualToValue={(option, value) =>
+                                option === value
+                              }
+                              value={getInputAttribute(item?.op2, 2)}
+                              onChange={(e, v) =>
+                                handleFunctionInputAttributeChange(
+                                  "val2",
+                                  index,
+                                  v
+                                )
+                              }
+                              options={attributesWithSpecial}
+                              fontSize="12px"
+                              sx={{
+                                width: "200px",
+                                color: theme.text_primary,
+                                border: "none",
+                                outline: "none",
+                                "&.Mui-focused .MuiOutlinedInput-notchedOutline":
+                                  {
+                                    border: "none",
+                                  },
+                                "& .MuiOutlinedInput-root": {
+                                  border: "none",
+                                  padding: 0,
+                                },
+                                "& .MuiOutlinedInput-root .MuiOutlinedInput-notchedOutline":
+                                  {
+                                    border: "none",
+                                    padding: 0,
+                                  },
+                              }}
+                              renderInput={(params) => (
+                                <TextField
+                                  sx={{
+                                    width: "200px",
+                                    color: theme.text_primary,
+                                    input: {
+                                      color: theme.text_primary,
+                                      borderColor: `${theme.text_secondary} !important`,
+                                      fontSize: "12px",
+                                    },
+                                    borderColor: `${theme.text_secondary} !important`,
+                                    borderRadius: "8px",
+                                    padding: "0px",
+                                    fontSize: "8px",
+                                    ".MuiSvgIcon-root ": {
+                                      fill: `${theme.text_secondary} !important`,
+                                    },
+                                    "&.Mui-focused .MuiOutlinedInput-notchedOutline":
+                                      {
+                                        border: "none",
+                                      },
+                                    "& .MuiOutlinedInput-root": {
+                                      border: "none",
+                                      padding: 0,
+                                    },
+                                    "& .MuiOutlinedInput-root .MuiOutlinedInput-notchedOutline":
+                                      {
+                                        border: "none",
+                                        padding: 0,
+                                      },
+                                  }}
+                                  fullWidth
+                                  {...params}
+                                  placeholder="Select"
+                                  value={getInputAttribute(item?.op2, 2)}
+                                  onChange={(e) =>
+                                    handleFunctionInputAttributeChange(
+                                      "val2",
+                                      index,
+                                      e.target.value
+                                    )
+                                  }
+                                />
+                              )}
+                            />
+                            ,
+                            <Autocomplete
+                              disablePortal
+                              fullWidth
+                              isOptionEqualToValue={(option, value) =>
+                                option === value
+                              }
+                              value={getInputAttribute(item?.op2, 3)}
+                              onChange={(e, v) =>
+                                handleFunctionInputAttributeChange(
+                                  "val3",
+                                  index,
+                                  v
+                                )
+                              }
+                              options={dateUnit}
+                              fontSize="12px"
+                              sx={{
+                                width: "200px",
+                                color: theme.text_primary,
+                                border: "none",
+                                outline: "none",
+                                "&.Mui-focused .MuiOutlinedInput-notchedOutline":
+                                  {
+                                    border: "none",
+                                  },
+                                "& .MuiOutlinedInput-root": {
+                                  border: "none",
+                                  padding: 0,
+                                },
+                                "& .MuiOutlinedInput-root .MuiOutlinedInput-notchedOutline":
+                                  {
+                                    border: "none",
+                                    padding: 0,
+                                  },
+                              }}
+                              renderInput={(params) => (
+                                <TextField
+                                  sx={{
+                                    width: "200px",
+                                    color: theme.text_primary,
+                                    input: {
+                                      color: theme.text_primary,
+                                      borderColor: `${theme.text_secondary} !important`,
+                                      fontSize: "12px",
+                                    },
+                                    borderColor: `${theme.text_secondary} !important`,
+                                    borderRadius: "8px",
+                                    padding: "0px",
+                                    fontSize: "8px",
+                                    ".MuiSvgIcon-root ": {
+                                      fill: `${theme.text_secondary} !important`,
+                                    },
+                                    "&.Mui-focused .MuiOutlinedInput-notchedOutline":
+                                      {
+                                        border: "none",
+                                      },
+                                    "& .MuiOutlinedInput-root": {
+                                      border: "none",
+                                      padding: 0,
+                                    },
+                                    "& .MuiOutlinedInput-root .MuiOutlinedInput-notchedOutline":
+                                      {
+                                        border: "none",
+                                        padding: 0,
+                                      },
+                                  }}
+                                  fullWidth
+                                  {...params}
+                                  placeholder="Select"
+                                  value={getInputAttribute(item?.op2, 3)}
+                                  onChange={(e) =>
+                                    handleFunctionInputAttributeChange(
+                                      "val3",
+                                      index,
+                                      e.target.value
+                                    )
+                                  }
+                                />
+                              )}
+                            />
+                            )
+                          </>
+                        )
                       }
-                      placeholder="Enter Value"
-                    />
+                    </>
                   )}
                 </OutlineWrapper>
               )}
