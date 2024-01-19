@@ -19,7 +19,7 @@ const upload = multer({ storage: storage });
 export const uploadMiddleware = (req, res, next) => {
   upload.single("file")(req, res, (err) => {
     if (err) {
-      return res.status(err.status).json(err.message);
+      return res.status(500).json(err.message);
     }
     next();
   }); 
