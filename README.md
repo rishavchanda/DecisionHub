@@ -4,6 +4,10 @@ A Rule Builder application “Decision Hub” that empowers Business Analysts to
 
 #### Web Link: https://decisionhub.netlify.app/
 
+| Architecture                      |
+| --------------------------------- |
+|![image](https://github.com/user-attachments/assets/97adc3ca-da97-4dbe-810e-bac94db513c3)|
+
 | Dashboard                         |
 | --------------------------------- |
 | ![Image1](./assets/dashboard.jpg) |
